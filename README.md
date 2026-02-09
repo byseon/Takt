@@ -60,7 +60,7 @@ MAMH is a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin t
 User: "mamh: Build an AI scoring platform"
          |
   +------v------+
-  |  MAMH Skill  |  <-- Plugin entry point (skills/mamh/SKILL.md)
+  |  MAMH Skill  |  <-- Plugin entry point (skills/mamh/SKILL.md -> routes to subcommands)
   +------+------+
          |
          |  Phase 0: Planning Interview
@@ -114,7 +114,14 @@ User: "mamh: Build an AI scoring platform"
 ```
 mamh/                              <-- Plugin repository (you install this)
   .claude-plugin/plugin.json       <-- Plugin manifest
-  skills/mamh/SKILL.md             <-- Skill entry point (6-phase lifecycle)
+  skills/mamh/SKILL.md             <-- Main skill entry point (help + routing)
+  skills/plan/SKILL.md             <-- /mamh:plan (Phases 0-2)
+  skills/execute/SKILL.md          <-- /mamh:execute (Phase 3)
+  skills/review/SKILL.md           <-- /mamh:review (Phase 4)
+  skills/next/SKILL.md             <-- /mamh:next (Phase 5)
+  skills/status/SKILL.md           <-- /mamh:status (dashboard)
+  skills/resume/SKILL.md           <-- /mamh:resume (resume protocol)
+  skills/stop/SKILL.md             <-- /mamh:stop (stop protocol)
   agents/mamh-orchestrator.md      <-- Team lead (delegate mode, no code tools)
   templates/agents/*.md            <-- 8 agent templates (backend, frontend, etc.)
   templates/POLICY.md              <-- Shared rulebook template
@@ -341,14 +348,17 @@ You can check progress at any time with `mamh status`, trigger manual review wit
 
 | Command | Description |
 |---------|-------------|
-| `mamh <description>` | Start a new project. Runs the full 6-phase lifecycle. |
-| `mamh status` | Display the status dashboard with agent roster, ticket board, and progress. |
-| `mamh review` | Manually trigger a review cycle on all completed but unreviewed tickets. |
-| `mamh next` | Advance to the next milestone (after the current one completes). |
-| `mamh resume` | Resume an interrupted session from the last saved state. |
-| `mamh stop` | Gracefully shut down all agents, save state, and mark in-progress tickets as pending. |
+| Command | Slash Command | Description |
+|---------|---------------|-------------|
+| `mamh <description>` | `/mamh:plan` | Start a new project. Runs planning (Phases 0-2), then execution. |
+| `mamh status` | `/mamh:status` | Display the status dashboard with agent roster, ticket board, and progress. |
+| `mamh review` | `/mamh:review` | Manually trigger a review cycle on all completed but unreviewed tickets. |
+| `mamh next` | `/mamh:next` | Advance to the next milestone (after the current one completes). |
+| `mamh resume` | `/mamh:resume` | Resume an interrupted session from the last saved state. |
+| `mamh stop` | `/mamh:stop` | Gracefully shut down all agents, save state, and mark in-progress tickets as pending. |
+| `mamh execute` | `/mamh:execute` | Launch Agent Teams for the current milestone (usually called automatically after planning). |
 
-Running bare `mamh` with no arguments displays a help message listing these commands.
+Running bare `mamh` with no arguments displays a help message listing these commands. Each subcommand is also available as a slash command (`/mamh:<subcommand>`) for direct invocation and tab-completion.
 
 ### Example Session
 
@@ -916,8 +926,21 @@ mamh/
 
   skills/
     mamh/
-      SKILL.md                   # Main skill entry point — the complete 6-phase
-                                 #   lifecycle definition with all subcommands
+      SKILL.md                   # Main entry point — help, routing, directory reference
+    plan/
+      SKILL.md                   # /mamh:plan — Phases 0-2 (planning, agents, tickets)
+    execute/
+      SKILL.md                   # /mamh:execute — Phase 3 (Agent Teams execution)
+    review/
+      SKILL.md                   # /mamh:review — Phase 4 (review gates)
+    next/
+      SKILL.md                   # /mamh:next — Phase 5 (milestone iteration)
+    status/
+      SKILL.md                   # /mamh:status — Project dashboard
+    resume/
+      SKILL.md                   # /mamh:resume — Resume interrupted session
+    stop/
+      SKILL.md                   # /mamh:stop — Graceful shutdown
 
   agents/
     mamh-orchestrator.md         # Team lead agent definition — delegate mode,
@@ -1113,7 +1136,7 @@ node /path/to/mamh/scripts/init-project.mjs /path/to/your/project
 1. Create `templates/agents/<role>.md` with YAML frontmatter + markdown instructions
 2. Include placeholders: `{{PROJECT_NAME}}`, `{{AGENT_NAME}}`, `{{ALLOWED_PATHS}}`, `{{READ_ONLY_PATHS}}`, `{{FORBIDDEN_PATHS}}`, `{{CONSTRAINTS}}`
 3. Define: role, responsibilities, non-responsibilities, tools, scope, communication protocol, definition of done, stop conditions
-4. Update documentation in `SKILL.md` and this README
+4. Update documentation in the relevant `skills/*/SKILL.md` files and this README
 
 ### Modifying Hooks
 
@@ -1129,4 +1152,4 @@ MIT License. See [LICENSE](LICENSE) for the full text.
 
 ---
 
-**MAMH v0.1.0** -- Built for Claude Code. Zero dependencies. Maximum autonomy.
+**MAMH v0.1.1** -- Built for Claude Code. Zero dependencies. Maximum autonomy.

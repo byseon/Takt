@@ -17,8 +17,22 @@ mamh/
 ├── .claude-plugin/
 │   └── plugin.json              # Plugin manifest (name, version, entry points)
 ├── skills/
-│   └── mamh/
-│       └── SKILL.md             # Main skill entry point (6-phase lifecycle)
+│   ├── mamh/
+│   │   └── SKILL.md             # Main entry point (help, routing, directory reference)
+│   ├── plan/
+│   │   └── SKILL.md             # /mamh:plan — Phases 0-2 (planning, agents, tickets)
+│   ├── execute/
+│   │   └── SKILL.md             # /mamh:execute — Phase 3 (Agent Teams execution)
+│   ├── review/
+│   │   └── SKILL.md             # /mamh:review — Phase 4 (review gates)
+│   ├── next/
+│   │   └── SKILL.md             # /mamh:next — Phase 5 (milestone iteration)
+│   ├── status/
+│   │   └── SKILL.md             # /mamh:status — Project dashboard
+│   ├── resume/
+│   │   └── SKILL.md             # /mamh:resume — Resume interrupted session
+│   └── stop/
+│       └── SKILL.md             # /mamh:stop — Graceful shutdown
 ├── agents/
 │   └── mamh-orchestrator.md     # Team lead agent (delegate mode, no code tools)
 ├── hooks/
@@ -176,9 +190,10 @@ echo '{"agent_name":"mamh-backend"}' | \
 4. Update `hooks/hooks.json` if adding/removing hooks
 
 ### Adding a Subcommand
-1. Update `skills/mamh/SKILL.md` subcommand routing section
-2. Add usage examples
-3. Document in `README.md`
+1. Create a new `skills/<subcommand>/SKILL.md` with YAML frontmatter (`name` + `description`)
+2. Update `skills/mamh/SKILL.md` subcommand routing table
+3. Add usage examples
+4. Document in `README.md`
 
 ---
 
@@ -186,7 +201,14 @@ echo '{"agent_name":"mamh-backend"}' | \
 
 - **[STATUS.md](STATUS.md)**: Current project status and changelog
 - **[README.md](README.md)**: Installation and usage guide
-- **[skills/mamh/SKILL.md](skills/mamh/SKILL.md)**: Skill interface (6-phase lifecycle)
+- **[skills/mamh/SKILL.md](skills/mamh/SKILL.md)**: Main skill entry point (help, routing, directory reference)
+- **[skills/plan/SKILL.md](skills/plan/SKILL.md)**: Planning skill (Phases 0-2)
+- **[skills/execute/SKILL.md](skills/execute/SKILL.md)**: Execution skill (Phase 3)
+- **[skills/review/SKILL.md](skills/review/SKILL.md)**: Review skill (Phase 4)
+- **[skills/next/SKILL.md](skills/next/SKILL.md)**: Milestone iteration skill (Phase 5)
+- **[skills/status/SKILL.md](skills/status/SKILL.md)**: Status dashboard skill
+- **[skills/resume/SKILL.md](skills/resume/SKILL.md)**: Resume protocol skill
+- **[skills/stop/SKILL.md](skills/stop/SKILL.md)**: Stop protocol skill
 - **[docs/README.md](docs/README.md)**: Internal developer docs
 - **[docs/TEMPLATES.md](docs/TEMPLATES.md)**: Template customization guide
 - **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**: Configuration reference
@@ -195,4 +217,4 @@ echo '{"agent_name":"mamh-backend"}' | \
 ---
 
 **Last Updated**: 2026-02-08
-**Plugin Version**: 0.1.0
+**Plugin Version**: 0.1.1

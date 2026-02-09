@@ -1,6 +1,6 @@
 # MAMH — Project Status
 
-## Current Version: 0.1.0 (Initial Release)
+## Current Version: 0.1.1
 
 **Date:** 2026-02-08
 
@@ -10,7 +10,8 @@
 
 ### Core Plugin
 - [x] Plugin manifest (`.claude-plugin/plugin.json`)
-- [x] Main skill entry point (`skills/mamh/SKILL.md`) — 6-phase lifecycle
+- [x] Main skill entry point (`skills/mamh/SKILL.md`) — help + routing
+- [x] Split subcommand skills (`plan`, `execute`, `review`, `next`, `status`, `resume`, `stop`)
 - [x] Orchestrator agent in delegate mode (`agents/mamh-orchestrator.md`)
 - [x] Package metadata (`package.json`)
 
@@ -73,6 +74,18 @@
 ---
 
 ## Changelog
+
+### 2026-02-08 — v0.1.1
+- Split monolithic `skills/mamh/SKILL.md` (923 lines) into 8 focused skill files
+  - `/mamh:plan` (Phases 0-2), `/mamh:execute` (Phase 3), `/mamh:review` (Phase 4), `/mamh:next` (Phase 5)
+  - `/mamh:status` (dashboard), `/mamh:resume` (resume protocol), `/mamh:stop` (stop protocol)
+  - `/mamh:mamh` (help + routing, ~83 lines)
+- Each subcommand now has its own slash command with tab-completion
+- Fixed orchestrator using Task tool instead of Agent Teams:
+  - Removed `Task` from orchestrator allowed tools, added to `disallowedTools`
+  - Added `TeamCreate` and `SendMessage` to orchestrator tools
+  - Added explicit anti-pattern documentation in orchestrator agent and execute skill
+- Updated CLAUDE.md, README.md, STATUS.md with new skill structure
 
 ### 2026-02-08 — v0.1.0 (Initial Release)
 - Created complete MAMH plugin with 28 files
