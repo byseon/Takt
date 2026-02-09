@@ -1,0 +1,36 @@
+{
+  "hooks": [
+    {
+      "event": "PreToolUse",
+      "tools": ["Write", "Edit"],
+      "script": "${CLAUDE_PLUGIN_ROOT}/scripts/scope-guard.mjs",
+      "description": "Blocks agents from writing outside their allowed scope"
+    },
+    {
+      "event": "TaskCompleted",
+      "script": "${CLAUDE_PLUGIN_ROOT}/scripts/review-gate.mjs",
+      "description": "Enforces review checks before ticket completion"
+    },
+    {
+      "event": "TeammateIdle",
+      "script": "${CLAUDE_PLUGIN_ROOT}/scripts/keep-working.mjs",
+      "description": "Directs idle agents to claim next available ticket"
+    }
+  ],
+  "scripts": {
+    "worktree-setup": {
+      "script": "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-setup.mjs",
+      "description": "Creates isolated git worktrees for write-capable agents. Called by the skill during Phase 3 (agent launch). Not a hook — invoked directly by the orchestrator.",
+      "usage": "node worktree-setup.mjs [project-directory]",
+      "flags": {
+        "--cleanup": "Remove all MAMH worktrees and clean up branches",
+        "--merge": "Delegates to worktree-merge.mjs to merge agent branches into main"
+      }
+    },
+    "worktree-merge": {
+      "script": "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-merge.mjs",
+      "description": "Merges all agent worktree branches back to main at milestone completion. Runs tests per-branch before merging and full suite after.",
+      "usage": "node worktree-merge.mjs [project-directory]"
+    }
+  }
+}

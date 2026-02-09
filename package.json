@@ -1,0 +1,33 @@
+{
+  "name": "mamh",
+  "version": "0.1.0",
+  "description": "Multi-Agent Multi-Harness (MAMH) — Claude Code plugin for orchestrating teams of specialized AI agents",
+  "author": "seongjinpark",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "multi-agent",
+    "orchestration",
+    "agent-teams"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seongjinpark/mamh"
+  },
+  "files": [
+    ".claude-plugin/",
+    "skills/",
+    "agents/",
+    "hooks/",
+    "scripts/",
+    "templates/",
+    "docs/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,10 @@
+# MAMH development artifacts
+PLAN.md
+.omc/
+.claude/
+.worktrees/
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
