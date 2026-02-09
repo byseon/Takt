@@ -45,6 +45,30 @@ TeamCreate(team_name="mamh-<project>")
 # Teammates communicate via SendMessage and share TaskList
 ```
 
+### Step 3.0 - Git Worktree Setup
+
+Each agent with write permission operates in its own git worktree, branched from `main`. This eliminates merge conflicts during parallel execution.
+
+Run the worktree setup script for each writing agent:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-setup.mjs"
+```
+
+This creates a worktree per agent:
+```bash
+git worktree add .worktrees/mamh-backend -b mamh/backend main
+git worktree add .worktrees/mamh-frontend -b mamh/frontend main
+# ... one per writing agent
+```
+
+**Important:**
+- Each agent's working directory is `.worktrees/mamh-<agent-id>/` — NOT the project root
+- The `.mamh/` directory is shared (symlinked or accessed at project root) so all agents can read state
+- The reviewer agent has READ-ONLY access to all worktrees at `.worktrees/**`
+- Record worktree paths in `.mamh/agents/registry.json` → `worktreePath` field
+- When spawning teammates (Step 3.1), include the worktree path in their spawn prompt
+
 ### Step 3.1 - Create the Agent Team
 
 Create an agent team by instructing Claude Code to spawn teammates. You are the team lead operating in **delegate mode** (coordination only — do not implement code yourself).
@@ -65,6 +89,7 @@ Create an agent team for this project. I am the team lead in delegate mode — I
 Spawn these teammates:
 
 1. **mamh-backend** (use Sonnet): Backend engineer. Owns src/api/**, src/db/**, tests/api/**.
+   Your working directory is `.worktrees/mamh-backend/` — write ALL files there, not in the project root.
    Your tickets for M001:
    - T001: Setup FastAPI project structure [no deps]
    - T003: Define shared API types [no deps]
@@ -72,6 +97,7 @@ Spawn these teammates:
    Read .mamh/POLICY.md for team rules. Read your full ticket files from .mamh/tickets/milestones/M001-*/
 
 2. **mamh-frontend** (use Sonnet): Frontend engineer. Owns src/ui/**, public/**.
+   Your working directory is `.worktrees/mamh-frontend/` — write ALL files there, not in the project root.
    Your tickets for M001:
    - T002: Setup React + TypeScript scaffold [no deps]
    - T005: Setup design tokens [deps: T002]

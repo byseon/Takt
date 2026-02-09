@@ -33,6 +33,27 @@ A milestone is complete when ALL of its tickets have `approved` status. When thi
    - Learnings for future milestones
 3. Archive completed ticket files (move to `.mamh/tickets/archive/M001-*/`).
 
+### Step 5.1b - Git Worktree Merge
+
+After all tickets are approved, merge each agent's worktree branch back into `main`. Run the worktree merge script:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-merge.mjs"
+```
+
+This performs the following for each writing agent:
+
+1. **Run tests** in the agent's worktree to confirm passing state
+2. **Merge** the agent's branch into main: `git merge mamh/<agent-id> --no-ff -m "M001: merge mamh-<agent-id> changes"`
+3. **Resolve conflicts** if any occur (rare due to scope enforcement):
+   - Identify which agents' changes conflict
+   - Delegate conflict resolution to the agent that owns the conflicting file
+   - If ownership is ambiguous, ask the user
+4. **Remove worktrees** after successful merge: `git worktree remove .worktrees/mamh-<agent-id>`
+5. **Delete branches**: `git branch -d mamh/<agent-id>`
+
+Fresh worktrees are created for the next milestone when `/mamh:execute` runs again (Step 3.0).
+
 ### Step 5.2 - Roster Review
 
 Before starting the next milestone, the orchestrator evaluates whether the agent roster needs changes:
@@ -58,11 +79,13 @@ Based on `milestoneAdvanceMode` from `session.json`:
 
 When ALL milestones are complete:
 
-1. Update state to `{ "phase": 5, "status": "project-complete" }`.
-2. Generate a final project report in `.mamh/logs/project-report.md`:
+1. **Final worktree merge** — Run Step 5.1b one last time to merge any remaining agent branches.
+2. **Clean up all worktrees** — Remove `.worktrees/` directory and all `mamh/*` branches.
+3. Update state to `{ "phase": 5, "status": "project-complete" }`.
+4. Generate a final project report in `.mamh/logs/project-report.md`:
    - Overall metrics
    - Architecture decisions and rationale
    - Known issues and technical debt
    - Recommended next steps
-3. Announce to the user:
+5. Announce to the user:
    > "MAMH project complete. All milestones delivered. See `.mamh/logs/project-report.md` for the full report."

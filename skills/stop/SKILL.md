@@ -40,7 +40,9 @@ This skill gracefully shuts down Agent Teams, saves the current state, and marks
 
 3. **Mark in-progress tickets:** Set any `in_progress` tickets back to `pending` so they can be re-claimed on resume.
 
-4. **Write stop summary:**
+4. **Preserve git worktrees:** Do NOT remove `.worktrees/` or delete agent branches. Worktrees contain uncommitted work that agents need when resuming. Each agent's worktree at `.worktrees/mamh-<agent-id>/` and branch `mamh/<agent-id>` must remain intact for `/mamh:resume`.
+
+5. **Write stop summary:**
    > "MAMH session stopped and state saved. Progress:"
    > - "Milestone: M00X - <name>"
    > - "Tickets completed: X / Y"

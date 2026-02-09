@@ -38,12 +38,19 @@ This skill resumes an interrupted MAMH session. It reads the saved state, determ
    | 5 | `project-complete` | Inform user project is already complete |
    | Any | `stopped` | Resume from the phase indicated |
 
-4. **Restore Agent Teams:** If resuming Phase 3, re-launch Agent Teams with:
+4. **Verify git worktrees:** If resuming Phase 3 or later, check that agent worktrees still exist:
+   - Verify `.worktrees/mamh-<agent-id>/` directories exist for each agent in `registry.json`
+   - Verify agent branches `mamh/<agent-id>` exist
+   - If worktrees are missing (e.g., manual cleanup), recreate them: `node "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-setup.mjs"`
+   - If worktrees exist, they contain the agent's prior work — do NOT recreate them
+
+5. **Restore Agent Teams:** If resuming Phase 3, re-launch Agent Teams with:
    - All agents from `registry.json`
+   - Each agent's worktree path (`.worktrees/mamh-<agent-id>/`) as their working directory
    - Ticket states from ticket files (skip completed/approved tickets)
    - In-progress tickets reset to `pending` (the agent may have lost context)
 
-5. **Announce:**
+6. **Announce:**
    > "MAMH session resumed. Continuing from Phase <N>: <phase name>."
 
 ---

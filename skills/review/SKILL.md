@@ -24,12 +24,21 @@ This skill triggers review gates on completed tickets. The review process valida
 
 Review gates fire when a ticket transitions to `completed` status. The review process depends on the configured `reviewMode` in `.mamh/state/session.json`.
 
+### Worktree Context
+
+Each agent works in its own git worktree at `.worktrees/mamh-<agent-id>/`. When reviewing:
+
+- **Build and test checks** must run inside the agent's worktree directory
+- **Scope checks** verify files changed within the worktree are within the agent's owned paths
+- **Peer reviewers** inspect the agent's worktree and can compare against main: `git diff main...mamh/<agent-id>`
+- **User review diffs** should be generated from the worktree branch: `git diff main...mamh/<agent-id> --stat`
+
 ### Auto Review (`reviewMode: "auto"`)
 
-Run automated checks:
+Run automated checks inside the agent's worktree (`.worktrees/mamh-<agent-id>/`):
 
-1. **Build check:** Run the project build command. Must pass with zero errors.
-2. **Test check:** Run the project test suite. All tests must pass.
+1. **Build check:** Run the project build command in the worktree. Must pass with zero errors.
+2. **Test check:** Run the project test suite in the worktree. All tests must pass.
 3. **Diagnostics check:** Run LSP diagnostics on files touched by the ticket. Must return zero errors.
 4. **Scope check:** Verify all file changes are within the agent's owned paths.
 
