@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "mamh",
-      "source": ".",
+      "source": "./",
       "description": "Orchestrate teams of specialized AI agents to build complex projects autonomously with scope enforcement, review gates, and milestone-driven execution.",
       "version": "0.1.0",
       "author": {
