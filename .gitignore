@@ -5,6 +5,17 @@ PLAN.md
 .worktrees/
 node_modules/
 
+# Runtime state (generated per-project)
+.mamh/
+
 # OS files
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
