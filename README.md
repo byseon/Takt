@@ -182,23 +182,35 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 ### For Humans
 
+#### Option A: Permanent Install (Recommended)
+
 ```bash
-# 1. Clone the repository
-git clone https://github.com/seongjinpark-88/multi-agent-multi-harness.git
+# 1. In Claude Code, add the marketplace:
+/plugin marketplace add seongjinpark-88/multi-agent-multi-harness
 
-# 2. Run Claude Code with the plugin loaded
-claude --plugin-dir /path/to/multi-agent-multi-harness
+# 2. Install the plugin:
+/plugin install mamh@mamh-marketplace
 
-# That's it. The plugin is active for this session.
-# Skills are available as: /mamh:<command>
+# Done. The plugin persists across sessions.
+# Skills available as: /mamh:<command>
 ```
 
-That is it. No `npm install`. No build step. No dependencies to resolve.
+#### Option B: Development / One-Off Testing
 
-> **Note:** `--plugin-dir` loads the plugin for the current session. There is no persistent `plugin add` command. You pass `--plugin-dir` each time you launch Claude Code, or set it in your shell alias:
+```bash
+# Clone the repository
+git clone https://github.com/seongjinpark-88/multi-agent-multi-harness.git
+
+# Launch Claude Code with the plugin loaded for this session only
+claude --plugin-dir /path/to/multi-agent-multi-harness
+```
+
+> **Tip:** For repeated local testing, use a shell alias:
 > ```bash
 > alias claude-mamh='claude --plugin-dir /path/to/multi-agent-multi-harness'
 > ```
+
+No `npm install`. No build step. No dependencies to resolve.
 
 ### For LLMs (Automated Installation)
 
@@ -248,13 +260,18 @@ cat /path/to/mamh/.claude-plugin/plugin.json
 
 The file must exist and contain `"name": "mamh"`.
 
-#### Step 5: Launch Claude Code with the Plugin
+#### Step 5: Install the Plugin
 
+**Option A — Permanent install (if running inside Claude Code):**
+```
+/plugin marketplace add seongjinpark-88/multi-agent-multi-harness
+/plugin install mamh@mamh-marketplace
+```
+
+**Option B — Session-only (from shell):**
 ```bash
 claude --plugin-dir /path/to/multi-agent-multi-harness
 ```
-
-> **Note:** There is no `claude plugin add` command. The `--plugin-dir` flag loads the plugin for the current session.
 
 #### Step 6: Test with a Simple Project
 
@@ -958,15 +975,18 @@ mamh/
 ### Plugin Not Loading
 
 ```bash
-# Make sure you're passing the correct path to the plugin directory:
+# Option A: If installed via marketplace, check it's enabled:
+/plugin  # Go to "Installed" tab and verify mamh is listed
+
+# Option B: If using --plugin-dir, make sure you're passing the correct path:
 claude --plugin-dir /path/to/multi-agent-multi-harness
 
 # Verify the plugin manifest is valid JSON:
 node -e "JSON.parse(require('fs').readFileSync('/path/to/multi-agent-multi-harness/.claude-plugin/plugin.json','utf-8')); console.log('OK')"
 
-# Common mistakes:
-# - Using "claude plugin add" (does not exist)
-# - Pointing to wrong directory (must contain .claude-plugin/plugin.json)
+# If marketplace install doesn't work, try clearing the cache:
+# rm -rf ~/.claude/plugins/cache
+# Then restart Claude Code and reinstall.
 ```
 
 ### Agent Teams Not Working

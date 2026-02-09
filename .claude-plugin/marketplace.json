@@ -1,0 +1,27 @@
+{
+  "name": "mamh-marketplace",
+  "owner": {
+    "name": "seongjinpark"
+  },
+  "metadata": {
+    "description": "Multi-Agent Multi-Harness (MAMH) plugin marketplace",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "mamh",
+      "source": ".",
+      "description": "Orchestrate teams of specialized AI agents to build complex projects autonomously with scope enforcement, review gates, and milestone-driven execution.",
+      "version": "0.1.0",
+      "author": {
+        "name": "seongjinpark"
+      },
+      "homepage": "https://github.com/seongjinpark-88/multi-agent-multi-harness",
+      "repository": "https://github.com/seongjinpark-88/multi-agent-multi-harness",
+      "license": "MIT",
+      "keywords": ["multi-agent", "orchestration", "team", "autonomous", "scope-enforcement"],
+      "category": "development-workflows",
+      "tags": ["agents", "orchestration", "project-management", "automation"]
+    }
+  ]
+}

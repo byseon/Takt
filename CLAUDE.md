@@ -100,13 +100,14 @@ mamh/
 
 ## Testing
 
-### Plugin Loading
+### Plugin Installation
 ```bash
-# From any project directory
-claude --plugin-dir /path/to/mamh
+# Option A: Permanent install (inside Claude Code)
+/plugin marketplace add seongjinpark-88/multi-agent-multi-harness
+/plugin install mamh@mamh-marketplace
 
-# The plugin is loaded for this session only.
-# Skills available as: /mamh:<command>
+# Option B: Session-only (from shell)
+claude --plugin-dir /path/to/mamh
 ```
 
 ### Integration Testing
@@ -115,9 +116,7 @@ claude --plugin-dir /path/to/mamh
 mkdir /tmp/mamh-test && cd /tmp/mamh-test
 git init
 
-# Launch Claude Code with plugin loaded
-claude --plugin-dir /path/to/mamh
-
+# Launch Claude Code (with plugin loaded via either method above)
 # In Claude Code, run:
 # mamh "Build a REST API for task management"
 
