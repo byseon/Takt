@@ -1,7 +1,9 @@
-# MAMH - Multi-Agent Multi-Harness
+---
+name: mamh
+description: Orchestrate teams of specialized AI agents to build complex projects autonomously. Triggers on "mamh", "multi-harness", "multi-agent project", "team build".
+---
 
-**Skill name:** `mamh`
-**Triggers:** `mamh`, `multi-harness`, `multi-agent project`, `team build`
+# MAMH - Multi-Agent Multi-Harness
 
 MAMH orchestrates teams of specialized AI agents to build complex projects autonomously. It uses Claude Code's Agent Teams feature to provision purpose-built agents, assign scoped tickets, enforce path boundaries, run review gates, and iterate through milestones until the project is complete.
 
