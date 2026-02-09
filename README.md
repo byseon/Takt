@@ -184,21 +184,21 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/seongjinpark/mamh.git
+git clone https://github.com/seongjinpark-88/multi-agent-multi-harness.git
 
-# 2. Install as a Claude Code plugin
-claude plugin add /path/to/mamh
+# 2. Run Claude Code with the plugin loaded
+claude --plugin-dir /path/to/multi-agent-multi-harness
 
-# 3. Verify installation
-claude plugin list
-# You should see:
-#   mamh (0.1.0) — Multi-Agent Multi-Harness
-#     Skills: mamh
-#     Agents: mamh-orchestrator
-#     Hooks: 3 (PreToolUse, TaskCompleted, TeammateIdle)
+# That's it. The plugin is active for this session.
+# Skills are available as: /mamh:<command>
 ```
 
 That is it. No `npm install`. No build step. No dependencies to resolve.
+
+> **Note:** `--plugin-dir` loads the plugin for the current session. There is no persistent `plugin add` command. You pass `--plugin-dir` each time you launch Claude Code, or set it in your shell alias:
+> ```bash
+> alias claude-mamh='claude --plugin-dir /path/to/multi-agent-multi-harness'
+> ```
 
 ### For LLMs (Automated Installation)
 
@@ -240,7 +240,7 @@ The major version must be 18 or higher. If not, inform the user to upgrade Node.
 
 ```bash
 # If not already cloned:
-git clone https://github.com/seongjinpark/mamh.git /path/to/mamh
+git clone https://github.com/seongjinpark-88/multi-agent-multi-harness.git /path/to/mamh
 
 # Verify the plugin manifest exists:
 cat /path/to/mamh/.claude-plugin/plugin.json
@@ -248,26 +248,23 @@ cat /path/to/mamh/.claude-plugin/plugin.json
 
 The file must exist and contain `"name": "mamh"`.
 
-#### Step 5: Install the Plugin
+#### Step 5: Launch Claude Code with the Plugin
 
 ```bash
-claude plugin add /path/to/mamh
+claude --plugin-dir /path/to/multi-agent-multi-harness
 ```
 
-#### Step 6: Verify the Skill is Available
+> **Note:** There is no `claude plugin add` command. The `--plugin-dir` flag loads the plugin for the current session.
 
-```bash
-claude plugin list
-```
-
-Confirm `mamh` appears in the output with its skill and hooks.
-
-#### Step 7: Test with a Simple Project
+#### Step 6: Test with a Simple Project
 
 ```bash
 # Create a throwaway test project
 mkdir /tmp/mamh-test && cd /tmp/mamh-test
 git init
+
+# Launch Claude Code with the MAMH plugin loaded
+claude --plugin-dir /path/to/multi-agent-multi-harness
 
 # In Claude Code, trigger MAMH:
 # mamh "Build a simple hello world REST API"
@@ -286,10 +283,9 @@ ls -la .claude/agents/mamh-*
 # Navigate to any git-initialized project
 cd /path/to/your/project
 
-# Make sure the plugin is installed (global or local)
-claude plugin list | grep mamh
+# Launch Claude Code with MAMH plugin loaded
+claude --plugin-dir /path/to/multi-agent-multi-harness
 
-# Start MAMH
 # In Claude Code, type:
 mamh "Build a React dashboard with charts and user authentication"
 
@@ -938,7 +934,7 @@ mamh/
     POLICY.md                    # Documentation explaining the policy system
 
   CLAUDE.md                      # Developer guide for LLMs working on this repo
-  PLAN.md                        # Original design plan and architectural decisions
+  STATUS.md                      # Project status, changelog, design decisions
   README.md                      # This file
   package.json                   # npm metadata (no runtime dependencies)
   LICENSE                        # MIT License
@@ -959,17 +955,18 @@ mamh/
 
 ## Troubleshooting
 
-### Plugin Not Found
+### Plugin Not Loading
 
 ```bash
-# Verify installation
-claude plugin list
-
-# If mamh is not listed, reinstall:
-claude plugin add /path/to/mamh
+# Make sure you're passing the correct path to the plugin directory:
+claude --plugin-dir /path/to/multi-agent-multi-harness
 
 # Verify the plugin manifest is valid JSON:
-node -e "JSON.parse(require('fs').readFileSync('/path/to/mamh/.claude-plugin/plugin.json','utf-8')); console.log('OK')"
+node -e "JSON.parse(require('fs').readFileSync('/path/to/multi-agent-multi-harness/.claude-plugin/plugin.json','utf-8')); console.log('OK')"
+
+# Common mistakes:
+# - Using "claude plugin add" (does not exist)
+# - Pointing to wrong directory (must contain .claude-plugin/plugin.json)
 ```
 
 ### Agent Teams Not Working
@@ -1067,7 +1064,7 @@ node /path/to/mamh/scripts/init-project.mjs /path/to/your/project
 
 2. **Read `CLAUDE.md`** first. It contains the complete developer guide: coding standards, architectural decisions, naming conventions, and testing procedures.
 
-3. **Read `PLAN.md`** for the original design rationale.
+3. **Read `STATUS.md`** for current project status and design decisions.
 
 4. **Follow these coding standards**:
    - All scripts must be ESM (`.mjs`), not CommonJS
@@ -1079,11 +1076,11 @@ node /path/to/mamh/scripts/init-project.mjs /path/to/your/project
 
 5. **Test your changes**:
    ```bash
-   # Install the modified plugin
-   claude plugin add /path/to/your/fork
-
    # Create a test project
    mkdir /tmp/mamh-test && cd /tmp/mamh-test && git init
+
+   # Launch Claude Code with your fork loaded as a plugin
+   claude --plugin-dir /path/to/your/fork
 
    # Run MAMH and verify your changes work
    mamh "Build a simple REST API"
