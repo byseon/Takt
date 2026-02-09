@@ -446,52 +446,82 @@ Announce:
 
 ## Phase 3: Execution (Autonomous)
 
-**Goal:** Launch Agent Teams and execute the current milestone's tickets autonomously.
+**Goal:** Launch an Agent Team and execute the current milestone's tickets autonomously.
 
-### Step 3.1 - Launch Agent Teams
+**CRITICAL:** This phase MUST use Claude Code's native **Agent Teams** feature — NOT the Task tool. Agent Teams spawns real teammate sessions that appear in tmux split panes (if tmux is available) or in-process mode. Do NOT use `Task(subagent_type=...)` for execution.
 
-Start Agent Teams in delegate mode with:
-- **Team lead:** mamh-orchestrator (coordination only, no code tools)
-- **Teammates:** All agents from `.mamh/agents/registry.json`
-- **Task list:** All tickets from the current milestone that have no unresolved dependencies
+### Step 3.1 - Create the Agent Team
 
-Configure each teammate agent with:
-- The agent definition from `.claude/agents/mamh-<agent-id>.md`
-- Memory type: `project` (persistent learnings across tickets)
-- Access to `.mamh/tickets/` for reading their assigned tickets
+Create an agent team by instructing Claude Code to spawn teammates. You are the team lead operating in **delegate mode** (coordination only — do not implement code yourself).
 
-### Step 3.2 - Ticket Distribution
+**How to create the team:** Tell Claude Code to create an agent team. For each agent in `.mamh/agents/registry.json`, spawn a teammate with a detailed spawn prompt that includes:
 
-The orchestrator distributes tickets following these rules:
+1. The agent's role and responsibilities (from `.claude/agents/mamh-<agent-id>.md`)
+2. The agent's owned paths, readable paths, and forbidden paths
+3. The POLICY.md rules (from `.mamh/POLICY.md`)
+4. Their assigned tickets for the current milestone (full ticket content)
+5. Instructions to read `.mamh/POLICY.md` at session start
 
-1. **Dependency resolution:** Only tickets whose dependencies are ALL completed can be claimed.
-2. **Agent matching:** Each ticket is pre-assigned to a specific agent. The orchestrator sends the ticket to the correct agent.
-3. **Parallelism:** Multiple agents work simultaneously on independent tickets.
-4. **Self-claiming:** Agents pick up their next ticket automatically when they finish one.
+**Example team creation prompt (adapt based on actual agents):**
+
+```
+Create an agent team for this project. I am the team lead in delegate mode — I will only coordinate, not write code.
+
+Spawn these teammates:
+
+1. **mamh-backend** (use Sonnet): Backend engineer. Owns src/api/**, src/db/**, tests/api/**.
+   Your tickets for M001:
+   - T001: Setup FastAPI project structure [no deps]
+   - T003: Define shared API types [no deps]
+   - T004: Setup PostgreSQL schema [deps: T001]
+   Read .mamh/POLICY.md for team rules. Read your full ticket files from .mamh/tickets/milestones/M001-*/
+
+2. **mamh-frontend** (use Sonnet): Frontend engineer. Owns src/ui/**, public/**.
+   Your tickets for M001:
+   - T002: Setup React + TypeScript scaffold [no deps]
+   - T005: Setup design tokens [deps: T002]
+   Read .mamh/POLICY.md for team rules.
+
+3. **mamh-reviewer** (use Opus): Code reviewer. Read-only access to all files plus .worktrees/**.
+   No implementation tickets. Review completed work when requested.
+   Read .mamh/POLICY.md for team rules.
+
+Each teammate should:
+- Read .mamh/POLICY.md before starting work
+- Work only within their owned paths
+- Mark tickets complete by checking all acceptance criteria boxes
+- Message me (the lead) when blocked or when a ticket is done
+- Self-claim their next ticket when one finishes
+```
+
+After creating the team, **switch to delegate mode** (press Shift+Tab) to restrict yourself to coordination-only tools.
+
+### Step 3.2 - Ticket Distribution via Shared Task List
+
+Use the Agent Teams shared task list (not file-based tracking) to manage work:
+
+1. **Create tasks** in the shared task list for each ticket in the current milestone
+2. **Set dependencies** between tasks matching ticket dependencies
+3. Teammates **self-claim** available tasks as they finish their current work
+4. The TeammateIdle hook (`${CLAUDE_PLUGIN_ROOT}/scripts/keep-working.mjs`) prevents teammates from going idle when they have unclaimed tickets
 
 ### Step 3.3 - Scope Enforcement
 
-The scope guard hook (`${CLAUDE_PLUGIN_ROOT}/scripts/scope-guard.mjs`) enforces path boundaries:
+The scope guard hook (`${CLAUDE_PLUGIN_ROOT}/scripts/scope-guard.mjs`) automatically enforces path boundaries on all teammate file writes:
 
-- Before any file write, the hook checks the agent's `ownedPaths` from `registry.json`.
-- If the write target is outside the agent's owned paths, the write is **blocked** and the agent is informed:
-  > "SCOPE VIOLATION: You attempted to write to `<path>` which is outside your owned paths. Coordinate with the agent that owns this path."
-- Reads to `readablePaths` are allowed.
-- Access to `forbiddenPaths` is blocked entirely.
+- Before any file write, the hook checks the agent's `ownedPaths` from `registry.json`
+- Writes outside scope are **blocked** with a message identifying the violation
+- Reads to `readablePaths` are allowed
+- Access to `forbiddenPaths` is blocked entirely
 
 ### Step 3.4 - Agent-to-Agent Coordination
 
-When an agent needs work from another agent:
+Teammates communicate using **Agent Teams native messaging** (not file-based coordination):
 
-1. The agent writes a coordination request to `.mamh/logs/coordination/<from-agent>-to-<to-agent>-<timestamp>.md`
-2. The orchestrator detects the request and routes it to the target agent
-3. The target agent responds in the same file
-4. Both agents continue their work
-
-Common coordination patterns:
-- **Interface contract:** Backend agent defines an API; frontend agent consumes it
-- **Shared types:** One agent creates type definitions; others import them
-- **Blocking dependency:** One agent is blocked until another completes a prerequisite
+- Teammates **message each other directly** for interface contracts, shared types, and handoffs
+- Teammates **message the lead** when blocked, when a ticket is done, or when they need a decision
+- The lead **broadcasts** important decisions to all teammates (use sparingly)
+- Key decisions are also logged to `.mamh/comms/decisions.md` for persistence
 
 ### Step 3.5 - Dynamic Agent Provisioning
 
