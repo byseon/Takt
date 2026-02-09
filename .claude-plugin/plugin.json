@@ -2,56 +2,12 @@
   "name": "mamh",
   "version": "0.1.0",
   "description": "Multi-Agent Multi-Harness (MAMH) — orchestrate teams of specialized AI agents to build complex projects autonomously with scope enforcement, review gates, and milestone-driven execution.",
-  "author": "seongjinpark",
-  "skills": [
-    {
-      "name": "mamh",
-      "path": "skills/mamh/SKILL.md",
-      "description": "Launch and manage multi-agent project teams with automated planning, agent provisioning, scope enforcement, and milestone-driven execution.",
-      "triggers": ["mamh", "multi-harness", "multi-agent project", "team build"]
-    }
-  ],
-  "agents": [
-    {
-      "name": "mamh-orchestrator",
-      "path": "agents/mamh-orchestrator.md",
-      "description": "Team lead agent that coordinates MAMH agents in delegate mode — no direct code changes, only orchestration."
-    }
-  ],
-  "hooks": {
-    "path": "hooks/hooks.json"
+  "author": {
+    "name": "seongjinpark"
   },
-  "scripts": {
-    "init-project": "scripts/init-project.mjs",
-    "scope-guard": "scripts/scope-guard.mjs",
-    "review-gate": "scripts/review-gate.mjs",
-    "keep-working": "scripts/keep-working.mjs"
-  },
-  "templates": {
-    "agents": "templates/agents/"
-  },
-  "config": {
-    "agentApprovalMode": {
-      "type": "string",
-      "enum": ["auto", "suggest", "locked"],
-      "default": "suggest",
-      "description": "Controls whether the orchestrator can create new agents at runtime. 'auto' = create without asking, 'suggest' = propose and wait for user approval, 'locked' = no new agents after Phase 1."
-    },
-    "milestoneAdvanceMode": {
-      "type": "string",
-      "enum": ["auto-advance", "re-plan", "user-decides"],
-      "default": "user-decides",
-      "description": "Controls what happens when a milestone completes."
-    },
-    "reviewMode": {
-      "type": "string",
-      "enum": ["auto", "peer", "user"],
-      "default": "auto",
-      "description": "Controls how completed tickets are reviewed."
-    }
-  },
-  "requirements": {
-    "experimental": ["CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS"],
-    "minClaudeCodeVersion": "1.0.0"
-  }
+  "homepage": "https://github.com/seongjinpark-88/multi-agent-multi-harness",
+  "repository": "https://github.com/seongjinpark-88/multi-agent-multi-harness",
+  "license": "MIT",
+  "keywords": ["multi-agent", "orchestration", "team", "autonomous", "scope-enforcement"],
+  "hooks": "./hooks/hooks.json"
 }
