@@ -2,45 +2,44 @@
 
 **Orchestrate teams of specialized AI agents to build complex projects autonomously.**
 
-MAMH is a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that replaces the single-LLM-does-everything paradigm with a coordinated team of purpose-built specialists. Instead of one context window juggling backend, frontend, testing, and deployment, MAMH generates a team of agents — each with scoped file access, defined responsibilities, and restricted tools — that work in parallel through a ticket-based workflow with review gates, milestone-driven delivery, and scope enforcement.
+MAMH is a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that coordinates multiple agents to build projects together. Instead of one LLM doing everything in a single context window, MAMH generates a team of specialists that work in parallel — each with scoped file access, defined responsibilities, and restricted tools.
 
-MAMH supports two execution modes:
+### Why MAMH?
+
+**1. Multi-agent execution that actually coordinates.** MAMH supports both [Agent Teams](https://docs.anthropic.com/en/docs/claude-code) (persistent teammates with shared task lists) and a subagent fallback (Task-tool batch dispatch). Either way, agents work in parallel with scope enforcement — the backend agent literally cannot write to frontend files.
+
+**2. Human-readable tracking via markdown and tickets.** Every piece of project state is a readable file — not hidden in LLM context. Tickets are markdown files with acceptance criteria. Decisions are logged to `decisions.md`. Progress is captured in `HANDOFF.md`. You can open any file in `.mamh/` and understand exactly what happened, what's in progress, and what's next. This makes it possible to stop, resume across sessions, hand off to a colleague, or audit what the agents did.
+
+```
+You say: mamh "Build an AI communication platform"
+
+  3 quick questions → auto-generated plan → approve → agents take it from there
+```
+
+### Execution Modes
 
 | Mode | How It Works | Best For |
 |------|-------------|----------|
-| **Agent Teams** | Persistent teammates via `TeamCreate` + `SendMessage`, shared task list, native messaging | Users with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` enabled |
-| **Subagents** | Task-tool parallel batch dispatch, main session orchestrates, file-based communication | Everyone — no experimental features required |
-
-The execution mode is chosen during planning and can be changed between milestones.
-
-```
-                              You say:
-               "mamh: Build an AI communication platform"
-                              |
-                    MAMH takes it from there.
-```
+| **Agent Teams** | Persistent teammates, shared task list, native messaging | Users with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
+| **Subagents** | Task-tool parallel batch dispatch, file-based communication | Everyone — no experimental features needed |
 
 ---
 
 ## Table of Contents
 
 - [Key Features](#key-features)
-- [Architecture](#architecture)
 - [Requirements](#requirements)
 - [Installation](#installation)
-  - [For Humans](#for-humans)
-  - [For LLMs (Automated Installation)](#for-llms-automated-installation)
 - [Quick Start](#quick-start)
-- [Usage](#usage)
-  - [Commands](#commands)
-  - [Example Session](#example-session)
+- [Commands](#commands)
+- [Example Session](#example-session)
+- [How It Works](#how-it-works)
 - [What Gets Generated](#what-gets-generated)
 - [Agent Templates](#agent-templates)
 - [Configuration](#configuration)
-- [Hooks (Scope Enforcement)](#hooks-scope-enforcement)
+- [Hooks](#hooks)
 - [Git Worktree Isolation](#git-worktree-isolation)
-- [POLICY.md — Shared Rulebook](#policymd--shared-rulebook)
-- [Plugin Repository Structure](#plugin-repository-structure)
+- [POLICY.md](#policymd--shared-rulebook)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
@@ -51,109 +50,15 @@ The execution mode is chosen during planning and can be changed between mileston
 
 | Feature | Description |
 |---------|-------------|
-| **Automated Planning** | 3 quick questions --> auto-generate full plan --> approve --> execute. Progressive disclosure, not a form. |
-| **Dynamic Agent Provisioning** | Creates specialized agents on-the-fly based on project needs. A CLI tool gets different agents than a full-stack web app. |
-| **Scope Enforcement** | Hooks block agents from writing outside their domain. The backend agent cannot touch frontend files. Period. |
-| **Review Gates** | Tickets must pass acceptance criteria checks, build verification, and optional peer/user review before completion. |
-| **Milestone-Driven Execution** | Work is organized into ordered milestones with dependency tracking. Infrastructure ships before features. |
-| **Git Worktree Isolation** | Each agent works in its own git worktree branch. No merge conflicts during parallel work. Branches merge at milestone boundaries. |
-| **Shared POLICY.md** | A team-wide rulebook that every agent reads at session start. Defines communication protocols, code standards, safety rules, and coordination patterns. |
-| **Resume/Stop Support** | Save state at any point, shut down cleanly, and resume later exactly where you left off. |
-| **Zero External Dependencies** | All scripts use Node.js built-ins only. No `npm install` required. No version conflicts. |
-
----
-
-## Architecture
-
-```
-User: "mamh: Build an AI scoring platform"
-         |
-  +------v------+
-  |  MAMH Skill  |  <-- Plugin entry point (skills/mamh/SKILL.md -> routes to subcommands)
-  +------+------+
-         |
-         |  Phase 0: Planning Interview
-         |    - Analyst agent expands requirements
-         |    - User answers scoping questions (agent roles, constraints, tech stack)
-         |    - Architect agent creates tech spec
-         |    - Writes PRD, tech spec, constraints to .mamh/
-         |
-         |  Phase 1: Agent Definition
-         |    - Architect designs agent roster with scoped paths
-         |    - Agent definition files generated from templates
-         |    - User confirms or modifies the roster
-         |    - Registry written to .mamh/agents/registry.json
-         |
-         |  Phase 2: Ticket Generation
-         |    - Planner decomposes project into milestones + tickets
-         |    - Each ticket assigned to one agent with dependencies
-         |    - Acceptance criteria defined per ticket
-         |    - Ticket board presented to user
-         |
-  +------v------+
-  | Execution    |  <-- Agent Teams OR Subagent mode (chosen during planning)
-  +------+------+
-         |
-         |  Phase 3: Parallel Execution
-         |    Mode A (Agent Teams): Persistent teammates, shared task list, native messaging
-         |    Mode B (Subagents):   Task-tool batch dispatch, main session orchestrates
-         |    - Both: Agents work in parallel on independent tickets
-         |    - Both: Scope guard hook blocks out-of-bounds writes
-         |    - Both: Git worktree isolation prevents merge conflicts
-         |
-         |  Phase 4: Review Gates
-         |    - Auto: build + test + diagnostics + scope check
-         |    - Peer: reviewer agent examines code quality
-         |    - User: human approval for critical changes
-         |    - Failed reviews return tickets to the author with feedback
-         |
-         |  Phase 5: Milestone Iteration
-         |    - Completed milestones archived
-         |    - Roster re-evaluated for next milestone
-         |    - Advance mode: auto / re-plan / user-decides
-         |    - Repeat Phases 3-5 until all milestones complete
-         |
-  +------v------+
-  |   Complete   |  <-- Final report in .mamh/logs/project-report.md
-  +-------------+
-```
-
-### Component Map
-
-```
-mamh/                              <-- Plugin repository (you install this)
-  .claude-plugin/plugin.json       <-- Plugin manifest
-  skills/mamh/SKILL.md             <-- Main skill entry point (help + routing)
-  skills/plan/SKILL.md             <-- /mamh-plan (Phases 0-2)
-  skills/execute/SKILL.md          <-- /mamh-execute (Phase 3)
-  skills/review/SKILL.md           <-- /mamh-review (Phase 4)
-  skills/next/SKILL.md             <-- /mamh-next (Phase 5)
-  skills/status/SKILL.md           <-- /mamh-status (dashboard)
-  skills/resume/SKILL.md           <-- /mamh-resume (resume protocol)
-  skills/stop/SKILL.md             <-- /mamh-stop (stop protocol)
-  agents/mamh-orchestrator.md      <-- Team lead (delegate mode, no code tools)
-  templates/agents/*.md            <-- 8 agent templates (backend, frontend, etc.)
-  templates/POLICY.md              <-- Shared rulebook template
-  hooks/hooks.json                 <-- Hook configuration
-  scripts/
-    scope-guard.mjs                <-- PreToolUse hook: blocks scope violations
-    review-gate.mjs                <-- TaskCompleted hook: enforces review checks
-    keep-working.mjs               <-- TeammateIdle hook: prevents premature stopping
-    init-project.mjs               <-- Project initialization script
-
-your-project/                      <-- Your project (MAMH writes here at runtime)
-  .mamh/                           <-- Project state (generated)
-    POLICY.md                      <-- Customized shared rulebook
-    prd.md, tech-spec.md, ...      <-- Planning artifacts
-    agents/registry.json           <-- Agent roster with scoped paths
-    tickets/milestones/            <-- Milestone directories with ticket files
-    state/mamh-state.json          <-- Phase/progress tracking
-  .claude/agents/
-    mamh-backend.md                <-- Generated agent definitions
-    mamh-frontend.md
-    mamh-reviewer.md
-    ...
-```
+| **Progressive Planning** | 3 questions → auto-generated plan → one-click approve → execute. No lengthy interview. |
+| **Dynamic Agents** | Creates specialized agents based on project needs. A CLI tool gets different agents than a full-stack web app. |
+| **Scope Enforcement** | Hooks block agents from writing outside their domain. Backend cannot touch frontend files. |
+| **Review Gates** | Tickets must pass build, test, and optional peer/user review before approval. |
+| **Milestone Delivery** | Work organized into ordered milestones with dependency tracking. Infrastructure ships before features. |
+| **Git Worktree Isolation** | Each agent works on its own branch. No merge conflicts during parallel work. |
+| **Inline Progress** | One-liner updates after each ticket and milestone so you always know what's happening. |
+| **Resume/Stop** | Save state at any point, shut down cleanly, resume later exactly where you left off. |
+| **Zero Dependencies** | All scripts use Node.js built-ins only. No `npm install` needed. |
 
 ---
 
@@ -161,173 +66,31 @@ your-project/                      <-- Your project (MAMH writes here at runtime
 
 | Requirement | Details |
 |-------------|---------|
-| **Claude Code** | Latest version. MAMH is a Claude Code plugin. |
-| **Node.js** | >= 18.0.0. Required for hook scripts (all ESM, zero external deps). |
-| **Git** | Required for worktree isolation. Each agent gets its own branch. |
-| **Agent Teams** *(optional)* | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` enables Agent Teams execution mode. Without it, MAMH uses Subagent mode (fully functional, no experimental features needed). |
-
-### Verify Requirements
-
-```bash
-# Check Claude Code
-claude --version
-
-# Check Node.js
-node --version  # Must be >= 18.0.0
-
-# Check Git
-git --version
-
-# (Optional) Check Agent Teams availability
-echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS  # "1" = Agent Teams mode available
-```
-
-### Enabling Agent Teams Mode (Optional)
-
-Agent Teams mode uses persistent teammate sessions with shared task lists and native messaging. If you want to use it:
-
-```bash
-# Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
-export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
-
-# Or set it for the current session only
-export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
-```
-
-If Agent Teams is not enabled, MAMH automatically defaults to **Subagent mode**, which dispatches tickets via the Task tool in dependency-ordered parallel batches. Both modes produce the same results — the difference is in the execution mechanism.
+| **Claude Code** | Latest version |
+| **Node.js** | >= 18.0.0 (for hook scripts) |
+| **Git** | Required for worktree isolation |
+| **Agent Teams** *(optional)* | Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` for persistent teammate mode. Without it, Subagent mode works out of the box. |
 
 ---
 
 ## Installation
 
-### For Humans
-
-#### Option A: Permanent Install (Recommended)
+### Option A: Marketplace (Permanent)
 
 ```bash
-# 1. In Claude Code, add the marketplace:
+# Inside Claude Code:
 /plugin marketplace add seongjinpark-88/multi-agent-multi-harness
-
-# 2. Install the plugin:
 /plugin install mamh@mamh-marketplace
-
-# Done. The plugin persists across sessions.
-# Skills available as: /mamh-<command>
 ```
 
-#### Option B: Development / One-Off Testing
+### Option B: Local (Session Only)
 
 ```bash
-# Clone the repository
 git clone https://github.com/seongjinpark-88/multi-agent-multi-harness.git
-
-# Launch Claude Code with the plugin loaded for this session only
 claude --plugin-dir /path/to/multi-agent-multi-harness
 ```
 
-> **Tip:** For repeated local testing, use a shell alias:
-> ```bash
-> alias claude-mamh='claude --plugin-dir /path/to/multi-agent-multi-harness'
-> ```
-
-No `npm install`. No build step. No dependencies to resolve.
-
-### For LLMs (Automated Installation)
-
-If you are an LLM installing MAMH into a Claude Code environment, follow these steps exactly:
-
-#### Step 1: Verify Claude Code is Available
-
-```bash
-# Confirm claude CLI exists and responds
-claude --version
-```
-
-If this fails, Claude Code is not installed. Stop and inform the user.
-
-#### Step 2: Check Agent Teams Availability (Optional)
-
-```bash
-# Check the environment variable
-echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
-```
-
-If the variable is set to `1`, MAMH will default to **Agent Teams mode** (persistent teammates).
-If not set, MAMH will default to **Subagent mode** (Task-tool batch dispatch). Both modes are fully functional — the user can also override the default during the planning interview.
-
-#### Step 3: Verify Node.js >= 18
-
-```bash
-node --version
-```
-
-The major version must be 18 or higher. If not, inform the user to upgrade Node.js.
-
-#### Step 4: Clone or Locate the Plugin Repository
-
-```bash
-# If not already cloned:
-git clone https://github.com/seongjinpark-88/multi-agent-multi-harness.git /path/to/mamh
-
-# Verify the plugin manifest exists:
-cat /path/to/mamh/.claude-plugin/plugin.json
-```
-
-The file must exist and contain `"name": "mamh"`.
-
-#### Step 5: Install the Plugin
-
-**Option A — Permanent install (if running inside Claude Code):**
-```
-/plugin marketplace add seongjinpark-88/multi-agent-multi-harness
-/plugin install mamh@mamh-marketplace
-```
-
-**Option B — Session-only (from shell):**
-```bash
-claude --plugin-dir /path/to/multi-agent-multi-harness
-```
-
-#### Step 6: Test with a Simple Project
-
-```bash
-# Create a throwaway test project
-mkdir /tmp/mamh-test && cd /tmp/mamh-test
-git init
-
-# Launch Claude Code with the MAMH plugin loaded
-claude --plugin-dir /path/to/multi-agent-multi-harness
-
-# In Claude Code, trigger MAMH:
-# mamh "Build a simple hello world REST API"
-
-# After Phase 0 completes, verify generated files:
-ls -la .mamh/
-# Expected: session.json, prd.md, tech-spec.md, constraints.md, agents/, tickets/, state/, comms/
-
-ls -la .claude/agents/mamh-*
-# Expected: mamh-orchestrator.md plus specialist agent files
-```
-
-### Testing in Another Project
-
-```bash
-# Navigate to any git-initialized project
-cd /path/to/your/project
-
-# Launch Claude Code with MAMH plugin loaded
-claude --plugin-dir /path/to/multi-agent-multi-harness
-
-# In Claude Code, type:
-mamh "Build a React dashboard with charts and user authentication"
-
-# MAMH will run the planning interview, then you are off to the races.
-
-# Check what was generated:
-ls -la .mamh/
-ls -la .claude/agents/mamh-*
-cat .mamh/agents/registry.json
-```
+No `npm install`. No build step. No dependencies.
 
 ---
 
@@ -337,507 +100,284 @@ cat .mamh/agents/registry.json
 mamh "Build a React dashboard with charts and user authentication"
 ```
 
-That is it. MAMH handles everything:
+That's it. MAMH:
 
-1. **Plans** the project (interview, PRD, tech spec)
-2. **Creates** specialist agents (backend, frontend, reviewer, etc.)
-3. **Generates** tickets organized into milestones
-4. **Executes** tickets in parallel with scope enforcement
-5. **Reviews** completed work (automated build/test checks + optional peer review)
-6. **Delivers** milestone by milestone until the project is complete
+1. Asks 3 quick questions (constraints, execution mode, involvement level)
+2. Auto-generates the full plan (agents, milestones, tickets)
+3. Shows a summary for your approval
+4. Executes tickets in parallel with scope enforcement
+5. Reviews completed work (build/test checks + optional peer review)
+6. Delivers milestone by milestone until the project is complete
 
-You can check progress at any time with `mamh status`, trigger manual review with `mamh review`, advance milestones with `mamh next`, or gracefully stop with `mamh stop`.
+Check progress anytime with `mamh status`. Update the handoff doc with `mamh handoff`. Stop cleanly with `mamh stop`.
 
 ---
 
-## Usage
-
-### Commands
+## Commands
 
 | Command | Slash Command | Description |
 |---------|---------------|-------------|
-| `mamh <description>` | `/mamh-plan` | Start a new project. Runs planning (Phases 0-2), then execution. |
-| `mamh status` | `/mamh-status` | Display the status dashboard with agent roster, ticket board, and progress. |
-| `mamh review` | `/mamh-review` | Manually trigger a review cycle on all completed but unreviewed tickets. |
-| `mamh next` | `/mamh-next` | Advance to the next milestone (after the current one completes). |
-| `mamh resume` | `/mamh-resume` | Resume an interrupted session from the last saved state. |
-| `mamh handoff` | `/mamh-handoff` | Update HANDOFF.md with current project state, progress, decisions, and next steps. |
-| `mamh stop` | `/mamh-stop` | Gracefully shut down all agents, save state, and mark in-progress tickets as pending. |
-| `mamh execute` | `/mamh-execute` | Launch Agent Teams for the current milestone (usually called automatically after planning). |
+| `mamh <description>` | `/mamh-plan` | Start a new project (plan + execute) |
+| `mamh status` | `/mamh-status` | Show dashboard: agents, tickets, progress |
+| `mamh review` | `/mamh-review` | Trigger review on completed tickets |
+| `mamh next` | `/mamh-next` | Advance to the next milestone |
+| `mamh handoff` | `/mamh-handoff` | Update HANDOFF.md with current state |
+| `mamh resume` | `/mamh-resume` | Resume an interrupted session |
+| `mamh stop` | `/mamh-stop` | Gracefully shut down and save state |
+| `mamh execute` | `/mamh-execute` | Launch execution for current milestone |
 
-Running bare `mamh` with no arguments displays a help message listing these commands. Each subcommand is also available as a slash command (`/mamh-<subcommand>`) for direct invocation and tab-completion.
+Bare `mamh` with no arguments shows help.
 
-### Example Session
+---
 
-Here is a complete walkthrough of running MAMH on a real project:
+## Example Session
 
 ```
 mamh "Build a todo app with React frontend and FastAPI backend"
 ```
 
-#### Phase 0: Planning (3 Questions + Plan Approval)
+### Planning (3 questions + approval)
 
 ```
-Analyzing project description...
+Q1: Any hard constraints?
+> Must use PostgreSQL. TypeScript for frontend.
 
-Q1: Any hard constraints I should know about?
-
-> Must use PostgreSQL. Must use TypeScript for the frontend.
-
-Q2: How should agents run during execution?
+Q2: How should agents run?
     [Agent Teams (Recommended) | Subagents]
-
 > Agent Teams
 
-Q3: How involved do you want to be during execution?
+Q3: How involved do you want to be?
     [Autonomous | Milestone checkpoints (Recommended) | Hands-on]
-
 > Milestone checkpoints
 
-Generating plan (analyst + architect + planner agents working)...
+Generating plan...
 
 ================================================================
   MAMH Plan Summary
 ================================================================
-
   Project:     Todo App
   Execution:   Agent Teams
   Involvement: Milestone checkpoints
 
-----------------------------------------------------------------
-  Agent Roster (4 agents)
-----------------------------------------------------------------
-  Agent              | Model  | Owned Paths
-  -------------------|--------|---------------------------
-  mamh-backend       | sonnet | src/api/**, src/db/**, tests/api/**
-  mamh-frontend      | sonnet | src/ui/**, public/**
-  mamh-designer      | sonnet | src/ui/components/**, src/ui/styles/**
-  mamh-reviewer      | opus   | (read-only: all)
+  Agents (4):
+    mamh-backend    | sonnet | src/api/**, src/db/**
+    mamh-frontend   | sonnet | src/ui/**, public/**
+    mamh-designer   | sonnet | src/ui/components/**, src/ui/styles/**
+    mamh-reviewer   | opus   | (read-only: all)
 
-----------------------------------------------------------------
-  Milestones (4 milestones, 17 tickets total)
-----------------------------------------------------------------
-  M001: Project Scaffolding (5 tickets)
-    T001  Setup FastAPI project structure      -> mamh-backend   (no deps)
-    T002  Setup React + TypeScript scaffold    -> mamh-frontend  (no deps)
-    T003  Define shared API types              -> mamh-backend   (no deps)
-    T004  Setup PostgreSQL schema + migrations -> mamh-backend   (deps: T001)
-    T005  Setup design tokens + base styles    -> mamh-designer  (deps: T002)
-
-  M002: Authentication (3 tickets)
-    T006  Implement auth endpoints             -> mamh-backend   (deps: T004)
-    T007  Implement login/signup UI            -> mamh-frontend  (deps: T005, T006)
-    T008  Add JWT middleware + protected routes -> mamh-backend   (deps: T006)
-
-  M003: Core CRUD (5 tickets)
-    T009-T013  Todo CRUD endpoints, list/detail views, forms, filtering
-
-  M004: Polish + Review (4 tickets)
-    T014-T017  Responsive layout, error handling, code review, Docker
-
+  Milestones (4, 17 tickets):
+    M001: Scaffolding     (5 tickets)  T001-T005
+    M002: Authentication  (3 tickets)  T006-T008
+    M003: Core CRUD       (5 tickets)  T009-T013
+    M004: Polish          (4 tickets)  T014-T017
 ================================================================
-  [Approve]  [Modify agents]  [Modify tickets]  [Start over]
-================================================================
-
-Does this plan look good?
 
 > Approve
 
 [MAMH] Planning complete. 4 agents, 17 tickets, 4 milestones.
-[MAMH] Ready to execute. Starting M001: Project Scaffolding.
+[MAMH] Starting M001: Scaffolding.
 ```
 
-#### Phase 3: Execution (with inline progress)
+### Execution (inline progress)
 
 ```
-[MAMH] Executing M001 — Project Scaffolding (5 tickets, agent-teams mode)
-
-[MAMH] T001 approved (mamh-backend) — Setup FastAPI project structure
+[MAMH] Executing M001 — Scaffolding (5 tickets, agent-teams mode)
+[MAMH] T001 approved (mamh-backend)  — Setup FastAPI project structure
 [MAMH] T002 approved (mamh-frontend) — Setup React + TypeScript scaffold
-[MAMH] T003 approved (mamh-backend) — Define shared API types
-[MAMH] T004 approved (mamh-backend) — Setup PostgreSQL schema + migrations
-[MAMH] T005 approved (mamh-designer) — Setup design tokens + base styles
-[MAMH] Milestone M001 complete! 5/5 tickets approved. Merging branches.
+[MAMH] T003 approved (mamh-backend)  — Define shared API types
+[MAMH] T004 approved (mamh-backend)  — Setup PostgreSQL schema
+[MAMH] T005 approved (mamh-designer) — Setup design tokens
+[MAMH] Milestone M001 complete! 5/5 approved. Merging branches.
 
-------------------------------------------------------------
-Next: Milestone M002 — Authentication (3 tickets)
-------------------------------------------------------------
-
-Milestone advance mode: milestone checkpoints
-
-Options:
-  [Continue]  Start M002 with the current roster
-  [Re-plan]   Re-evaluate remaining milestones
-  [Modify]    Change the next milestone's tickets
-  [Stop]      Save state and stop
-
+Options: [Continue] [Re-plan] [Modify] [Stop]
 > Continue
 
 [MAMH] Starting M002 — Authentication (3 tickets)
-[MAMH] T006 approved (mamh-backend) — Implement auth endpoints
-[MAMH] T007 approved (mamh-frontend) — Implement login/signup UI
-[MAMH] T008 approved (mamh-backend) — Add JWT middleware + protected routes
-[MAMH] Milestone M002 complete! 3/3 tickets approved. Merging branches.
+[MAMH] T006 approved (mamh-backend)  — Auth endpoints
+[MAMH] T007 approved (mamh-frontend) — Login/signup UI
+[MAMH] T008 approved (mamh-backend)  — JWT middleware
+[MAMH] Milestone M002 complete! 3/3 approved. Merging branches.
 ...
 ```
 
-The cycle repeats for each milestone until the project is complete.
+---
+
+## How It Works
+
+```
+User: "mamh Build an AI scoring platform"
+         |
+  Phase 0: Planning (progressive disclosure)
+    - 3 quick questions (constraints, execution mode, involvement)
+    - Analyst + architect + planner agents auto-generate full plan
+    - User approves (or modifies) the plan summary
+         |
+  Phase 1-2: File Generation (automatic, no user input)
+    - Agent definition files from templates
+    - Registry with scoped paths
+    - Milestone directories with ticket files
+         |
+  Phase 3: Parallel Execution
+    - Mode A (Agent Teams): persistent teammates, shared task list
+    - Mode B (Subagents): Task-tool batch dispatch, main session orchestrates
+    - Both: scope enforcement, git worktree isolation, inline progress
+         |
+  Phase 4: Review Gates
+    - Auto: build + test + diagnostics + scope check
+    - Peer: reviewer agent examines code quality
+    - User: human approval for critical changes
+         |
+  Phase 5: Milestone Iteration
+    - Archive completed milestone, merge branches
+    - Evaluate roster for next milestone
+    - Advance mode: auto / re-plan / user-decides
+    - Repeat Phases 3-5 until done
+         |
+  Complete → final report in .mamh/logs/project-report.md
+```
 
 ---
 
 ## What Gets Generated
 
-### In Your Project (`.mamh/`)
+### Project State (`.mamh/`)
 
 ```
 .mamh/
-  POLICY.md                              # Shared rules all agents follow
-  prd.md                                 # Product Requirements Document
-  tech-spec.md                           # Technical Specification
-  constraints.md                         # Hard constraints and preferences
-  session.json                           # Project configuration (legacy location)
+  HANDOFF.md                 # Primary context file — what's done, decisions, next steps
+  POLICY.md                  # Shared rules all agents follow
+  prd.md                     # Product Requirements Document
+  tech-spec.md               # Technical Specification
+  constraints.md             # Hard constraints and preferences
+  session.json               # Project configuration (execution mode, review mode, etc.)
   state/
-    mamh-state.json                      # Current phase, milestone, ticket counts
-    session.json                         # Session configuration
+    mamh-state.json          # Current phase, milestone, ticket counts
   agents/
-    registry.json                        # Agent roster with scoped path boundaries
+    registry.json            # Agent roster with scoped path boundaries
   tickets/
     milestones/
-      M001-scaffolding/
-        _milestone.json                  # Milestone metadata and status
-        T001-setup-fastapi.md            # Individual ticket files
-        T002-setup-react.md
-        T003-shared-types.md
-        T004-postgres-schema.md
-        T005-design-tokens.md
-      M002-authentication/
-        _milestone.json
-        T006-auth-endpoints.md
-        T007-login-signup-ui.md
-        T008-jwt-middleware.md
-      M003-core-crud/
+      M001-scaffolding/      # Milestone directories
+        _milestone.json      # Milestone metadata
+        T001-setup-api.md    # Individual ticket files
+        T002-setup-ui.md
+      M002-auth/
         ...
-      M004-polish-review/
-        ...
-    archive/                             # Completed milestone tickets moved here
-      M001-scaffolding/
-        ...
-  reviews/
-    T001-review.json                     # Review results per ticket
-    T002-review.json
-    ...
+    archive/                 # Completed milestones moved here
   comms/
-    decisions.md                         # Architectural decisions log
-    changelog.md                         # Change log for notable events
-  logs/
-    coordination/                        # Agent-to-agent message logs
-    errors/                              # Error and failure logs
-    scope-violations.md                  # Scope enforcement violation log
-    M001-summary.md                      # Milestone completion summaries
-    project-report.md                    # Final project report (on completion)
+    decisions.md             # Architectural decisions log
+    changelog.md             # Change log
+  reviews/                   # Review results per ticket
+  logs/                      # Milestone summaries, errors, scope violations
 ```
 
 ### Agent Definitions (`.claude/agents/`)
 
 ```
 .claude/agents/
-  mamh-orchestrator.md       # Team lead — delegate mode, no code tools
-  mamh-backend.md            # Backend engineer — APIs, database, server logic
-  mamh-frontend.md           # Frontend engineer — UI, state, routing, styling
-  mamh-designer.md           # UI/UX designer — visual design, component arch
-  mamh-reviewer.md           # Code reviewer — read-only, quality gatekeeper
-  ...                        # Additional agents as needed per project
+  mamh-orchestrator.md       # Team lead (delegate mode, no code tools)
+  mamh-backend.md            # Backend engineer
+  mamh-frontend.md           # Frontend engineer
+  mamh-reviewer.md           # Code reviewer (read-only)
+  ...                        # Additional agents per project
 ```
-
-Each agent file defines:
-- Role description and responsibilities
-- Allowed tools (Read, Write, Edit, Bash, Glob, Grep, etc.)
-- Disallowed tools (prevents out-of-scope actions)
-- Owned paths (read-write glob patterns)
-- Read-only paths
-- Forbidden paths
-- Communication protocol
-- Definition of done
-- Stop conditions (when to escalate instead of looping)
 
 ---
 
 ## Agent Templates
 
-MAMH ships with 8 agent templates. During Phase 1, the architect selects which agents a project needs and customizes their scope. Not every project uses every template.
+MAMH ships with 8 templates. The architect selects and customizes them per project.
 
-| Template | Default Model | Tools | Scope | Description |
-|----------|--------------|-------|-------|-------------|
-| **backend** | sonnet | Read, Write, Edit, Bash, Glob, Grep | Server-side code | APIs, database, server logic, server-side tests. Cannot touch frontend files. |
-| **frontend** | sonnet | Read, Write, Edit, Bash, Glob, Grep | Client-side code | UI components, state management, routing, styling, client-side tests. Cannot touch server files. |
-| **reviewer** | opus | Read, Glob, Grep, Bash (read-only) | Read-only: all | Code review, quality gates, security checks. Cannot write or edit any files. Bash restricted to running tests and linters only. |
-| **pm** | sonnet | Read, Write, Glob, Grep | Docs only | Requirements management, status reports, ticket tracking. Cannot run commands or edit source code. |
-| **designer** | sonnet | Read, Write, Edit, Bash, Glob, Grep | UI components + styles | Visual design, design tokens, component architecture, responsive layouts, accessibility. |
-| **researcher** | sonnet | Read, WebFetch, WebSearch, Glob, Grep | External + read-only project | API documentation research, library evaluation, solution investigation. Cannot modify project files. |
-| **content** | haiku | Read, Write, Glob, Grep | Content paths | User-facing copy, documentation, error messages, help text. Cannot edit source code or run commands. |
-| **devops** | sonnet | Read, Write, Edit, Bash, Glob, Grep | Infrastructure | CI/CD pipelines, Dockerfiles, deployment configs, automation scripts. Cannot modify application source code. |
+| Template | Model | Description |
+|----------|-------|-------------|
+| **backend** | sonnet | APIs, database, server logic. Cannot touch frontend files. |
+| **frontend** | sonnet | UI, state, routing, styling. Cannot touch server files. |
+| **reviewer** | opus | Code review, quality gates. Read-only — cannot write any files. |
+| **pm** | sonnet | Requirements, status reports. Docs only — no source code. |
+| **designer** | sonnet | Design tokens, components, responsive layouts. |
+| **researcher** | sonnet | API docs research, library evaluation. Read-only + web access. |
+| **content** | haiku | User-facing copy, documentation, help text. |
+| **devops** | sonnet | CI/CD, Docker, deployment configs. Cannot modify app source. |
 
-### The Orchestrator
+### Orchestrator
 
-**Agent Teams mode:** The **mamh-orchestrator** agent runs in **delegate mode**:
-- **Allowed**: Read, Glob, Grep, Bash, TeamCreate, SendMessage, AskUserQuestion
-- **Disallowed**: Write, Edit, NotebookEdit, Task
-- **Model**: opus
-- **Role**: Coordination only. Distributes tickets, monitors progress, triggers reviews, manages milestones, provisions new agents. Never writes code directly.
-
-**Subagent mode:** There is no separate orchestrator agent. The **main session** acts as orchestrator, dispatching tickets via the Task tool in dependency-ordered parallel batches and collecting results via file-based communication.
+- **Agent Teams mode:** The `mamh-orchestrator` agent runs in delegate mode (opus, no Write/Edit tools). Coordinates all other agents.
+- **Subagent mode:** No separate orchestrator. The main session orchestrates via Task tool dispatches.
 
 ---
 
 ## Configuration
 
-All configuration is set during the Phase 0 planning interview and stored in `.mamh/state/session.json`. You can also set defaults in the plugin manifest (`.claude-plugin/plugin.json`).
+Set during planning (Question 3 maps to smart defaults). Stored in `.mamh/session.json`.
+
+### Involvement Level (Question 3)
+
+| Choice | reviewMode | milestoneAdvanceMode | milestoneGranularity |
+|--------|-----------|---------------------|---------------------|
+| **Autonomous** | auto | auto-advance | coarse |
+| **Milestone checkpoints** | auto | user-decides | medium |
+| **Hands-on** | user | user-decides | fine |
 
 ### Execution Mode
 
-Controls how Phase 3 execution is performed.
+| Mode | Mechanism | Requires |
+|------|-----------|----------|
+| `agent-teams` | TeamCreate + SendMessage, orchestrator agent | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
+| `subagents` | Task tool parallel batch dispatch, main session orchestrates | Nothing extra |
 
-| Mode | Mechanism | Orchestrator | Communication | Requires |
-|------|-----------|-------------|---------------|----------|
-| `agent-teams` | TeamCreate + SendMessage | `mamh-orchestrator.md` agent | Native messaging | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
-| `subagents` | Task tool parallel dispatches | Main session | File-based (`.mamh/comms/`) | Nothing extra |
+Default: auto-detected from env var. Overridable during planning.
 
-**Default:** `agent-teams` if env var is set, `subagents` otherwise. Auto-detected at project init, overridable during planning interview.
+### Other Settings
 
-### Agent Approval Mode
-
-Controls whether the orchestrator can create new agents during execution.
-
-| Mode | Behavior |
-|------|----------|
-| `auto` | Orchestrator creates agents without asking. Logs the decision. |
-| `suggest` | Orchestrator proposes the new agent with rationale. Waits for user approval. **(default)** |
-| `locked` | No new agents after Phase 1. Tickets are assigned to the closest existing agent. |
-
-### Milestone Advance Mode
-
-Controls what happens when a milestone completes.
-
-| Mode | Behavior |
-|------|----------|
-| `auto-advance` | Immediately start the next milestone. No pause. |
-| `re-plan` | Planner agent re-evaluates remaining milestones based on what was learned. May reorder, merge, split, or add milestones. |
-| `user-decides` | Pause and present the user with options: Continue, Re-plan, Modify, Stop. **(default)** |
-
-### Review Mode
-
-Controls how completed tickets are validated.
-
-| Mode | Behavior |
-|------|----------|
-| `auto` | Build + test + diagnostics + scope check. All pass = approved. Any fail = rejected with details. **(default)** |
-| `peer` | After auto checks pass, a reviewer agent examines code quality, security, and test coverage. |
-| `user` | After auto (and optionally peer) checks pass, the ticket is flagged for human approval. |
-
-### Milestone Granularity
-
-Controls how tickets are grouped into milestones.
-
-| Granularity | Tickets per Milestone | Best For |
-|-------------|----------------------|----------|
-| `fine` | 1-3 | Rapid iteration, frequent checkpoints |
-| `medium` | 4-8 | Balanced delivery **(default)** |
-| `coarse` | 9+ | Large batches, less interruption |
+| Setting | Values | Default |
+|---------|--------|---------|
+| `agentApprovalMode` | `auto` / `suggest` / `locked` | `suggest` |
+| `milestoneAdvanceMode` | `auto-advance` / `re-plan` / `user-decides` | `user-decides` |
+| `reviewMode` | `auto` / `peer` / `user` | `auto` |
+| `milestoneGranularity` | `fine` / `medium` / `coarse` | `medium` |
 
 ---
 
-## Hooks (Scope Enforcement)
+## Hooks
 
-MAMH uses three hooks to enforce team discipline. They are configured in `hooks/hooks.json` and execute scripts from `scripts/`.
+Three hooks enforce team discipline. Configured in `hooks/hooks.json`.
 
-**Mode awareness:** `scope-guard` fires in both execution modes. `review-gate` (TaskCompleted) and `keep-working` (TeammateIdle) only fire in Agent Teams mode — in Subagent mode, the main session handles review and dispatch directly.
+| Hook | Event | Mode | What It Does |
+|------|-------|------|-------------|
+| **scope-guard.mjs** | PreToolUse (Write/Edit) | Both | Blocks writes outside agent's owned paths |
+| **review-gate.mjs** | TaskCompleted | Agent Teams only | Enforces acceptance criteria + review mode |
+| **keep-working.mjs** | TeammateIdle | Agent Teams only | Redirects idle agents to their next ticket |
 
-### scope-guard.mjs
-
-**Event**: `PreToolUse` (fires on every `Write` and `Edit` operation)
-
-Reads the agent's allowed paths from `.mamh/agents/registry.json` and checks whether the target file falls within scope.
-
-- **Allow** (exit 0): File is within the agent's owned paths.
-- **Block** (exit 2): File is outside scope. Returns a message identifying the violation and suggesting which agent owns the target path.
-- **Fail open** (exit 0): If the registry does not exist or the agent is not registered, the write is allowed. This prevents blocking legitimate operations before MAMH is fully initialized.
-
-Example blocked message:
-```
-SCOPE VIOLATION: mamh-frontend cannot write to /project/src/api/routes/auth.py.
-This file belongs to mamh-backend's scope. Send a message to mamh-backend instead.
-```
-
-### review-gate.mjs
-
-**Event**: `TaskCompleted` (fires when an agent marks a ticket as done)
-
-Reads the ticket file, parses acceptance criteria checkboxes, and enforces the configured review mode:
-
-- **Auto mode**: If all `- [x]` checkboxes are checked, approve. If any `- [ ]` remain unchecked, block with a list of unmet criteria.
-- **Peer mode**: Block and route to the reviewer agent regardless of checkbox state.
-- **User mode**: Block and flag for human approval.
-
-### keep-working.mjs
-
-**Event**: `TeammateIdle` (fires when an agent reports it has nothing to do)
-
-Scans the current milestone's tickets for any still assigned to the idle agent that are `pending` or `in_progress`. If found:
-
-- **Block idle** (exit 2): Directs the agent to its next ticket with a specific message.
-- **Allow idle** (exit 0): Agent genuinely has no remaining work in this milestone.
+In Subagent mode, the main session handles review and dispatch directly — `review-gate` and `keep-working` are not needed.
 
 ---
 
 ## Git Worktree Isolation
 
-Each agent with write permission operates in its own git worktree, branched from `main`. This eliminates merge conflicts during parallel execution.
+Each writing agent gets its own git branch via worktrees. No merge conflicts during parallel work.
 
-### How It Works
+```
+Phase 3 start:  git worktree add .worktrees/mamh-backend -b mamh/backend main
+                 git worktree add .worktrees/mamh-frontend -b mamh/frontend main
 
-1. **Setup** (Phase 3 launch): For each writing agent, the orchestrator creates a worktree:
-   ```bash
-   git worktree add .worktrees/mamh-backend -b mamh/backend main
-   git worktree add .worktrees/mamh-frontend -b mamh/frontend main
-   ```
+During work:     mamh-backend writes to .worktrees/mamh-backend/src/api/...
+                 mamh-frontend writes to .worktrees/mamh-frontend/src/ui/...
 
-2. **Execution**: Each agent's working directory is set to its worktree. The backend agent writes to `.worktrees/mamh-backend/src/api/...` while the frontend agent writes to `.worktrees/mamh-frontend/src/ui/...`. They never touch the same files.
+Milestone end:   git merge mamh/backend --no-ff
+                 git merge mamh/frontend --no-ff
+                 git worktree remove .worktrees/mamh-backend
+```
 
-3. **Merge** (milestone completion): The orchestrator merges each agent's branch back to main:
-   ```bash
-   git merge mamh/backend --no-ff -m "M001: merge mamh-backend changes"
-   git merge mamh/frontend --no-ff -m "M001: merge mamh-frontend changes"
-   ```
-
-4. **Cleanup**: Worktrees are removed after successful merge. Fresh worktrees are created for the next milestone.
-
-### Conflict Resolution
-
-If a merge conflict occurs (rare, because scope enforcement prevents agents from touching the same files):
-
-1. The orchestrator identifies which agents' changes conflict.
-2. It delegates conflict resolution to the agent that owns the conflicting file.
-3. If ownership is ambiguous, the orchestrator asks the user.
+Conflicts are rare (scope enforcement prevents shared file access). When they occur, the orchestrator delegates resolution to the file's owner.
 
 ---
 
 ## POLICY.md -- Shared Rulebook
 
-Every MAMH project gets a `.mamh/POLICY.md` file that all agents read at session start. It is generated from the template at `templates/POLICY.md` with project-specific values substituted in.
+Every project gets `.mamh/POLICY.md` — a rulebook all agents read at session start. Generated from `templates/POLICY.md` with project-specific values.
 
-### What It Defines
+**Covers:** agent identity, communication protocol, file ownership, code standards, ticket workflow, review requirements, safety rules, error handling, and coordination patterns.
 
-| Section | Content |
-|---------|---------|
-| Agent Identity & Scope | Who each agent is, what files they own, how to check ownership |
-| Communication Protocol | Message format, urgency levels, escalation path |
-| File Ownership & Conflict Resolution | Rules for shared files, priority ordering, interface contracts |
-| Code Standards | Project conventions, commit hygiene, dependency management |
-| Ticket Workflow | Lifecycle states, claiming rules, definition of done |
-| Review Requirements | Auto, peer, and user review processes |
-| Constraints | Hard rules that cannot be violated |
-| Technology Stack | Approved technologies, no unauthorized additions |
-| Safety & Security | Rules that apply to all agents at all times (no secrets in code, parameterized queries, input validation) |
-| Session Protocol | What every agent does at session start and end |
-| Error Handling & Recovery | Diagnose, retry, escalate procedures |
-| Coordination Patterns | Recipes for shared interface changes, handoffs, blocking dependencies |
-
-### Template Placeholders
-
-| Placeholder | Source |
-|-------------|--------|
-| `{{PROJECT_NAME}}` | Derived from user's project description |
-| `{{TIMESTAMP}}` | Generation time |
-| `{{AGENT_ROSTER}}` | From `.mamh/agents/registry.json` (filled after Phase 1) |
-| `{{CONSTRAINTS}}` | User interview answers + `.mamh/constraints.md` |
-| `{{TECHNOLOGY_STACK}}` | Tech spec + user preferences |
-| `{{CODE_STANDARDS}}` | Detected from codebase or user-specified |
-
-### Customization
-
-- **Edit the template** (`templates/POLICY.md`) to change policy for all future projects.
-- **Edit the generated file** (`.mamh/POLICY.md`) to change policy for one project.
-- Changes take effect immediately because agents re-read the file at every session start.
-
----
-
-## Plugin Repository Structure
-
-```
-mamh/
-  .claude-plugin/
-    plugin.json                  # Plugin manifest: name, version, skills, agents,
-                                 #   hooks, scripts, templates, config, requirements
-
-  skills/
-    mamh/
-      SKILL.md                   # Main entry point — help, routing, directory reference
-    plan/
-      SKILL.md                   # /mamh-plan — Phases 0-2 (planning, agents, tickets)
-    execute/
-      SKILL.md                   # /mamh-execute — Phase 3 (Agent Teams execution)
-    review/
-      SKILL.md                   # /mamh-review — Phase 4 (review gates)
-    next/
-      SKILL.md                   # /mamh-next — Phase 5 (milestone iteration)
-    status/
-      SKILL.md                   # /mamh-status — Project dashboard
-    resume/
-      SKILL.md                   # /mamh-resume — Resume interrupted session
-    handoff/
-      SKILL.md                   # /mamh-handoff — Update HANDOFF.md
-    stop/
-      SKILL.md                   # /mamh-stop — Graceful shutdown
-
-  agents/
-    mamh-orchestrator.md         # Team lead agent definition — delegate mode,
-                                 #   no Write/Edit tools, coordinates all other agents
-
-  hooks/
-    hooks.json                   # Hook configuration:
-                                 #   - PreToolUse (Write/Edit) -> scope-guard.mjs
-                                 #   - TaskCompleted -> review-gate.mjs
-                                 #   - TeammateIdle -> keep-working.mjs
-
-  scripts/
-    scope-guard.mjs              # Scope enforcement hook script (242 lines)
-    review-gate.mjs              # Review gate hook script (279 lines)
-    keep-working.mjs             # Keep-working hook script (262 lines)
-    init-project.mjs             # Project initialization script (218 lines)
-
-  templates/
-    POLICY.md                    # Shared rulebook template with {{PLACEHOLDERS}}
-    agents/
-      backend.md                 # Backend engineer template
-      frontend.md                # Frontend engineer template
-      reviewer.md                # Code reviewer template (read-only)
-      pm.md                      # Project manager template (docs only)
-      designer.md                # UI/UX designer template
-      researcher.md              # External researcher template (read-only)
-      content.md                 # Content writer template
-      devops.md                  # DevOps/infrastructure template
-
-  docs/
-    POLICY.md                    # Documentation explaining the policy system
-
-  CLAUDE.md                      # Developer guide for LLMs working on this repo
-  STATUS.md                      # Project status, changelog, design decisions
-  README.md                      # This file
-  package.json                   # npm metadata (no runtime dependencies)
-  LICENSE                        # MIT License
-```
-
-### Key Design Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| **Zero external dependencies** | All scripts use Node.js built-ins only. No `npm install`, no version conflicts, faster cold start. |
-| **Template-based agent generation** | Different projects need different specialists. Templates are customized per-project during Phase 1. |
-| **Portable plugin paths** | Hooks use `${CLAUDE_PLUGIN_ROOT}` so the plugin works regardless of where it is installed. |
-| **Project-scoped state** | All state lives in `.mamh/` inside the project, not in the plugin directory. Multiple projects can use MAMH simultaneously. |
-| **Orchestrator as pure coordinator** | The orchestrator has no Write/Edit tools. It cannot do work directly. This enforces delegation discipline. |
-| **ESM modules** | All scripts are `.mjs` (ECMAScript modules). No CommonJS. |
-| **Dual execution mode** | Agent Teams requires an experimental env var not available to all users. Subagent mode (Task tool batch dispatch) provides a fully functional fallback with no extra requirements. |
+**Customizable:** Edit `templates/POLICY.md` for all future projects, or `.mamh/POLICY.md` for one project. Changes take effect immediately (agents re-read it each session).
 
 ---
 
@@ -846,169 +386,52 @@ mamh/
 ### Plugin Not Loading
 
 ```bash
-# Option A: If installed via marketplace, check it's enabled:
-/plugin  # Go to "Installed" tab and verify mamh is listed
+# Verify plugin manifest is valid
+node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/plugin.json','utf-8')); console.log('OK')"
 
-# Option B: If using --plugin-dir, make sure you're passing the correct path:
+# If using --plugin-dir, check the path:
 claude --plugin-dir /path/to/multi-agent-multi-harness
-
-# Verify the plugin manifest is valid JSON:
-node -e "JSON.parse(require('fs').readFileSync('/path/to/multi-agent-multi-harness/.claude-plugin/plugin.json','utf-8')); console.log('OK')"
-
-# If marketplace install doesn't work, try clearing the cache:
-# rm -rf ~/.claude/plugins/cache
-# Then restart Claude Code and reinstall.
 ```
 
 ### Agent Teams Not Working
 
-If you chose Agent Teams mode but it is not working:
-
 ```bash
-# Ensure the environment variable is set
-echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
-# Must output: 1
+echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS  # Should output: 1
 
 # If not set:
 export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
-
-# Add to your shell profile for persistence:
-echo 'export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1' >> ~/.zshrc
-# or
-echo 'export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1' >> ~/.bashrc
 ```
 
-**Alternative:** Switch to Subagent mode by editing `.mamh/session.json`:
-```bash
-# Change executionMode to subagents
-jq '.executionMode = "subagents"' .mamh/session.json > .mamh/session.tmp && mv .mamh/session.tmp .mamh/session.json
-```
-Subagent mode provides the same functionality without requiring the experimental env var.
+Or switch to Subagent mode: edit `.mamh/session.json` and set `"executionMode": "subagents"`.
 
 ### Scope Violations
 
-If an agent is unexpectedly blocked from writing:
+Check the agent's paths in `.mamh/agents/registry.json`. Patterns use glob syntax (`**` matches any path segments). Common cause: pattern doesn't include the target subdirectory.
+
+### Resuming After Interruption
 
 ```bash
-# Check the agent's allowed paths in the registry
-cat .mamh/agents/registry.json | python3 -m json.tool
-
-# Verify the path patterns match the target file
-# Patterns use glob syntax: ** matches any path segments, * matches within a segment
-```
-
-Common causes:
-- Path pattern does not include the subdirectory (e.g., `src/api/**` does not match `src/api.py` at root level)
-- Agent name in the registry does not match the agent's actual name
-- Registry file is missing or has invalid JSON
-
-### Agents Stopping Early
-
-The `keep-working.mjs` hook should prevent agents from going idle when they still have assigned tickets. If agents are stopping:
-
-```bash
-# Check that the hook is registered
-cat /path/to/mamh/hooks/hooks.json
-
-# Verify the hook script is executable
-ls -la /path/to/mamh/scripts/keep-working.mjs
-
-# Test the hook directly
-echo '{"agent_name":"mamh-backend"}' | node /path/to/mamh/scripts/keep-working.mjs
-```
-
-### Tickets Not Completing (Review Gate Blocking)
-
-```bash
-# Check the review mode
-cat .mamh/state/session.json | python3 -c "import sys,json; print(json.load(sys.stdin).get('reviewMode','auto'))"
-
-# Check unchecked acceptance criteria in a ticket
-grep -c '\- \[ \]' .mamh/tickets/milestones/M001-*/T001-*.md
-
-# If using peer or user review mode, the review gate intentionally blocks
-# until the reviewer agent or user approves
-```
-
-### Resuming After an Interruption
-
-```bash
-# Check saved state
-cat .mamh/state/mamh-state.json | python3 -m json.tool
-
-# Resume from where you left off
-# In Claude Code, type:
 mamh resume
 ```
 
-The resume protocol:
-1. Reads `.mamh/state/mamh-state.json` to determine the last phase and status.
-2. Resets any `in_progress` tickets to `pending` (the agent may have lost context).
-3. Restores execution based on `executionMode`:
-   - **Agent Teams:** Re-launches Agent Teams with the current roster and remaining tickets.
-   - **Subagents:** Rebuilds the dependency graph and recomputes parallel batches from remaining tickets.
-
-### Init Script Errors
-
-```bash
-# Run the init script manually to see detailed output
-node /path/to/mamh/scripts/init-project.mjs /path/to/your/project
-
-# The script is idempotent — safe to run multiple times.
-# It will skip files/directories that already exist.
-```
+Reads HANDOFF.md for context, resets in-progress tickets to pending, and restores execution in the configured mode.
 
 ---
 
 ## Contributing
 
-1. **Fork the repository** and clone your fork.
-
-2. **Read `CLAUDE.md`** first. It contains the complete developer guide: coding standards, architectural decisions, naming conventions, and testing procedures.
-
-3. **Read `STATUS.md`** for current project status and design decisions.
-
-4. **Follow these coding standards**:
-   - All scripts must be ESM (`.mjs`), not CommonJS
-   - Zero external dependencies (Node.js built-ins only)
-   - Use `${CLAUDE_PLUGIN_ROOT}` for portable paths in hooks
-   - Use `{{PLACEHOLDER}}` syntax in templates
-   - State files go in `.mamh/` (project-scoped), never in the plugin directory
-   - Test in a separate project, not in the plugin repo itself
-
-5. **Test your changes**:
-   ```bash
-   # Create a test project
-   mkdir /tmp/mamh-test && cd /tmp/mamh-test && git init
-
-   # Launch Claude Code with your fork loaded as a plugin
-   claude --plugin-dir /path/to/your/fork
-
-   # Run MAMH and verify your changes work
-   mamh "Build a simple REST API"
-   ```
-
-6. **Submit a pull request** with a clear description of what changed and why.
-
-### Adding a New Agent Template
-
-1. Create `templates/agents/<role>.md` with YAML frontmatter + markdown instructions
-2. Include placeholders: `{{PROJECT_NAME}}`, `{{AGENT_NAME}}`, `{{ALLOWED_PATHS}}`, `{{READ_ONLY_PATHS}}`, `{{FORBIDDEN_PATHS}}`, `{{CONSTRAINTS}}`
-3. Define: role, responsibilities, non-responsibilities, tools, scope, communication protocol, definition of done, stop conditions
-4. Update documentation in the relevant `skills/*/SKILL.md` files and this README
-
-### Modifying Hooks
-
-1. Edit the hook script in `scripts/`
-2. Test directly: `echo '{"agent_name":"mamh-backend","tool_name":"Write","tool_input":{"file_path":"/test"}}' | node scripts/scope-guard.mjs`
-3. Verify exit codes: 0 = allow, 2 = block, 1 = error
+1. Read `CLAUDE.md` (developer guide) and `STATUS.md` (project status)
+2. All scripts: ESM (`.mjs`), zero external dependencies, Node.js built-ins only
+3. Use `${CLAUDE_PLUGIN_ROOT}` for portable paths, `{{PLACEHOLDER}}` in templates
+4. Test in a separate project: `mkdir /tmp/test && cd /tmp/test && git init && claude --plugin-dir /path/to/mamh`
+5. Submit a PR with clear description
 
 ---
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for the full text.
+MIT License. See [LICENSE](LICENSE).
 
 ---
 
-**MAMH v0.1.3** -- Built for Claude Code. Zero dependencies. Maximum autonomy. Agent Teams or Subagents — your choice.
+**MAMH v0.1.5** — Built for Claude Code. Zero dependencies. 3 questions to autonomous execution.
