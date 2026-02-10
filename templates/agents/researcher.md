@@ -151,6 +151,14 @@ A research task is complete when ALL of the following are true:
 
 ---
 
+## Model Usage
+
+- Use **haiku** when: reading files, simple search queries
+- Use **your assigned model** for: research synthesis, API evaluation, solution investigation
+- Request **opus** from orchestrator when: complex technical analysis or architecture evaluation needed
+
+---
+
 ## Stop Conditions
 
 Stop working and escalate if any of the following occur:

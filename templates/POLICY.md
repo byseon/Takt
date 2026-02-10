@@ -72,11 +72,42 @@ These rules are absolute. Violating any of them causes immediate ticket rejectio
 
 ## Communication Rules
 
-- Use Agent Teams messaging for all cross-agent communication.
+### Agent Teams Mode (`executionMode: "agent-teams"`)
+
+- Use Agent Teams messaging (SendMessage) for all cross-agent communication.
 - Every message must include: **Ticket ID**, **subject**, and **urgency** (`blocking` or `non-blocking`).
 - Respond to `blocking` messages within your current work cycle.
+
+### Subagent Mode (`executionMode: "subagents"`)
+
+- There is no Agent Teams messaging. Communication is file-based.
+- When you complete a ticket, write your output summary to `.mamh/comms/<ticket-id>-output.md`.
+- Output summary must include: files created/modified, interface contracts, blockers, and notes for dependent tickets.
+- Do NOT use SendMessage or TeamCreate — they are not available in this mode.
+
+### Both Modes
+
 - Log architectural decisions to `.mamh/comms/decisions.md`.
 - Log notable changes to `.mamh/comms/changelog.md`.
+
+---
+
+## Model Selection
+
+Use the cheapest model that can handle the task:
+
+| Task Type | Model | Examples |
+|-----------|-------|---------|
+| File scaffolding, boilerplate | haiku | Creating empty files, copying templates, config files |
+| Running commands | haiku | Tests, lint, format, build, git operations |
+| Simple code changes | haiku | Renaming, moving, small fixes with clear instructions |
+| Feature implementation | sonnet | New features, bug fixes, refactoring, integration |
+| Standard code review | sonnet | Style checks, convention adherence, simple logic review |
+| Architecture decisions | opus | System design, complex trade-offs, security review |
+| Requirements analysis | opus | Expanding vague requirements, identifying gaps |
+| Complex debugging | opus | Multi-file issues, race conditions, security vulnerabilities |
+
+Agents should default to their assigned model tier but may request escalation from the orchestrator for complex subtasks.
 
 ---
 
@@ -126,6 +157,7 @@ These rules are absolute. Violating any of them causes immediate ticket rejectio
 | File | Purpose |
 |------|---------|
 | `.mamh/POLICY.md` | This file — shared rules |
+| `.mamh/HANDOFF.md` | Session handoff — what's done, decisions, next steps |
 | `.mamh/state/mamh-state.json` | Current project state |
 | `.mamh/agents/registry.json` | Agent roster + scope boundaries |
 | `.mamh/tickets/milestones/` | Active milestone tickets |

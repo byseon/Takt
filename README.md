@@ -4,6 +4,15 @@
 
 MAMH is a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that replaces the single-LLM-does-everything paradigm with a coordinated team of purpose-built specialists. Instead of one context window juggling backend, frontend, testing, and deployment, MAMH generates a team of agents — each with scoped file access, defined responsibilities, and restricted tools — that work in parallel through a ticket-based workflow with review gates, milestone-driven delivery, and scope enforcement.
 
+MAMH supports two execution modes:
+
+| Mode | How It Works | Best For |
+|------|-------------|----------|
+| **Agent Teams** | Persistent teammates via `TeamCreate` + `SendMessage`, shared task list, native messaging | Users with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` enabled |
+| **Subagents** | Task-tool parallel batch dispatch, main session orchestrates, file-based communication | Everyone — no experimental features required |
+
+The execution mode is chosen during planning and can be changed between milestones.
+
 ```
                               You say:
                "mamh: Build an AI communication platform"
@@ -82,15 +91,15 @@ User: "mamh: Build an AI scoring platform"
          |    - Ticket board presented to user
          |
   +------v------+
-  | Agent Teams  |  <-- Claude Code native multi-agent execution
+  | Execution    |  <-- Agent Teams OR Subagent mode (chosen during planning)
   +------+------+
          |
          |  Phase 3: Parallel Execution
-         |    - Orchestrator distributes tickets to specialist agents
-         |    - Agents work in parallel on independent tickets
-         |    - Scope guard hook blocks out-of-bounds writes
-         |    - Keep-working hook prevents agents from stopping early
-         |    - Agents coordinate via messaging for shared interfaces
+         |    Mode A (Agent Teams): Persistent teammates, shared task list, native messaging
+         |    Mode B (Subagents):   Task-tool batch dispatch, main session orchestrates
+         |    - Both: Agents work in parallel on independent tickets
+         |    - Both: Scope guard hook blocks out-of-bounds writes
+         |    - Both: Git worktree isolation prevents merge conflicts
          |
          |  Phase 4: Review Gates
          |    - Auto: build + test + diagnostics + scope check
@@ -115,13 +124,13 @@ User: "mamh: Build an AI scoring platform"
 mamh/                              <-- Plugin repository (you install this)
   .claude-plugin/plugin.json       <-- Plugin manifest
   skills/mamh/SKILL.md             <-- Main skill entry point (help + routing)
-  skills/plan/SKILL.md             <-- /mamh:plan (Phases 0-2)
-  skills/execute/SKILL.md          <-- /mamh:execute (Phase 3)
-  skills/review/SKILL.md           <-- /mamh:review (Phase 4)
-  skills/next/SKILL.md             <-- /mamh:next (Phase 5)
-  skills/status/SKILL.md           <-- /mamh:status (dashboard)
-  skills/resume/SKILL.md           <-- /mamh:resume (resume protocol)
-  skills/stop/SKILL.md             <-- /mamh:stop (stop protocol)
+  skills/plan/SKILL.md             <-- /mamh-plan (Phases 0-2)
+  skills/execute/SKILL.md          <-- /mamh-execute (Phase 3)
+  skills/review/SKILL.md           <-- /mamh-review (Phase 4)
+  skills/next/SKILL.md             <-- /mamh-next (Phase 5)
+  skills/status/SKILL.md           <-- /mamh-status (dashboard)
+  skills/resume/SKILL.md           <-- /mamh-resume (resume protocol)
+  skills/stop/SKILL.md             <-- /mamh-stop (stop protocol)
   agents/mamh-orchestrator.md      <-- Team lead (delegate mode, no code tools)
   templates/agents/*.md            <-- 8 agent templates (backend, frontend, etc.)
   templates/POLICY.md              <-- Shared rulebook template
@@ -153,9 +162,9 @@ your-project/                      <-- Your project (MAMH writes here at runtime
 | Requirement | Details |
 |-------------|---------|
 | **Claude Code** | Latest version. MAMH is a Claude Code plugin. |
-| **Agent Teams** | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` must be set in your environment. This is an experimental Claude Code feature that enables multi-agent orchestration. |
 | **Node.js** | >= 18.0.0. Required for hook scripts (all ESM, zero external deps). |
 | **Git** | Required for worktree isolation. Each agent gets its own branch. |
+| **Agent Teams** *(optional)* | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` enables Agent Teams execution mode. Without it, MAMH uses Subagent mode (fully functional, no experimental features needed). |
 
 ### Verify Requirements
 
@@ -169,19 +178,23 @@ node --version  # Must be >= 18.0.0
 # Check Git
 git --version
 
-# Check Agent Teams is enabled
-echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS  # Should print "1"
+# (Optional) Check Agent Teams availability
+echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS  # "1" = Agent Teams mode available
 ```
 
-If Agent Teams is not enabled:
+### Enabling Agent Teams Mode (Optional)
+
+Agent Teams mode uses persistent teammate sessions with shared task lists and native messaging. If you want to use it:
 
 ```bash
 # Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
 export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
-# Or set it for the current session
+# Or set it for the current session only
 export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 ```
+
+If Agent Teams is not enabled, MAMH automatically defaults to **Subagent mode**, which dispatches tickets via the Task tool in dependency-ordered parallel batches. Both modes produce the same results — the difference is in the execution mechanism.
 
 ---
 
@@ -199,7 +212,7 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 /plugin install mamh@mamh-marketplace
 
 # Done. The plugin persists across sessions.
-# Skills available as: /mamh:<command>
+# Skills available as: /mamh-<command>
 ```
 
 #### Option B: Development / One-Off Testing
@@ -232,20 +245,15 @@ claude --version
 
 If this fails, Claude Code is not installed. Stop and inform the user.
 
-#### Step 2: Verify Agent Teams is Enabled
+#### Step 2: Check Agent Teams Availability (Optional)
 
 ```bash
 # Check the environment variable
 echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
 ```
 
-Expected output: `1`
-
-If the variable is not set or is not `1`, inform the user:
-
-> "MAMH requires Claude Code Agent Teams. Please enable it by running:
-> `export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
-> Add this to your shell profile for persistence."
+If the variable is set to `1`, MAMH will default to **Agent Teams mode** (persistent teammates).
+If not set, MAMH will default to **Subagent mode** (Task-tool batch dispatch). Both modes are fully functional — the user can also override the default during the planning interview.
 
 #### Step 3: Verify Node.js >= 18
 
@@ -346,19 +354,18 @@ You can check progress at any time with `mamh status`, trigger manual review wit
 
 ### Commands
 
-| Command | Description |
-|---------|-------------|
 | Command | Slash Command | Description |
 |---------|---------------|-------------|
-| `mamh <description>` | `/mamh:plan` | Start a new project. Runs planning (Phases 0-2), then execution. |
-| `mamh status` | `/mamh:status` | Display the status dashboard with agent roster, ticket board, and progress. |
-| `mamh review` | `/mamh:review` | Manually trigger a review cycle on all completed but unreviewed tickets. |
-| `mamh next` | `/mamh:next` | Advance to the next milestone (after the current one completes). |
-| `mamh resume` | `/mamh:resume` | Resume an interrupted session from the last saved state. |
-| `mamh stop` | `/mamh:stop` | Gracefully shut down all agents, save state, and mark in-progress tickets as pending. |
-| `mamh execute` | `/mamh:execute` | Launch Agent Teams for the current milestone (usually called automatically after planning). |
+| `mamh <description>` | `/mamh-plan` | Start a new project. Runs planning (Phases 0-2), then execution. |
+| `mamh status` | `/mamh-status` | Display the status dashboard with agent roster, ticket board, and progress. |
+| `mamh review` | `/mamh-review` | Manually trigger a review cycle on all completed but unreviewed tickets. |
+| `mamh next` | `/mamh-next` | Advance to the next milestone (after the current one completes). |
+| `mamh resume` | `/mamh-resume` | Resume an interrupted session from the last saved state. |
+| `mamh handoff` | `/mamh-handoff` | Update HANDOFF.md with current project state, progress, decisions, and next steps. |
+| `mamh stop` | `/mamh-stop` | Gracefully shut down all agents, save state, and mark in-progress tickets as pending. |
+| `mamh execute` | `/mamh-execute` | Launch Agent Teams for the current milestone (usually called automatically after planning). |
 
-Running bare `mamh` with no arguments displays a help message listing these commands. Each subcommand is also available as a slash command (`/mamh:<subcommand>`) for direct invocation and tab-completion.
+Running bare `mamh` with no arguments displays a help message listing these commands. Each subcommand is also available as a slash command (`/mamh-<subcommand>`) for direct invocation and tab-completion.
 
 ### Example Session
 
@@ -432,6 +439,11 @@ Q6: When a milestone completes, what should happen?
     [Auto-advance | Re-plan | User-decides]
 
 > User-decides
+
+Q7: How should agents execute tickets?
+    [Agent Teams (Recommended) | Subagents]
+
+> Agent Teams
 
 Delegating to architect agent for tech spec generation...
 
@@ -748,18 +760,30 @@ MAMH ships with 8 agent templates. During Phase 1, the architect selects which a
 
 ### The Orchestrator
 
-The **mamh-orchestrator** is always present. It runs in **delegate mode**:
-
-- **Allowed**: Read, Glob, Grep, Bash, Task (delegation), AskUserQuestion
-- **Disallowed**: Write, Edit, NotebookEdit
+**Agent Teams mode:** The **mamh-orchestrator** agent runs in **delegate mode**:
+- **Allowed**: Read, Glob, Grep, Bash, TeamCreate, SendMessage, AskUserQuestion
+- **Disallowed**: Write, Edit, NotebookEdit, Task
 - **Model**: opus
 - **Role**: Coordination only. Distributes tickets, monitors progress, triggers reviews, manages milestones, provisions new agents. Never writes code directly.
+
+**Subagent mode:** There is no separate orchestrator agent. The **main session** acts as orchestrator, dispatching tickets via the Task tool in dependency-ordered parallel batches and collecting results via file-based communication.
 
 ---
 
 ## Configuration
 
 All configuration is set during the Phase 0 planning interview and stored in `.mamh/state/session.json`. You can also set defaults in the plugin manifest (`.claude-plugin/plugin.json`).
+
+### Execution Mode
+
+Controls how Phase 3 execution is performed.
+
+| Mode | Mechanism | Orchestrator | Communication | Requires |
+|------|-----------|-------------|---------------|----------|
+| `agent-teams` | TeamCreate + SendMessage | `mamh-orchestrator.md` agent | Native messaging | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
+| `subagents` | Task tool parallel dispatches | Main session | File-based (`.mamh/comms/`) | Nothing extra |
+
+**Default:** `agent-teams` if env var is set, `subagents` otherwise. Auto-detected at project init, overridable during planning interview.
 
 ### Agent Approval Mode
 
@@ -806,6 +830,8 @@ Controls how tickets are grouped into milestones.
 ## Hooks (Scope Enforcement)
 
 MAMH uses three hooks to enforce team discipline. They are configured in `hooks/hooks.json` and execute scripts from `scripts/`.
+
+**Mode awareness:** `scope-guard` fires in both execution modes. `review-gate` (TaskCompleted) and `keep-working` (TeammateIdle) only fire in Agent Teams mode — in Subagent mode, the main session handles review and dispatch directly.
 
 ### scope-guard.mjs
 
@@ -928,19 +954,21 @@ mamh/
     mamh/
       SKILL.md                   # Main entry point — help, routing, directory reference
     plan/
-      SKILL.md                   # /mamh:plan — Phases 0-2 (planning, agents, tickets)
+      SKILL.md                   # /mamh-plan — Phases 0-2 (planning, agents, tickets)
     execute/
-      SKILL.md                   # /mamh:execute — Phase 3 (Agent Teams execution)
+      SKILL.md                   # /mamh-execute — Phase 3 (Agent Teams execution)
     review/
-      SKILL.md                   # /mamh:review — Phase 4 (review gates)
+      SKILL.md                   # /mamh-review — Phase 4 (review gates)
     next/
-      SKILL.md                   # /mamh:next — Phase 5 (milestone iteration)
+      SKILL.md                   # /mamh-next — Phase 5 (milestone iteration)
     status/
-      SKILL.md                   # /mamh:status — Project dashboard
+      SKILL.md                   # /mamh-status — Project dashboard
     resume/
-      SKILL.md                   # /mamh:resume — Resume interrupted session
+      SKILL.md                   # /mamh-resume — Resume interrupted session
+    handoff/
+      SKILL.md                   # /mamh-handoff — Update HANDOFF.md
     stop/
-      SKILL.md                   # /mamh:stop — Graceful shutdown
+      SKILL.md                   # /mamh-stop — Graceful shutdown
 
   agents/
     mamh-orchestrator.md         # Team lead agent definition — delegate mode,
@@ -990,6 +1018,7 @@ mamh/
 | **Project-scoped state** | All state lives in `.mamh/` inside the project, not in the plugin directory. Multiple projects can use MAMH simultaneously. |
 | **Orchestrator as pure coordinator** | The orchestrator has no Write/Edit tools. It cannot do work directly. This enforces delegation discipline. |
 | **ESM modules** | All scripts are `.mjs` (ECMAScript modules). No CommonJS. |
+| **Dual execution mode** | Agent Teams requires an experimental env var not available to all users. Subagent mode (Task tool batch dispatch) provides a fully functional fallback with no extra requirements. |
 
 ---
 
@@ -1014,6 +1043,8 @@ node -e "JSON.parse(require('fs').readFileSync('/path/to/multi-agent-multi-harne
 
 ### Agent Teams Not Working
 
+If you chose Agent Teams mode but it is not working:
+
 ```bash
 # Ensure the environment variable is set
 echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
@@ -1027,6 +1058,13 @@ echo 'export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1' >> ~/.zshrc
 # or
 echo 'export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1' >> ~/.bashrc
 ```
+
+**Alternative:** Switch to Subagent mode by editing `.mamh/session.json`:
+```bash
+# Change executionMode to subagents
+jq '.executionMode = "subagents"' .mamh/session.json > .mamh/session.tmp && mv .mamh/session.tmp .mamh/session.json
+```
+Subagent mode provides the same functionality without requiring the experimental env var.
 
 ### Scope Violations
 
@@ -1087,7 +1125,9 @@ mamh resume
 The resume protocol:
 1. Reads `.mamh/state/mamh-state.json` to determine the last phase and status.
 2. Resets any `in_progress` tickets to `pending` (the agent may have lost context).
-3. Re-launches Agent Teams with the current roster and remaining tickets.
+3. Restores execution based on `executionMode`:
+   - **Agent Teams:** Re-launches Agent Teams with the current roster and remaining tickets.
+   - **Subagents:** Rebuilds the dependency graph and recomputes parallel batches from remaining tickets.
 
 ### Init Script Errors
 
@@ -1152,4 +1192,4 @@ MIT License. See [LICENSE](LICENSE) for the full text.
 
 ---
 
-**MAMH v0.1.1** -- Built for Claude Code. Zero dependencies. Maximum autonomy.
+**MAMH v0.1.3** -- Built for Claude Code. Zero dependencies. Maximum autonomy. Agent Teams or Subagents — your choice.

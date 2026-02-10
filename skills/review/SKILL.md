@@ -1,5 +1,5 @@
 ---
-name: review
+name: mamh-review
 description: Trigger MAMH review gates on completed tickets. Validates work through auto, peer, or user review. Triggers on "mamh review".
 ---
 
@@ -12,7 +12,7 @@ This skill triggers review gates on completed tickets. The review process valida
 ## Prerequisites
 
 1. **Tickets exist.** Verify `.mamh/state/mamh-state.json` shows `phase >= 3`. If not, inform the user:
-   > "No completed tickets to review. Run `/mamh:execute` first."
+   > "No completed tickets to review. Run `/mamh-execute` first."
 2. **Completed tickets exist.** Scan ticket files in the current milestone for any with `Status: completed` that have not yet been approved. If none found:
    > "No completed tickets pending review. All tickets are either already approved or still in progress."
 
@@ -47,16 +47,27 @@ If ANY check fails: Mark ticket as `rejected`, attach failure details as review 
 
 ### Peer Review (`reviewMode: "peer"`)
 
-After auto review passes:
+After auto review passes, the peer review mechanism depends on the execution mode. Read `executionMode` from `.mamh/session.json` (default: `"agent-teams"` if env var set, else `"subagents"`).
+
+**Agent Teams mode (`executionMode: "agent-teams"`):**
 
 1. Spawn a reviewer teammate agent (use a different agent than the one that wrote the code).
-2. The reviewer examines:
-   - Code quality and style consistency
-   - Acceptance criteria satisfaction
-   - Edge cases and error handling
-   - Integration with adjacent components
+2. The reviewer examines the items listed below.
 3. Reviewer outputs: `approved` with optional suggestions, or `rejected` with required changes.
-4. If rejected, the original agent receives the feedback and reworks the ticket.
+4. If rejected, the original agent receives the feedback via SendMessage and reworks the ticket.
+
+**Subagent mode (`executionMode: "subagents"`):**
+
+1. Dispatch a reviewer via the Task tool with `subagent_type: "general-purpose"` and `model: "opus"`.
+2. The reviewer Task prompt includes: ticket content, files changed (git diff), acceptance criteria, and POLICY rules.
+3. Reviewer outputs: `approved` or `rejected` with feedback, written to `.mamh/comms/<ticket-id>-review-output.md`.
+4. If rejected, the main session re-dispatches the original agent with the reviewer's feedback included in the prompt.
+
+**In both modes, the reviewer examines:**
+- Code quality and style consistency
+- Acceptance criteria satisfaction
+- Edge cases and error handling
+- Integration with adjacent components
 
 ### User Review (`reviewMode: "user"`)
 
@@ -68,6 +79,19 @@ After auto review (and optionally peer review) passes:
    - Acceptance criteria checklist
    - Any reviewer notes
 3. User can: `approve`, `reject` (with feedback), or `skip` (approve and move on).
+
+### After Approval — State Mutation
+
+After marking a ticket as approved (in any review mode), perform these state updates:
+
+1. **Update ticket file:** Set `**Status:** approved` and add `**ApprovedAt:** <ISO timestamp>` in the ticket's metadata header.
+2. **Write review result** to `.mamh/reviews/<ticket-id>-review.json` (see format below).
+3. **Update agent stats** in `.mamh/agents/registry.json`: increment `ticketsCompleted` (+1), decrement `ticketsAssigned` (-1) for the owning agent.
+4. **Update state file** `.mamh/state/mamh-state.json`: adjust `ticketsSummary` counts (decrement `completed`, increment `approved` or move to the appropriate bucket).
+5. **Update HANDOFF.md** with a line noting the ticket approval.
+6. **Check milestone completion:** Are ALL tickets in the current milestone now `approved`?
+   - If YES → trigger milestone completion (invoke `/mamh-next` or proceed inline).
+   - If NO → continue with remaining tickets.
 
 ### Review Artifacts
 

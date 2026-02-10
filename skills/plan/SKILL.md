@@ -1,11 +1,16 @@
 ---
-name: plan
+name: mamh-plan
 description: Run MAMH planning phases — requirements interview, agent definition, and ticket generation. Triggers on "mamh plan", or when starting a new MAMH project with "mamh <description>".
 ---
 
 # MAMH Plan — Phases 0-2
 
+> This is `/mamh-plan` — the MAMH planning workflow. NOT the generic `/plan` skill.
+> If the user said `mamh <description>`, you are in the right place.
+
 This skill runs the first three phases of the MAMH lifecycle: **Planning Interview** (Phase 0), **Agent Definition** (Phase 1), and **Ticket Generation** (Phase 2). It transforms a project idea into a concrete plan with agents and tickets ready for execution.
+
+**Delegation mechanism:** Phases 0-2 use the **Task tool** for 1:1 delegation (one-shot analysis). This is intentional — planning does not require Agent Teams coordination. Agent Teams is only used in Phase 3 (execution).
 
 ---
 
@@ -13,8 +18,7 @@ This skill runs the first three phases of the MAMH lifecycle: **Planning Intervi
 
 Before starting, verify the following:
 
-1. **Agent Teams is enabled.** The environment variable `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` must be set. If it is not, inform the user:
-   > "MAMH requires Claude Code Agent Teams. Please enable it by setting `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in your environment, then try again."
+1. **Check Agent Teams availability.** Check whether the environment variable `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set. Record the result — this determines which execution modes are available during the planning interview (Step 0.3, Question 7). Both modes are fully supported; Agent Teams is NOT required.
 2. **Plugin scripts exist.** The plugin root is available via `${CLAUDE_PLUGIN_ROOT}`. Verify that `${CLAUDE_PLUGIN_ROOT}/scripts/init-project.mjs` exists. If not, warn the user that the plugin installation may be incomplete.
 
 ---
@@ -33,7 +37,7 @@ Read the user's project description from the trigger input. Extract:
 
 ### Step 0.2 - Requirements Expansion
 
-Delegate to the `analyst` agent (Opus tier) with this prompt:
+Delegate to the `analyst` agent (Opus tier) via the Task tool (use Task tool for this one-shot delegation):
 
 ```
 Analyze the following project description and expand it into a structured requirements document.
@@ -53,7 +57,7 @@ Output the following sections:
 
 Using the analyst's output, conduct a planning interview with the user. Use `AskUserQuestion` for each question to provide clickable UI options.
 
-Ask these questions in order (skip any that the analyst's output already answers definitively):
+Ask these questions in order (skip Q1-Q6 if the analyst's output already answers them definitively; Q7 must ALWAYS be asked):
 
 1. **Agent Roles**: "Based on your project, I recommend these agent roles: [list from analyst]. Would you like to add, remove, or modify any?"
    - Provide the analyst's suggested roles as default options
@@ -88,9 +92,16 @@ Ask these questions in order (skip any that the analyst's output already answers
    - **User-decides** - Pause and ask you
    - Default: Use the value from plugin config (`config.milestoneAdvanceMode`)
 
+7. **Execution Mode** *(MUST ASK — do not skip this question)*: "How should agents execute tickets during Phase 3?"
+   - **Agent Teams** - Persistent teammate sessions with shared task list and native messaging. Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
+   - **Subagents** - Task-tool batch dispatch. Main session orchestrates. No experimental features required.
+   - Default: `"agent-teams"` if `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var is set, `"subagents"` otherwise
+   - Mark the recommended option based on env var availability: if env var is set, recommend Agent Teams; if not, recommend Subagents
+   - If the user picks Agent Teams but the env var is missing, explain how to set it (`export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) and offer to fall back to Subagents
+
 ### Step 0.4 - Tech Spec Generation
 
-Delegate to the `architect` agent (Opus tier) with this prompt:
+Delegate to the `architect` agent (Opus tier) via the Task tool (use Task tool for this one-shot delegation):
 
 ```
 Create a technical specification for the following project.
@@ -150,14 +161,17 @@ Write these files from the gathered information:
 - **`.mamh/state/session.json`** - Session configuration:
   ```json
   {
-    "projectName": "<derived from description>",
-    "startedAt": "<ISO timestamp>",
-    "currentPhase": 0,
+    "name": "<derived from description>",
+    "description": "<project description>",
+    "phase": 0,
     "currentMilestone": null,
+    "executionMode": "<agent-teams|subagents>",
     "agentApprovalMode": "<auto|suggest|locked>",
     "milestoneAdvanceMode": "<auto-advance|re-plan|user-decides>",
     "reviewMode": "<auto|peer|user>",
-    "milestoneGranularity": "<fine|medium|coarse>"
+    "milestoneGranularity": "<fine|medium|coarse>",
+    "createdAt": "<ISO timestamp>",
+    "updatedAt": "<ISO timestamp>"
   }
   ```
 
@@ -181,7 +195,7 @@ Announce completion:
 
 ### Step 1.1 - Agent Architecture
 
-Delegate to the `architect` agent (Opus tier) with this prompt:
+Delegate to the `architect` agent (Opus tier) via the Task tool (use Task tool for this one-shot delegation):
 
 ```
 Based on the tech spec and PRD, define the complete agent roster for this project.
@@ -203,9 +217,10 @@ For each agent, specify:
 10. **Coordination Notes** - How this agent interacts with others (dependencies, handoff points)
 
 Also define the **mamh-orchestrator** agent:
-- Delegate mode (no code tools: no Edit, Write, Bash for code changes)
-- Can use: Read, Glob, Grep (read-only), Task (to delegate), AskUserQuestion
-- Coordinates all other agents
+- Delegate mode (no code tools: no Edit, Write, NotebookEdit)
+- Can use: Read, Glob, Grep, Bash (verification only), TeamCreate, SendMessage, TaskCreate, TaskUpdate, TaskList, TaskGet, AskUserQuestion
+- Disallowed: Write, Edit, NotebookEdit, Task
+- Coordinates all other agents via Agent Teams
 - Manages ticket assignment and review flow
 ```
 
@@ -257,21 +272,23 @@ Write `.mamh/agents/registry.json`:
 
 ```json
 {
-  "agents": [
-    {
+  "agents": {
+    "mamh-<agent-id>": {
       "id": "mamh-<agent-id>",
       "role": "<role description>",
       "modelTier": "<haiku|sonnet|opus>",
-      "ownedPaths": ["<glob patterns>"],
+      "allowedPaths": ["<glob patterns>"],
       "readablePaths": ["<glob patterns>"],
       "forbiddenPaths": ["<glob patterns>"],
       "status": "active",
       "ticketsCompleted": 0,
-      "ticketsAssigned": 0
+      "ticketsAssigned": 0,
+      "created": "phase1"
     }
-  ],
+  },
   "generatedAt": "<ISO timestamp>",
-  "totalAgents": "<count>"
+  "totalAgents": "<count>",
+  "version": 1
 }
 ```
 
@@ -303,7 +320,7 @@ Announce:
 
 ### Step 2.1 - Milestone and Ticket Planning
 
-Delegate to the `planner` agent (Opus tier) with this prompt:
+Delegate to the `planner` agent (Sonnet tier) via the Task tool (use Task tool for this one-shot delegation):
 
 ```
 Decompose this project into milestones and tickets.
@@ -375,6 +392,7 @@ For each milestone, create the directory and ticket files:
 **Priority:** <critical|high|medium|low>
 **Complexity:** <low|medium|high>
 **Dependencies:** <comma-separated ticket IDs, or "none">
+**ApprovedAt:**
 
 ## Description
 <Detailed description of what to implement>
@@ -388,9 +406,11 @@ For each milestone, create the directory and ticket files:
 <!-- Populated after review -->
 ```
 
-### Step 2.3 - Create Agent Teams Tasks
+### Step 2.3 - Create Agent Teams Tasks (Agent Teams mode only)
 
-For each ticket in the first milestone, create an Agent Teams task with:
+**Skip this step if `executionMode` is `"subagents"`.** In subagent mode, ticket dispatch happens during Phase 3 execution.
+
+If `executionMode` is `"agent-teams"`, for each ticket in the first milestone, create an Agent Teams task with:
 - Task description from the ticket
 - Dependency links to other tasks
 - Assignment to the correct teammate agent

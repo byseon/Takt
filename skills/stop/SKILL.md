@@ -1,11 +1,11 @@
 ---
-name: stop
-description: Gracefully stop the MAMH session, save state, and shut down Agent Teams. Triggers on "mamh stop".
+name: mamh-stop
+description: Gracefully stop the MAMH session, save state, and shut down execution. Triggers on "mamh stop".
 ---
 
 # MAMH Stop — Stop Protocol
 
-This skill gracefully shuts down Agent Teams, saves the current state, and marks in-progress tickets as pending so they can be resumed later with `/mamh:resume`.
+This skill gracefully shuts down execution (Agent Teams or subagent dispatch), saves the current state, and marks in-progress tickets as pending so they can be resumed later with `/mamh-resume`.
 
 ---
 
@@ -14,7 +14,7 @@ This skill gracefully shuts down Agent Teams, saves the current state, and marks
 1. **MAMH session is active.** Verify `.mamh/state/mamh-state.json` exists and `status` is not `stopped` or `project-complete`. If the state file does not exist:
    > "No MAMH session found. Nothing to stop."
    If already stopped:
-   > "MAMH session is already stopped. Use `/mamh:resume` to continue."
+   > "MAMH session is already stopped. Use `/mamh-resume` to continue."
 
 ---
 
@@ -33,20 +33,31 @@ This skill gracefully shuts down Agent Teams, saves the current state, and marks
    }
    ```
 
-2. **Gracefully shut down Agent Teams:**
+2. **Shut down execution (mode-dependent):**
+
+   Read `executionMode` from `.mamh/session.json` (default: `"agent-teams"` if env var set, else `"subagents"`).
+
+   **Agent Teams mode (`executionMode: "agent-teams"`):**
    - Signal all teammate agents to stop after their current operation completes.
    - Do NOT interrupt mid-file-write operations.
    - Wait for agents to acknowledge stop (with a 30-second timeout).
 
+   **Subagent mode (`executionMode: "subagents"`):**
+   - Stop dispatching new Task batches. Do NOT dispatch the next batch.
+   - Allow any currently running Task subagents to complete (they are atomic — cannot be interrupted mid-execution).
+   - Collect results from any completed Tasks before saving state.
+
 3. **Mark in-progress tickets:** Set any `in_progress` tickets back to `pending` so they can be re-claimed on resume.
 
-4. **Preserve git worktrees:** Do NOT remove `.worktrees/` or delete agent branches. Worktrees contain uncommitted work that agents need when resuming. Each agent's worktree at `.worktrees/mamh-<agent-id>/` and branch `mamh/<agent-id>` must remain intact for `/mamh:resume`.
+4. **Preserve git worktrees:** Do NOT remove `.worktrees/` or delete agent branches. Worktrees contain uncommitted work that agents need when resuming. Each agent's worktree at `.worktrees/mamh-<agent-id>/` and branch `mamh/<agent-id>` must remain intact for `/mamh-resume`.
 
-5. **Write stop summary:**
+5. **Update HANDOFF.md:** Update `.mamh/HANDOFF.md` with current progress, in-progress work, and clear resume instructions under Next Steps.
+
+6. **Write stop summary:**
    > "MAMH session stopped and state saved. Progress:"
    > - "Milestone: M00X - <name>"
    > - "Tickets completed: X / Y"
-   > - "Use `/mamh:resume` to continue."
+   > - "Use `/mamh-resume` to continue."
 
 ---
 
@@ -84,13 +95,16 @@ Session configuration. Set once during Phase 0, read throughout.
 
 ```json
 {
-  "projectName": "my-project",
-  "startedAt": "2026-02-08T12:00:00.000Z",
-  "currentPhase": 3,
+  "name": "my-project",
+  "description": "A project description",
+  "phase": 3,
   "currentMilestone": "M001",
+  "executionMode": "agent-teams",
   "agentApprovalMode": "suggest",
   "milestoneAdvanceMode": "user-decides",
   "reviewMode": "auto",
-  "milestoneGranularity": "medium"
+  "milestoneGranularity": "medium",
+  "createdAt": "2026-02-08T12:00:00.000Z",
+  "updatedAt": "2026-02-08T15:30:00.000Z"
 }
 ```

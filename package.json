@@ -1,6 +1,6 @@
 {
   "name": "mamh",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "Multi-Agent Multi-Harness (MAMH) — Claude Code plugin for orchestrating teams of specialized AI agents",
   "author": "seongjinpark",
   "license": "MIT",

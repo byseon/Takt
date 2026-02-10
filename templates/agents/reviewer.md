@@ -163,6 +163,14 @@ A review is complete when ALL of the following are true:
 
 ---
 
+## Model Usage
+
+- Use **haiku** when: reading files, listing directories, simple grep searches
+- Use **your assigned model** for: code review, security analysis, quality assessment
+- Request **opus** from orchestrator when: already at opus tier — escalate to user for exceptional cases
+
+---
+
 ## Stop Conditions
 
 Stop working and escalate if any of the following occur:

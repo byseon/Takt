@@ -20,19 +20,21 @@ mamh/
 │   ├── mamh/
 │   │   └── SKILL.md             # Main entry point (help, routing, directory reference)
 │   ├── plan/
-│   │   └── SKILL.md             # /mamh:plan — Phases 0-2 (planning, agents, tickets)
+│   │   └── SKILL.md             # /mamh-plan — Phases 0-2 (planning, agents, tickets)
 │   ├── execute/
-│   │   └── SKILL.md             # /mamh:execute — Phase 3 (Agent Teams execution)
+│   │   └── SKILL.md             # /mamh-execute — Phase 3 (Agent Teams execution)
 │   ├── review/
-│   │   └── SKILL.md             # /mamh:review — Phase 4 (review gates)
+│   │   └── SKILL.md             # /mamh-review — Phase 4 (review gates)
 │   ├── next/
-│   │   └── SKILL.md             # /mamh:next — Phase 5 (milestone iteration)
+│   │   └── SKILL.md             # /mamh-next — Phase 5 (milestone iteration)
 │   ├── status/
-│   │   └── SKILL.md             # /mamh:status — Project dashboard
+│   │   └── SKILL.md             # /mamh-status — Project dashboard
 │   ├── resume/
-│   │   └── SKILL.md             # /mamh:resume — Resume interrupted session
+│   │   └── SKILL.md             # /mamh-resume — Resume interrupted session
+│   ├── handoff/
+│   │   └── SKILL.md             # /mamh-handoff — Update HANDOFF.md
 │   └── stop/
-│       └── SKILL.md             # /mamh:stop — Graceful shutdown
+│       └── SKILL.md             # /mamh-stop — Graceful shutdown
 ├── agents/
 │   └── mamh-orchestrator.md     # Team lead agent (delegate mode, no code tools)
 ├── hooks/
@@ -82,6 +84,7 @@ mamh/
 | POLICY.md capped at ~200 lines | Minimize per-agent context consumption (~1,300 tokens vs ~4,500). |
 | ESM modules (`.mjs`) | Modern JavaScript, no CommonJS. |
 | Git worktree isolation | Each writing agent gets its own branch; no merge conflicts during parallel work. |
+| Dual execution mode (agent-teams / subagents) | Agent Teams requires an experimental env var not available to all users. Subagent mode provides a fully functional fallback using Task tool batch dispatch with the main session as orchestrator. Mode is chosen during planning and stored in `session.json`. |
 
 ---
 
@@ -104,6 +107,7 @@ mamh/
 - **Exit codes**: 0 (allow), 2 (block), 1 (error)
 - **Input**: JSON on stdin with tool/agent context
 - **Output**: JSON on stdout (for blocking messages)
+- **Mode awareness**: `scope-guard` fires in both execution modes. `TeammateIdle` (keep-working) and `TaskCompleted` (review-gate) only fire in agent-teams mode.
 
 ### State Files (`.mamh/*.json`)
 - **Format**: JSON with clear schema
@@ -208,6 +212,7 @@ echo '{"agent_name":"mamh-backend"}' | \
 - **[skills/next/SKILL.md](skills/next/SKILL.md)**: Milestone iteration skill (Phase 5)
 - **[skills/status/SKILL.md](skills/status/SKILL.md)**: Status dashboard skill
 - **[skills/resume/SKILL.md](skills/resume/SKILL.md)**: Resume protocol skill
+- **[skills/handoff/SKILL.md](skills/handoff/SKILL.md)**: Handoff document update skill
 - **[skills/stop/SKILL.md](skills/stop/SKILL.md)**: Stop protocol skill
 - **[docs/README.md](docs/README.md)**: Internal developer docs
 - **[docs/TEMPLATES.md](docs/TEMPLATES.md)**: Template customization guide
@@ -216,5 +221,5 @@ echo '{"agent_name":"mamh-backend"}' | \
 
 ---
 
-**Last Updated**: 2026-02-08
-**Plugin Version**: 0.1.1
+**Last Updated**: 2026-02-10
+**Plugin Version**: 0.1.4

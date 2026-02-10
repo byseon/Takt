@@ -257,3 +257,58 @@ For reference, here is where POLICY.md sits relative to other MAMH state files:
 | Who writes it? | The orchestrator (generated from template + project details) |
 | Who can update it? | The orchestrator (during execution) or the user (manually) |
 | How is it different from napkin? | Team-wide rules vs. individual agent learnings |
+
+---
+
+## Important Files Map
+
+| File | Purpose | When to Read |
+|------|---------|-------------|
+| CLAUDE.md | Plugin developer guide | When modifying plugin code |
+| STATUS.md | Plugin changelog & roadmap | To check version history |
+| skills/mamh/SKILL.md | Main entry point + routing | Understanding command routing |
+| skills/plan/SKILL.md | Planning phases 0-2 | Before modifying planning flow |
+| skills/execute/SKILL.md | Execution phase 3 | Before modifying execution |
+| agents/mamh-orchestrator.md | Orchestrator behavior | Understanding coordination |
+| templates/POLICY.md | Shared rules template | Modifying team rules |
+| scripts/*.mjs | Hook scripts | Modifying enforcement |
+
+## Lessons Learned & Gotchas
+
+### Task Tool vs Agent Teams
+- Planning (Phases 0-2): Use Task tool for 1:1 delegation — fine for one-shot analysis
+- Execution (Phase 3+): MUST use Agent Teams (TeamCreate + SendMessage)
+- The LLM tends to fall back to Task tool. Anti-pattern docs in orchestrator help but need to be prominent.
+
+### Ticket Completion Chain
+- Review gate hook validates but doesn't persist status
+- Orchestrator must explicitly update ticket files, state, and registry after approval
+- Without explicit state mutation instructions, tickets get "stuck" in completed-but-not-approved limbo
+
+### Model Selection
+- Content agent (haiku) works well for simple writing tasks
+- Reviewer (opus) justified — code review requires deep reasoning
+- Planning agents benefit from opus for architecture/requirements analysis
+- Ticket decomposition (planner) can use sonnet — structured but not deeply analytical
+
+### Scope Guard
+- Works well for blocking out-of-scope writes
+- Fails open (allows writes) when registry missing — intentional for pre-init phase
+- Agents sometimes try workarounds when blocked — anti-patterns in POLICY.md help
+
+## What Worked
+- Template-based agent generation — different projects genuinely need different specialists
+- Git worktree isolation — prevents merge conflicts during parallel work
+- POLICY.md as shared rulebook — agents follow it reliably when told to read it at session start
+- Zero external dependencies — no npm install failures
+
+## What Didn't Work
+- Implicit state tracking — hooks validate but don't persist, causing completion chain gaps
+- Ambiguous delegation language — "delegate to" without specifying mechanism
+- Generic skill name conflicts — `plan` collides with other plugins
+
+## Known Limitations
+- Agent Teams requires experimental env var (CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS)
+- No automated testing framework for the plugin itself
+- Hook scripts can't modify ticket files directly (they only allow/block)
+- Per-agent memory not yet implemented (mentioned in templates but not functional)

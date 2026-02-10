@@ -1,5 +1,5 @@
 ---
-name: status
+name: mamh-status
 description: Show the MAMH project dashboard with agent roster, ticket board, and progress. Triggers on "mamh status".
 ---
 
@@ -12,7 +12,7 @@ This skill displays the current MAMH project status, including the agent roster,
 ## Prerequisites
 
 1. **MAMH project exists.** Verify `.mamh/state/mamh-state.json` exists. If not:
-   > "No MAMH session found. Use `/mamh:plan` to start a new project."
+   > "No MAMH session found. Use `/mamh-plan` to start a new project."
 
 ---
 

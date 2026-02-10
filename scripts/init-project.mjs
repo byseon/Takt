@@ -56,6 +56,9 @@ function getDefaultFiles() {
         description: "",
         phase: "planning",
         currentMilestone: null,
+        executionMode: process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
+          ? "agent-teams"
+          : "subagents",
         agentApprovalMode: "suggest",
         milestoneAdvanceMode: "user-decides",
         reviewMode: "auto",
@@ -84,6 +87,30 @@ function getDefaultFiles() {
     ".mamh/comms/decisions.md": "",
 
     ".mamh/comms/changelog.md": "",
+
+    ".mamh/HANDOFF.md": [
+      "# MAMH Handoff",
+      "",
+      `> Auto-updated by MAMH orchestrator. Last updated: ${now}`,
+      "",
+      "## What Has Been Done",
+      "- Project initialized",
+      "",
+      "## Key Decisions & Rationale",
+      "(none yet)",
+      "",
+      "## Next Steps",
+      "- Complete Phase 0: Planning Interview",
+      "- Complete Phase 1: Agent Definition",
+      "- Complete Phase 2: Ticket Generation",
+      "",
+      "## Open Questions / Blockers",
+      "(none)",
+      "",
+      "## Milestone History",
+      "(none yet)",
+      "",
+    ].join("\n"),
 
     ".mamh/state/mamh-state.json": JSON.stringify(
       {

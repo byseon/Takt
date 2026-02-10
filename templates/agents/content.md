@@ -131,6 +131,14 @@ Before marking any ticket complete, verify ALL of the following:
 
 ---
 
+## Model Usage
+
+- Use **haiku** when: reading files, listing directories, simple text lookups
+- Use **your assigned model** for: writing copy, documentation, content creation
+- Request **sonnet** from orchestrator when: complex writing requiring nuanced tone or technical depth
+
+---
+
 ## Stop Conditions
 
 Stop working and escalate if any of the following occur:

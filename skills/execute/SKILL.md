@@ -1,11 +1,16 @@
 ---
-name: execute
-description: Launch Agent Teams and execute the current milestone's tickets autonomously. Triggers on "mamh execute", "mamh run", or automatically after planning completes.
+name: mamh-execute
+description: Execute the current milestone's tickets autonomously using Agent Teams or Subagent mode. Triggers on "mamh execute", "mamh run", or automatically after planning completes.
 ---
 
 # MAMH Execute — Phase 3
 
-This skill launches an Agent Team and executes the current milestone's tickets autonomously. The orchestrator operates in **delegate mode** (coordination only, no direct code changes) while specialized teammate agents do all implementation work.
+This skill executes the current milestone's tickets autonomously. MAMH supports two execution modes, chosen during planning (Phase 0) and stored in `session.json` as `executionMode`:
+
+| Mode | Mechanism | Orchestrator | Communication |
+|------|-----------|-------------|---------------|
+| `agent-teams` | TeamCreate + SendMessage | `mamh-orchestrator.md` agent in delegate mode | Agent Teams native messaging |
+| `subagents` | Task tool parallel dispatches | **Main session** acts as orchestrator | File-based via `.mamh/comms/<ticket-id>-output.md` |
 
 ---
 
@@ -13,24 +18,32 @@ This skill launches an Agent Team and executes the current milestone's tickets a
 
 Before starting, verify the following:
 
-1. **Agent Teams is enabled.** The environment variable `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` must be set. If it is not, inform the user:
-   > "MAMH requires Claude Code Agent Teams. Please enable it by setting `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in your environment, then try again."
-2. **Planning is complete.** Verify `.mamh/state/mamh-state.json` exists and shows `phase >= 2` with `status: "tickets-generated"` (or `status: "executing"` for resume). If not, inform the user:
-   > "No tickets found. Run `/mamh:plan` first to generate the project plan."
-3. **Plugin scripts exist.** The plugin root is available via `${CLAUDE_PLUGIN_ROOT}`. Verify that `${CLAUDE_PLUGIN_ROOT}/scripts/scope-guard.mjs` and `${CLAUDE_PLUGIN_ROOT}/scripts/keep-working.mjs` exist.
+1. **Read execution mode.** Load `.mamh/session.json` and read the `executionMode` field. If the field is missing, default to `"agent-teams"` if `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set, otherwise `"subagents"`.
+2. **Agent Teams env var (agent-teams mode only).** If `executionMode` is `"agent-teams"`, verify `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set. If it is not, inform the user:
+   > "Agent Teams mode requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. Set the env var and retry, or switch to subagent mode by updating `executionMode` in `.mamh/session.json`."
+3. **Planning is complete.** Verify `.mamh/state/mamh-state.json` exists and shows `phase >= 2` with `status: "tickets-generated"` (or `status: "executing"` for resume). If not, inform the user:
+   > "No tickets found. Run `/mamh-plan` first to generate the project plan."
+4. **Plugin scripts exist.** The plugin root is available via `${CLAUDE_PLUGIN_ROOT}`. Verify that `${CLAUDE_PLUGIN_ROOT}/scripts/scope-guard.mjs` and `${CLAUDE_PLUGIN_ROOT}/scripts/keep-working.mjs` exist.
 
 ---
 
-## Phase 3: Execution (Autonomous)
+## Mode Routing
 
-**Goal:** Launch an Agent Team and execute the current milestone's tickets autonomously.
+Read `executionMode` from `.mamh/session.json`:
 
-**CRITICAL:** This phase MUST use Claude Code's native **Agent Teams** feature — NOT the Task tool.
+- If `"agent-teams"` → proceed to **Section A: Agent Teams Execution**
+- If `"subagents"` → proceed to **Section B: Subagent Execution**
+
+---
+
+## Section A: Agent Teams Execution
+
+**CRITICAL: This section MUST use Agent Teams (TeamCreate + SendMessage), NOT the Task tool.** If you are tempted to use the Task tool here, STOP.
 
 - Agent Teams (`TeamCreate` + `SendMessage`) spawns real teammate sessions that share a task list and can coordinate with each other.
-- The `Task` tool spawns isolated one-shot subagents that cannot share state or coordinate. **Do NOT use it for execution.**
+- The `Task` tool spawns isolated one-shot subagents that cannot share state or coordinate. **Do NOT use it for execution in this mode.**
 
-**Anti-patterns (NEVER do these):**
+**Anti-patterns (NEVER do these in agent-teams mode):**
 ```
 # WRONG — isolated subagents, no coordination, no shared task list
 Task(subagent_type="oh-my-claudecode:executor", prompt="implement T001...")
@@ -73,7 +86,7 @@ git worktree add .worktrees/mamh-frontend -b mamh/frontend main
 
 Create an agent team by instructing Claude Code to spawn teammates. You are the team lead operating in **delegate mode** (coordination only — do not implement code yourself).
 
-**How to create the team:** Tell Claude Code to create an agent team. For each agent in `.mamh/agents/registry.json`, spawn a teammate with a detailed spawn prompt that includes:
+**How to create the team:** Tell Claude Code to create an agent team. Spawn teammates using their registry `modelTier`. For simple mechanical subtasks, prefer haiku to save cost. For each agent in `.mamh/agents/registry.json`, spawn a teammate with a detailed spawn prompt that includes:
 
 1. The agent's role and responsibilities (from `.claude/agents/mamh-<agent-id>.md`)
 2. The agent's owned paths, readable paths, and forbidden paths
@@ -179,23 +192,221 @@ During execution, continuously update:
   }
   ```
 
+### Step 3.6b - State Persistence Checklist
+
+When a ticket status changes, perform ALL of these updates:
+
+1. Update the ticket markdown file's `**Status:**` field
+2. If approved, add `**ApprovedAt:** <ISO timestamp>`
+3. Update `mamh-state.json` `ticketsSummary` counts
+4. Update `registry.json` agent stats (`ticketsCompleted`, `ticketsAssigned`)
+5. Update `.mamh/HANDOFF.md` (see below)
+
+### Step 3.6c - HANDOFF.md Updates
+
+Update `.mamh/HANDOFF.md` at these checkpoints:
+
+1. **After each ticket approval:** Add a line to "What Has Been Done" noting what was delivered. Update "In Progress" and "Next Steps".
+2. **After each batch completes (subagent mode):** Update "In Progress" with remaining batches and ticket counts.
+3. **At milestone completion:** Perform a FULL handoff rewrite — update all sections and append a Milestone History entry (see `/mamh-handoff` for template).
+4. **On any significant event** (blocker, new agent provisioned, scope change): Update the relevant section.
+
+The goal is that a new session reading only HANDOFF.md can understand the full project state without reading every ticket file.
+
 ### Step 3.7 - Keep-Working Enforcement
 
 The keep-working script (`${CLAUDE_PLUGIN_ROOT}/scripts/keep-working.mjs`) ensures agents do not stop prematurely. If an agent reports completion but has remaining assigned tickets, it is redirected to the next ticket.
 
 ---
 
-## Error Handling
+## Section B: Subagent Execution
 
-### Agent Failure
+In subagent mode, the **main session** acts as orchestrator. There is no separate `mamh-orchestrator.md` agent — you (the main session) coordinate everything directly. Tickets are dispatched via the Task tool in dependency-ordered parallel batches. Communication is file-based.
+
+**CRITICAL: In subagent mode, do NOT use TeamCreate or SendMessage.** Use the Task tool to dispatch work.
+
+**Correct pattern (subagent mode):**
+```
+# Dispatch parallel batch of tickets
+Task(subagent_type="general-purpose", prompt="Implement ticket T001: ...", model="sonnet")
+Task(subagent_type="general-purpose", prompt="Implement ticket T002: ...", model="sonnet")
+# Wait for results, review, then dispatch next batch
+```
+
+### Step 3.0-S - Git Worktree Setup
+
+Same as Agent Teams mode. Each agent with write permission operates in its own git worktree.
+
+Run the worktree setup script:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/worktree-setup.mjs"
+```
+
+**Important:** Same worktree rules apply as Section A Step 3.0. Each subagent's Task prompt must specify the worktree path as working directory.
+
+### Step 3.1-S - Build Dependency Graph and Compute Batches
+
+Read all tickets for the current milestone from `.mamh/tickets/milestones/<current-milestone>/`. For each ticket, extract:
+- Ticket ID, title, description, acceptance criteria
+- Assigned agent (from ticket metadata)
+- Dependencies (from ticket metadata)
+
+**Topological sort:** Order tickets by dependencies to produce a valid execution order. Then group into **parallel batches**:
+
+1. **Batch 1:** All tickets with zero unresolved dependencies (no deps, or all deps already completed)
+2. **Batch 2:** All tickets whose dependencies are satisfied after Batch 1 completes
+3. **Batch N:** Continue until all tickets are batched
+
+If a circular dependency is detected, stop and report it to the user (see Error Handling).
+
+**Example batch computation:**
+```
+Tickets: T001 (no deps), T002 (no deps), T003 (deps: T001), T004 (deps: T001, T002), T005 (deps: T003)
+
+Batch 1: [T001, T002]     — no deps, execute in parallel
+Batch 2: [T003, T004]     — deps satisfied after Batch 1
+Batch 3: [T005]           — deps satisfied after Batch 2
+```
+
+### Step 3.2-S - Execute Batches
+
+For each batch, in order:
+
+#### 3.2-S.1 — Dispatch Parallel Tasks
+
+For each ticket in the batch, dispatch a Task tool call **in parallel** (multiple Task calls in a single message). Each Task prompt must include:
+
+1. **Ticket content:** Full ticket ID, title, description, acceptance criteria
+2. **Agent context:** The agent's role, owned paths, readable paths, forbidden paths (from `registry.json`)
+3. **Working directory:** The agent's worktree path (`.worktrees/mamh-<agent-id>/`)
+4. **POLICY rules:** Include the key rules from `.mamh/POLICY.md` (scope rules, hard prohibitions, code standards, definition of done)
+5. **Prior ticket outputs:** If this ticket depends on other tickets, include the output summaries from `.mamh/comms/<dep-ticket-id>-output.md`
+6. **Output instruction:** "When done, write a summary of what you implemented, files changed, and any interface contracts to `.mamh/comms/<ticket-id>-output.md`"
+
+**Task dispatch parameters:**
+- `subagent_type`: `"general-purpose"`
+- `model`: Use the agent's `modelTier` from `registry.json` (e.g., `"sonnet"`, `"haiku"`, `"opus"`)
+- `prompt`: Comprehensive ticket prompt as described above
+
+**Example dispatch:**
+```
+Task(
+  subagent_type="general-purpose",
+  model="sonnet",
+  prompt="You are mamh-backend, a backend engineer.
+
+Working directory: .worktrees/mamh-backend/
+Owned paths: src/api/**, src/db/**, tests/api/**
+Read-only paths: src/shared/**, .mamh/**
+
+## Ticket T001: Setup FastAPI project structure
+Status: pending → in_progress
+Priority: critical
+Dependencies: none
+
+## Description
+<full ticket description>
+
+## Acceptance Criteria
+- [ ] <criterion 1>
+- [ ] <criterion 2>
+
+## POLICY Rules
+<key rules from POLICY.md>
+
+## Instructions
+1. Work ONLY within your owned paths inside .worktrees/mamh-backend/
+2. Write all files to .worktrees/mamh-backend/, NOT the project root
+3. Satisfy ALL acceptance criteria
+4. Write tests for new functionality
+5. Commit your work to the mamh/backend branch
+6. When done, write your output summary to .mamh/comms/T001-output.md with:
+   - Files created/modified
+   - Interface contracts (APIs, types, schemas)
+   - Any blockers or notes for dependent tickets
+"
+)
+```
+
+#### 3.2-S.2 — Collect Results
+
+After all Tasks in the batch complete:
+
+1. Read each `.mamh/comms/<ticket-id>-output.md` for results
+2. If a Task failed (no output file, or output indicates failure), mark the ticket per error handling rules
+
+#### 3.2-S.3 — Review
+
+Run the review process per the configured `reviewMode` (see `/mamh-review`):
+- **Auto:** Run build + test + diagnostics + scope checks in each agent's worktree
+- **Peer:** Dispatch a reviewer Task (same as a ticket Task but with reviewer role and read-only access)
+- **User:** Present changes to user for approval
+
+#### 3.2-S.4 — Update State
+
+After review completes for each ticket:
+
+1. Update ticket markdown file `**Status:**` field (`completed` → `approved` or `rejected`)
+2. If approved, add `**ApprovedAt:** <ISO timestamp>`
+3. Update `mamh-state.json` `ticketsSummary` counts
+4. Update `registry.json` agent stats (`ticketsCompleted`, `ticketsAssigned`)
+5. Update `.mamh/HANDOFF.md` with progress
+
+#### 3.2-S.5 — Next Batch
+
+If all tickets in the batch are approved, proceed to the next batch. If any tickets were rejected, return them to pending for re-dispatch in a follow-up batch.
+
+Repeat until all batches are complete.
+
+### Step 3.3-S - Scope Enforcement
+
+The scope-guard hook (`${CLAUDE_PLUGIN_ROOT}/scripts/scope-guard.mjs`) fires in both modes. In subagent mode, each Task subagent triggers the hook when writing files. The hook reads the agent name from the environment and enforces path boundaries from `registry.json`.
+
+### Step 3.4-S - File-Based Communication
+
+In subagent mode, there is no Agent Teams messaging. Instead:
+
+- **Ticket outputs:** Each subagent writes `.mamh/comms/<ticket-id>-output.md` when done
+- **Decisions:** The main session (orchestrator) writes to `.mamh/comms/decisions.md`
+- **Changelog:** The main session writes to `.mamh/comms/changelog.md`
+- **Inter-ticket context:** When dispatching a ticket with dependencies, include the content of dependent ticket output files in the Task prompt
+
+### Step 3.5-S - Dynamic Agent Provisioning
+
+Same logic as Agent Teams mode. If a gap is detected:
+
+- **If `agentApprovalMode` is `auto`:** Create agent definition file + registry entry, then dispatch via Task.
+- **If `agentApprovalMode` is `suggest`:** Propose to user, wait for approval, then create and dispatch.
+- **If `agentApprovalMode` is `locked`:** Assign to closest existing agent.
+
+### Step 3.6-S - Progress Tracking
+
+The main session updates all state files directly (no delegation needed):
+
+- Update ticket statuses in ticket files
+- Update `mamh-state.json` after each batch completes
+- Update `registry.json` agent stats
+- Update `.mamh/HANDOFF.md` after each batch (see Step 3.6c for checkpoint rules)
+- At milestone completion, perform a full HANDOFF.md rewrite with Milestone History entry
+
+### Step 3.7-S - Keep-Working
+
+Not applicable in subagent mode. The TeammateIdle hook only fires in Agent Teams mode. In subagent mode, the main session controls the dispatch loop and there is no idle state.
+
+---
+
+## Error Handling (Both Modes)
+
+### Agent/Subagent Failure
 
 If an agent fails (crashes, times out, or produces invalid output):
 
 1. Mark the ticket as `failed` with error details in review notes.
 2. Log the failure to `.mamh/logs/errors/<ticket-id>-error.md`.
 3. Attempt recovery:
-   - If the failure is transient (timeout, rate limit): retry once.
-   - If the failure is persistent: reassign to a different agent or escalate to a higher model tier.
+   - If the failure is transient (timeout, rate limit): **retry once** with the same agent.
+   - If the retry fails: **escalate model tier** (haiku → sonnet → opus) and retry once.
    - If no recovery is possible: mark as `blocked` and notify the user.
 
 ### Scope Violation
@@ -209,7 +420,7 @@ If an agent writes outside its owned paths:
 
 ### Dependency Deadlock
 
-If the orchestrator detects a circular dependency (tickets waiting on each other):
+If a circular dependency is detected during batch computation (subagent mode) or runtime (agent-teams mode):
 
 1. Log the deadlock to `.mamh/logs/errors/deadlock-<timestamp>.md`.
 2. Present the deadlock to the user with the dependency chain.

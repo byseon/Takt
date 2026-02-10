@@ -98,6 +98,14 @@ Before marking any ticket complete, verify ALL of the following:
 
 ---
 
+## Model Usage
+
+- Use **haiku** when: reading files, running commands, generating boilerplate
+- Use **your assigned model** for: core implementation work
+- Request **opus** from orchestrator when: complex architectural decisions needed
+
+---
+
 ## Stop Conditions
 
 Stop working and escalate if any of the following occur:

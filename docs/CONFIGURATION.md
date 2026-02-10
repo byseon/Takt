@@ -52,6 +52,7 @@ Created by `init-project.mjs` during Phase 0 with defaults, then populated by th
   "description": "string",
   "phase": "number (0-5)",
   "currentMilestone": "string | null",
+  "executionMode": "agent-teams | subagents",
   "agentApprovalMode": "auto | suggest | locked",
   "milestoneAdvanceMode": "auto-advance | re-plan | user-decides",
   "reviewMode": "auto | peer | user",
@@ -114,6 +115,41 @@ Created by `init-project.mjs` during Phase 0 with defaults, then populated by th
 **Example:** `"M001"`
 
 **Set During:** Phase 2 (Ticket Generation), updated during Phase 5 (Milestone Iteration)
+
+---
+
+#### executionMode
+
+**Type:** `enum` - `"agent-teams" | "subagents"`
+
+**Description:** Controls how Phase 3 execution is performed. Determines whether MAMH uses Agent Teams (persistent teammates with shared task list) or Subagents (Task-tool-based parallel batch execution with the main session as orchestrator).
+
+**Values:**
+
+| Value | Mechanism | Orchestrator | Communication | Requires |
+|-------|-----------|-------------|---------------|----------|
+| `agent-teams` | TeamCreate + SendMessage | `mamh-orchestrator.md` agent in delegate mode | Agent Teams native messaging | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
+| `subagents` | Task tool parallel dispatches | Main session acts as orchestrator | File-based via `.mamh/comms/<ticket-id>-output.md` | Nothing extra |
+
+**Default:** `"agent-teams"` if `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var is set, `"subagents"` otherwise. Auto-detected by `init-project.mjs`.
+
+**Example:**
+```json
+{
+  "executionMode": "subagents"
+}
+```
+
+**Set During:** Planning interview (Phase 0, Step 0.3, Question 7)
+
+**Impact:**
+- **Phase 3 (Execution):** Determines which execution path is used:
+  - `agent-teams` → Section A of `/mamh-execute` (TeamCreate, SendMessage, shared task list, TeammateIdle hook)
+  - `subagents` → Section B of `/mamh-execute` (Task tool batch dispatch, file-based communication, main session orchestration)
+- **Phase 4 (Review):** Peer review uses teammate agent (agent-teams) or Task dispatch (subagents)
+- **Resume:** Agent Teams re-launches team; Subagents rebuilds dependency graph
+- **Stop:** Agent Teams signals teammates; Subagents stops dispatching batches
+- **Hooks:** `TeammateIdle` and `TaskCompleted` hooks only fire in agent-teams mode. `scope-guard` fires in both modes.
 
 ---
 
@@ -291,6 +327,7 @@ Created by `init-project.mjs` during Phase 0 with defaults, then populated by th
   "description": "A REST API for managing tasks with user authentication and real-time updates",
   "phase": 3,
   "currentMilestone": "M002",
+  "executionMode": "agent-teams",
   "agentApprovalMode": "suggest",
   "milestoneAdvanceMode": "auto-advance",
   "reviewMode": "peer",
@@ -1038,11 +1075,11 @@ See `.claude-plugin/plugin.json` in the plugin root.
 
 ### CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
 
-**Required:** Yes
+**Required:** Only if `executionMode` is `"agent-teams"`. Not required for `"subagents"` mode.
 
 **Type:** `boolean` (set as `1` or `true`)
 
-**Description:** Enables Agent Teams feature in Claude Code. MAMH requires this feature to spawn and coordinate multiple agents.
+**Description:** Enables Agent Teams feature in Claude Code. Required for agent-teams execution mode to spawn and coordinate persistent teammate sessions. Not needed for subagent mode, which uses the Task tool instead.
 
 **Set In:**
 ```bash
@@ -1061,6 +1098,8 @@ $env:CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1"
 echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
 # Should output: 1
 ```
+
+**Auto-detection:** `init-project.mjs` checks this env var at project initialization to set the default `executionMode` in `session.json`. If the env var is set, defaults to `"agent-teams"`; otherwise defaults to `"subagents"`. The user can override during the planning interview.
 
 ---
 

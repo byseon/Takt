@@ -1,8 +1,8 @@
 # MAMH — Project Status
 
-## Current Version: 0.1.1
+## Current Version: 0.1.4
 
-**Date:** 2026-02-08
+**Date:** 2026-02-10
 
 ---
 
@@ -58,6 +58,7 @@
 | Zero external dependencies in scripts | Portability — no `npm install` needed |
 | `${CLAUDE_PLUGIN_ROOT}` in hook paths | Plugin works from any install location |
 | Reviewer has `.worktrees/**` read access | Enables code review of agent branches before merge |
+| Dual execution mode (agent-teams / subagents) | Agent Teams requires experimental env var; subagent mode is a fully functional fallback using Task tool batch dispatch |
 
 ---
 
@@ -75,11 +76,64 @@
 
 ## Changelog
 
+### 2026-02-10 — v0.1.4
+- Added `/mamh-handoff` skill for manual HANDOFF.md updates
+  - Reads all state files, registry, tickets, decisions, changelog
+  - Generates comprehensive HANDOFF.md with structured template
+  - Preserves Milestone History across rewrites
+- Enhanced HANDOFF.md update cadence:
+  - Now explicitly updated at 4 checkpoints: ticket approval, batch completion, milestone completion, significant events
+  - Milestone completion triggers full HANDOFF.md rewrite with Milestone History entry
+  - Goal: new session can reconstruct full context from HANDOFF.md alone
+- Orchestrator now reads key docs at startup (MANDATORY):
+  - HANDOFF.md, POLICY.md, session.json, prd.md, decisions.md, registry.json — all read before any action
+- Resume skill now reads key docs (HANDOFF.md, POLICY.md, prd.md, decisions.md, registry.json) before state assessment
+- Modified 8 files:
+  1. `skills/handoff/SKILL.md` — NEW: `/mamh-handoff` skill
+  2. `agents/mamh-orchestrator.md` — Expanded session start reads (6→10 items), enhanced Handoff section
+  3. `skills/execute/SKILL.md` — Structured HANDOFF.md update checkpoints (Step 3.6c), subagent progress tracking
+  4. `skills/next/SKILL.md` — Structured milestone HANDOFF.md template with History entry format
+  5. `skills/resume/SKILL.md` — Expanded step 1 to read key docs (not just HANDOFF.md)
+  6. `skills/mamh/SKILL.md` — Added `/mamh-handoff` to routing table
+  7. `README.md` — Added `/mamh-handoff` to commands table and plugin structure
+  8. `CLAUDE.md` — Added handoff skill to repository structure and related docs
+
+### 2026-02-10 — v0.1.3
+- Added dual execution mode: **Agent Teams** + **Subagent fallback**
+  - `executionMode` field added to `session.json` (auto-detected from env var, user-selectable during planning)
+  - **Agent Teams mode**: Unchanged from v0.1.2 — TeamCreate + SendMessage, orchestrator agent, shared task list
+  - **Subagent mode**: Main session orchestrates via Task tool parallel batch dispatch, file-based communication via `.mamh/comms/<ticket-id>-output.md`, dependency-ordered topological sort
+  - Agent Teams is no longer a hard requirement — all skills use conditional checks
+- Modified 12 files:
+  1. `scripts/init-project.mjs` — `executionMode` field with env var auto-detection
+  2. `skills/plan/SKILL.md` — Conditional prereqs, Question 7 (execution mode choice), schema update, conditional Step 2.3
+  3. `skills/execute/SKILL.md` — Mode routing, Section A (Agent Teams, unchanged), Section B (Subagents, new), unified error handling
+  4. `templates/POLICY.md` — Mode-aware Communication Rules (Agent Teams / Subagents / Both subsections)
+  5. `skills/resume/SKILL.md` — Conditional prereqs, mode-aware restore (re-launch team vs rebuild dependency graph)
+  6. `skills/stop/SKILL.md` — Mode-aware shutdown (signal teammates vs stop dispatching)
+  7. `skills/review/SKILL.md` — Mode-aware peer review (teammate agent vs reviewer Task)
+  8. `skills/next/SKILL.md` — Mode-aware auto-advance (load into team vs rebuild graph)
+  9. `skills/mamh/SKILL.md` — Updated description and conditional prereqs
+  10. `docs/CONFIGURATION.md` — `executionMode` field docs, env var requirement updated to conditional
+  11. `CLAUDE.md` — Architectural decision, hook mode awareness notes
+  12. `STATUS.md` — This changelog entry
+
+### 2026-02-10 — v0.1.2
+- Fixed 5 issues discovered during real-world usage:
+  1. **Subagents vs Agent Teams**: Clarified Task tool (planning) vs Agent Teams (execution) in plan/SKILL.md, execute/SKILL.md, orchestrator
+  2. **Tickets/milestones not marked done**: Added post-review state mutation instructions (ticket status, registry stats, state file, HANDOFF.md), explicit archival steps, milestone completion chain
+  3. **`mamh:plan` vs `plan` routing**: Added disambiguation to mamh/SKILL.md and identity header to plan/SKILL.md
+  4. **Per-project handoff**: Added `.mamh/HANDOFF.md` (created by init-project.mjs, updated by execute/next/stop/resume), restructured docs/POLICY.md with lessons learned
+  5. **Model tiering**: Added model selection table to POLICY.md template, model delegation guidance to orchestrator, model usage section to all 8 agent templates
+- Changed planner delegation tier from opus to sonnet (structured decomposition, not deep reasoning)
+- Added `ApprovedAt` field to ticket file template
+- Updated CLAUDE.md structure to reference HANDOFF.md
+
 ### 2026-02-08 — v0.1.1
 - Split monolithic `skills/mamh/SKILL.md` (923 lines) into 8 focused skill files
-  - `/mamh:plan` (Phases 0-2), `/mamh:execute` (Phase 3), `/mamh:review` (Phase 4), `/mamh:next` (Phase 5)
-  - `/mamh:status` (dashboard), `/mamh:resume` (resume protocol), `/mamh:stop` (stop protocol)
-  - `/mamh:mamh` (help + routing, ~83 lines)
+  - `/mamh-plan` (Phases 0-2), `/mamh-execute` (Phase 3), `/mamh-review` (Phase 4), `/mamh-next` (Phase 5)
+  - `/mamh-status` (dashboard), `/mamh-resume` (resume protocol), `/mamh-stop` (stop protocol)
+  - `/mamh` (help + routing, ~83 lines)
 - Each subcommand now has its own slash command with tab-completion
 - Fixed orchestrator using Task tool instead of Agent Teams:
   - Removed `Task` from orchestrator allowed tools, added to `disallowedTools`

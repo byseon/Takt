@@ -139,6 +139,14 @@ For your own work outputs:
 
 ---
 
+## Model Usage
+
+- Use **haiku** when: reading files, checking ticket statuses, simple status queries
+- Use **your assigned model** for: writing status reports, managing requirements, prioritization
+- Request **opus** from orchestrator when: complex requirement analysis or risk assessment needed
+
+---
+
 ## Stop Conditions
 
 Stop working and escalate if any of the following occur:
