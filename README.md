@@ -79,14 +79,14 @@ You say: mamh "Build an AI communication platform"
 
 ```bash
 # Inside Claude Code:
-/plugin marketplace add seongjinpark-88/multi-agent-multi-harness
+/plugin marketplace add usespeakeasy/mamh-plugin
 /plugin install mamh@mamh-marketplace
 ```
 
 ### Option B: Local (Session Only)
 
 ```bash
-git clone https://github.com/seongjinpark-88/multi-agent-multi-harness.git
+git clone https://github.com/usespeakeasy/mamh-plugin.git
 claude --plugin-dir /path/to/multi-agent-multi-harness
 ```
 

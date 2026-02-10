@@ -121,7 +121,7 @@ mamh/
 ### Plugin Installation
 ```bash
 # Option A: Permanent install (inside Claude Code)
-/plugin marketplace add seongjinpark-88/multi-agent-multi-harness
+/plugin marketplace add usespeakeasy/mamh-plugin
 /plugin install mamh@mamh-marketplace
 
 # Option B: Session-only (from shell)

@@ -14,7 +14,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/seongjinpark/mamh"
+    "url": "https://github.com/usespeakeasy/mamh-plugin"
   },
   "files": [
     ".claude-plugin/",
