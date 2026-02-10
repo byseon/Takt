@@ -51,7 +51,7 @@ The execution mode is chosen during planning and can be changed between mileston
 
 | Feature | Description |
 |---------|-------------|
-| **Automated Planning** | Interview --> PRD --> tech spec --> agent roster --> tickets. No manual project setup. |
+| **Automated Planning** | 3 quick questions --> auto-generate full plan --> approve --> execute. Progressive disclosure, not a form. |
 | **Dynamic Agent Provisioning** | Creates specialized agents on-the-fly based on project needs. A CLI tool gets different agents than a full-stack web app. |
 | **Scope Enforcement** | Hooks block agents from writing outside their domain. The backend agent cannot touch frontend files. Period. |
 | **Review Gates** | Tickets must pass acceptance criteria checks, build verification, and optional peer/user review before completion. |
@@ -375,283 +375,95 @@ Here is a complete walkthrough of running MAMH on a real project:
 mamh "Build a todo app with React frontend and FastAPI backend"
 ```
 
-#### Phase 0: Planning Interview
+#### Phase 0: Planning (3 Questions + Plan Approval)
 
 ```
-============================================================
-  MAMH — Phase 0: Planning Interview
-============================================================
-
 Analyzing project description...
 
-Delegating to analyst agent for requirements expansion...
-
-  Core Requirements:
-  - User can create, read, update, delete todo items
-  - Todo items have: title, description, priority, due date, status
-  - Filter and sort todos by priority, status, due date
-  - User authentication (signup, login, logout)
-  - Persistent storage with a database
-
-  Non-Functional Requirements:
-  - Responsive UI (mobile + desktop)
-  - API response times < 200ms
-  - Input validation on both client and server
-
-  Suggested Agent Roles:
-  - backend-engineer (FastAPI, database, auth)
-  - frontend-engineer (React, UI components, state)
-  - reviewer (code quality, security)
-
-------------------------------------------------------------
-Planning Interview
-------------------------------------------------------------
-
-Q1: Based on your project, I recommend these agent roles:
-    [backend-engineer, frontend-engineer, reviewer]
-    Would you like to add, remove, or modify any?
-
-> Looks good, add a designer for the UI.
-
-Q2: Are there any hard constraints?
+Q1: Any hard constraints I should know about?
 
 > Must use PostgreSQL. Must use TypeScript for the frontend.
 
-Q3: Technology preferences?
-    - Language/runtime: Python 3.11+ (backend), TypeScript (frontend)
-    - Framework: FastAPI (backend), React 18 (frontend)
-    - Database: PostgreSQL
-    - Deployment: Docker
-
-> Use your best judgment for the rest.
-
-Q4: How granular should milestones be?
-    [Fine | Medium | Coarse]
-
-> Medium
-
-Q5: How should completed work be reviewed?
-    [Auto | Peer | User]
-
-> Auto
-
-Q6: When a milestone completes, what should happen?
-    [Auto-advance | Re-plan | User-decides]
-
-> User-decides
-
-Q7: How should agents execute tickets?
+Q2: How should agents run during execution?
     [Agent Teams (Recommended) | Subagents]
 
 > Agent Teams
 
-Delegating to architect agent for tech spec generation...
+Q3: How involved do you want to be during execution?
+    [Autonomous | Milestone checkpoints (Recommended) | Hands-on]
 
-Writing planning artifacts to .mamh/...
-  + .mamh/prd.md
-  + .mamh/tech-spec.md
-  + .mamh/constraints.md
-  + .mamh/state/session.json
-  + .mamh/state/mamh-state.json
+> Milestone checkpoints
 
-Phase 0 complete. PRD, tech spec, and constraints are ready.
-Moving to Phase 1: Agent Definition.
+Generating plan (analyst + architect + planner agents working)...
+
+================================================================
+  MAMH Plan Summary
+================================================================
+
+  Project:     Todo App
+  Execution:   Agent Teams
+  Involvement: Milestone checkpoints
+
+----------------------------------------------------------------
+  Agent Roster (4 agents)
+----------------------------------------------------------------
+  Agent              | Model  | Owned Paths
+  -------------------|--------|---------------------------
+  mamh-backend       | sonnet | src/api/**, src/db/**, tests/api/**
+  mamh-frontend      | sonnet | src/ui/**, public/**
+  mamh-designer      | sonnet | src/ui/components/**, src/ui/styles/**
+  mamh-reviewer      | opus   | (read-only: all)
+
+----------------------------------------------------------------
+  Milestones (4 milestones, 17 tickets total)
+----------------------------------------------------------------
+  M001: Project Scaffolding (5 tickets)
+    T001  Setup FastAPI project structure      -> mamh-backend   (no deps)
+    T002  Setup React + TypeScript scaffold    -> mamh-frontend  (no deps)
+    T003  Define shared API types              -> mamh-backend   (no deps)
+    T004  Setup PostgreSQL schema + migrations -> mamh-backend   (deps: T001)
+    T005  Setup design tokens + base styles    -> mamh-designer  (deps: T002)
+
+  M002: Authentication (3 tickets)
+    T006  Implement auth endpoints             -> mamh-backend   (deps: T004)
+    T007  Implement login/signup UI            -> mamh-frontend  (deps: T005, T006)
+    T008  Add JWT middleware + protected routes -> mamh-backend   (deps: T006)
+
+  M003: Core CRUD (5 tickets)
+    T009-T013  Todo CRUD endpoints, list/detail views, forms, filtering
+
+  M004: Polish + Review (4 tickets)
+    T014-T017  Responsive layout, error handling, code review, Docker
+
+================================================================
+  [Approve]  [Modify agents]  [Modify tickets]  [Start over]
+================================================================
+
+Does this plan look good?
+
+> Approve
+
+[MAMH] Planning complete. 4 agents, 17 tickets, 4 milestones.
+[MAMH] Ready to execute. Starting M001: Project Scaffolding.
 ```
 
-#### Phase 1: Agent Definition
+#### Phase 3: Execution (with inline progress)
 
 ```
-============================================================
-  MAMH — Phase 1: Agent Definition
-============================================================
+[MAMH] Executing M001 — Project Scaffolding (5 tickets, agent-teams mode)
 
-Delegating to architect agent for agent roster design...
-
-Generating agent definition files from templates...
-  + .claude/agents/mamh-backend.md
-  + .claude/agents/mamh-frontend.md
-  + .claude/agents/mamh-designer.md
-  + .claude/agents/mamh-reviewer.md
-
-------------------------------------------------------------
-Agent Roster
-------------------------------------------------------------
-
-  Agent            | Role                | Model  | Owned Paths                  | Status
-  -----------------|---------------------|--------|------------------------------|--------
-  mamh-backend     | Backend engineer    | sonnet | src/api/**, src/db/**, tests/api/** | Ready
-  mamh-frontend    | Frontend engineer   | sonnet | src/ui/**, public/**         | Ready
-  mamh-designer    | UI/UX designer      | sonnet | src/ui/components/**, src/ui/styles/** | Ready
-  mamh-reviewer    | Code reviewer       | opus   | (read-only: all)             | Ready
-  mamh-orchestrator| Team lead           | opus   | (delegate mode, no code)     | Ready
-
-Does this agent roster look correct?
-
-> Yes, proceed.
-
-Phase 1 complete. Agent roster locked in.
-Moving to Phase 2: Ticket Generation.
-```
-
-#### Phase 2: Ticket Generation
-
-```
-============================================================
-  MAMH — Phase 2: Ticket Generation
-============================================================
-
-Delegating to planner agent for milestone and ticket decomposition...
-
-=== MAMH Ticket Board ===
-
-Milestone M001: Project Scaffolding [PENDING]
-  T001 [pending]  Setup FastAPI project structure      -> mamh-backend    (no deps)
-  T002 [pending]  Setup React + TypeScript scaffold    -> mamh-frontend   (no deps)
-  T003 [pending]  Define shared API types              -> mamh-backend    (no deps)
-  T004 [pending]  Setup PostgreSQL schema + migrations -> mamh-backend    (deps: T001)
-  T005 [pending]  Setup design tokens + base styles    -> mamh-designer   (deps: T002)
-
-Milestone M002: Authentication [PENDING]
-  T006 [pending]  Implement auth endpoints             -> mamh-backend    (deps: T004)
-  T007 [pending]  Implement login/signup UI            -> mamh-frontend   (deps: T005, T006)
-  T008 [pending]  Add JWT middleware + protected routes -> mamh-backend   (deps: T006)
-
-Milestone M003: Core CRUD [PENDING]
-  T009 [pending]  Implement todo CRUD endpoints        -> mamh-backend    (deps: T008)
-  T010 [pending]  Implement todo list + detail views   -> mamh-frontend   (deps: T009)
-  T011 [pending]  Implement todo create/edit forms     -> mamh-frontend   (deps: T009)
-  T012 [pending]  Add filtering + sorting              -> mamh-backend    (deps: T009)
-  T013 [pending]  Add filter/sort UI controls          -> mamh-frontend   (deps: T012)
-
-Milestone M004: Polish + Review [PENDING]
-  T014 [pending]  Responsive layout pass               -> mamh-designer   (deps: T013)
-  T015 [pending]  Error handling + loading states      -> mamh-frontend   (deps: T013)
-  T016 [pending]  Full code review                     -> mamh-reviewer   (deps: T014, T015)
-  T017 [pending]  Docker compose setup                 -> mamh-backend    (deps: T016)
-
-Total: 17 tickets across 4 milestones
-
-Phase 2 complete. 17 tickets across 4 milestones are ready.
-Moving to Phase 3: Execution.
-```
-
-#### Phase 3: Parallel Execution
-
-```
-============================================================
-  MAMH — Phase 3: Execution (Milestone M001)
-============================================================
-
-Launching Agent Teams...
-  Team lead:  mamh-orchestrator (delegate mode)
-  Teammates:  mamh-backend, mamh-frontend, mamh-designer, mamh-reviewer
-
-Distributing tickets with no unresolved dependencies...
-  -> mamh-backend:   T001 (Setup FastAPI project structure)
-  -> mamh-frontend:  T002 (Setup React + TypeScript scaffold)
-  -> mamh-backend:   T003 (Define shared API types)
-
-[mamh-backend]   T001: Creating FastAPI project structure...
-                 - src/api/main.py (FastAPI app)
-                 - src/api/routes/ (endpoint modules)
-                 - src/api/models/ (Pydantic models)
-                 - src/db/ (SQLAlchemy setup)
-                 - tests/api/ (pytest structure)
-                 T001 -> completed
-
-[mamh-frontend]  T002: Setting up React + TypeScript scaffold...
-                 - src/ui/ (Vite + React + TypeScript)
-                 - src/ui/components/ (component library)
-                 - src/ui/pages/ (route pages)
-                 - public/ (static assets)
-                 T002 -> completed
-
-[mamh-backend]   T003: Defining shared API types...
-                 - src/api/schemas/todo.py (TodoCreate, TodoRead, TodoUpdate)
-                 - src/api/schemas/user.py (UserCreate, UserRead, Token)
-                 T003 -> completed
-
-Dependencies resolved. Releasing blocked tickets...
-  -> mamh-backend:   T004 (Setup PostgreSQL schema + migrations)
-  -> mamh-designer:  T005 (Setup design tokens + base styles)
-
-[mamh-backend]   T004: Creating database schema and migrations...
-[mamh-designer]  T005: Establishing design token system...
-```
-
-#### Phase 4: Review Gates
-
-```
-============================================================
-  MAMH — Phase 4: Review Gates (Milestone M001)
-============================================================
-
-Running auto-review on completed tickets...
-
-  T001 — Setup FastAPI project structure
-    Build check:       PASS (python -m pytest exits 0)
-    Test check:        PASS (3/3 tests pass)
-    Diagnostics check: PASS (0 errors)
-    Scope check:       PASS (all files in src/api/**, src/db/**, tests/api/**)
-    Result:            APPROVED
-
-  T002 — Setup React + TypeScript scaffold
-    Build check:       PASS (npm run build exits 0)
-    Test check:        PASS (5/5 tests pass)
-    Diagnostics check: PASS (0 errors, 0 warnings)
-    Scope check:       PASS (all files in src/ui/**, public/**)
-    Result:            APPROVED
-
-  T003 — Define shared API types
-    Build check:       PASS
-    Test check:        PASS (2/2 tests pass)
-    Diagnostics check: PASS
-    Scope check:       PASS
-    Result:            APPROVED
-
-  T004 — Setup PostgreSQL schema + migrations
-    Build check:       PASS
-    Test check:        PASS (4/4 tests pass)
-    Diagnostics check: PASS
-    Scope check:       PASS
-    Result:            APPROVED
-
-  T005 — Setup design tokens + base styles
-    Build check:       PASS
-    Test check:        PASS (2/2 tests pass)
-    Diagnostics check: PASS
-    Scope check:       PASS
-    Result:            APPROVED
-
-All 5 tickets in M001 approved.
-```
-
-#### Phase 5: Milestone Completion
-
-```
-============================================================
-  MAMH — Phase 5: Milestone Iteration
-============================================================
-
-Milestone M001: Project Scaffolding -> COMPLETE
-
-  Summary:
-  - 5 tickets completed, 0 rejected
-  - Agents involved: mamh-backend (3), mamh-frontend (1), mamh-designer (1)
-  - Deliverables: FastAPI scaffold, React scaffold, shared types,
-    database schema, design token system
-
-  Archiving completed tickets to .mamh/tickets/archive/M001-scaffolding/
+[MAMH] T001 approved (mamh-backend) — Setup FastAPI project structure
+[MAMH] T002 approved (mamh-frontend) — Setup React + TypeScript scaffold
+[MAMH] T003 approved (mamh-backend) — Define shared API types
+[MAMH] T004 approved (mamh-backend) — Setup PostgreSQL schema + migrations
+[MAMH] T005 approved (mamh-designer) — Setup design tokens + base styles
+[MAMH] Milestone M001 complete! 5/5 tickets approved. Merging branches.
 
 ------------------------------------------------------------
 Next: Milestone M002 — Authentication (3 tickets)
 ------------------------------------------------------------
 
-  T006 [pending]  Implement auth endpoints             -> mamh-backend
-  T007 [pending]  Implement login/signup UI            -> mamh-frontend
-  T008 [pending]  Add JWT middleware + protected routes -> mamh-backend
-
-Milestone advance mode: user-decides
+Milestone advance mode: milestone checkpoints
 
 Options:
   [Continue]  Start M002 with the current roster
@@ -660,6 +472,13 @@ Options:
   [Stop]      Save state and stop
 
 > Continue
+
+[MAMH] Starting M002 — Authentication (3 tickets)
+[MAMH] T006 approved (mamh-backend) — Implement auth endpoints
+[MAMH] T007 approved (mamh-frontend) — Implement login/signup UI
+[MAMH] T008 approved (mamh-backend) — Add JWT middleware + protected routes
+[MAMH] Milestone M002 complete! 3/3 tickets approved. Merging branches.
+...
 ```
 
 The cycle repeats for each milestone until the project is complete.

@@ -34,6 +34,11 @@ Read `executionMode` from `.mamh/session.json`:
 - If `"agent-teams"` → proceed to **Section A: Agent Teams Execution**
 - If `"subagents"` → proceed to **Section B: Subagent Execution**
 
+**Before starting either mode**, print:
+```
+[MAMH] Executing M001 — <milestone name> (<N> tickets, <mode> mode)
+```
+
 ---
 
 ## Section A: Agent Teams Execution
@@ -213,6 +218,37 @@ Update `.mamh/HANDOFF.md` at these checkpoints:
 
 The goal is that a new session reading only HANDOFF.md can understand the full project state without reading every ticket file.
 
+### Step 3.6d - Inline Progress Output
+
+**Print a one-liner to the user** at each of these events. This keeps the user informed without requiring them to check files:
+
+1. **After each ticket approval:**
+   ```
+   [MAMH] T001 approved (mamh-backend) — Setup project structure
+   ```
+
+2. **After each batch completes (subagent mode):**
+   ```
+   [MAMH] Batch 2/4 complete. 8/14 tickets done.
+   ```
+
+3. **At milestone completion:**
+   ```
+   [MAMH] Milestone M001 complete! 6/6 tickets approved. Merging branches.
+   ```
+
+4. **When starting the next milestone:**
+   ```
+   [MAMH] Starting M002 — Core Features (8 tickets)
+   ```
+
+5. **On blocker or failure:**
+   ```
+   [MAMH] T007 BLOCKED — dependency T005 failed. Escalating.
+   ```
+
+These messages are output as regular text to the user (not written to files). They supplement, not replace, the HANDOFF.md updates.
+
 ### Step 3.7 - Keep-Working Enforcement
 
 The keep-working script (`${CLAUDE_PLUGIN_ROOT}/scripts/keep-working.mjs`) ensures agents do not stop prematurely. If an agent reports completion but has remaining assigned tickets, it is redirected to the next ticket.
@@ -343,7 +379,7 @@ Run the review process per the configured `reviewMode` (see `/mamh-review`):
 - **Peer:** Dispatch a reviewer Task (same as a ticket Task but with reviewer role and read-only access)
 - **User:** Present changes to user for approval
 
-#### 3.2-S.4 — Update State
+#### 3.2-S.4 — Update State & Print Progress
 
 After review completes for each ticket:
 
@@ -352,6 +388,14 @@ After review completes for each ticket:
 3. Update `mamh-state.json` `ticketsSummary` counts
 4. Update `registry.json` agent stats (`ticketsCompleted`, `ticketsAssigned`)
 5. Update `.mamh/HANDOFF.md` with progress
+6. **Print inline progress** for each approved ticket:
+   ```
+   [MAMH] T001 approved (mamh-backend) — <ticket title>
+   ```
+7. **After all tickets in batch are processed**, print batch summary:
+   ```
+   [MAMH] Batch <N>/<total> complete. <done>/<total> tickets done.
+   ```
 
 #### 3.2-S.5 — Next Batch
 

@@ -21,12 +21,7 @@ This skill resumes an interrupted MAMH session. It reads the saved state, determ
 
 ### Steps
 
-1. **Read key documents (MANDATORY — do this before any other action):**
-   - `.mamh/HANDOFF.md` — what's done, key decisions, next steps (most critical)
-   - `.mamh/POLICY.md` — shared team rules
-   - `.mamh/prd.md` — product requirements (skim for context)
-   - `.mamh/comms/decisions.md` — architectural decisions made so far
-   - `.mamh/agents/registry.json` — agent roster and scopes
+1. **Read HANDOFF.md:** Read `.mamh/HANDOFF.md` — this contains the full project context: what's done, key decisions, agent roster, and next steps.
 
 2. **Read state:** Load `.mamh/state/mamh-state.json`. If it does not exist, inform the user:
    > "No MAMH session found. Use `/mamh-plan` to start a new project."

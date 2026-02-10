@@ -478,16 +478,15 @@ When asked for status, display:
 ## Session Continuity
 
 **At session start (MANDATORY — read these before taking any action):**
-1. Read `.mamh/HANDOFF.md` — what's done, key decisions, next steps
-2. Read `.mamh/POLICY.md` — shared team rules
-3. Read `.mamh/state/mamh-state.json` — current phase, milestone, ticket counts
-4. Read `.mamh/session.json` — project config, execution mode, constraints
-5. Read `.mamh/prd.md` — product requirements (skim for context)
-6. Read `.mamh/comms/decisions.md` — architectural decisions made so far
-7. Read `.mamh/agents/registry.json` — agent roster and scopes
-8. Read active tickets in current milestone
-9. Check for stalled work
-10. Resume coordination
+1. Read `.mamh/HANDOFF.md` — full project context (what's done, decisions, agents, next steps)
+2. Read `.mamh/state/mamh-state.json` — current phase, milestone, ticket counts
+
+These two files provide enough context to resume coordination. Read other files **on-demand** when needed:
+- `.mamh/agents/registry.json` — when assigning tickets or checking scopes
+- `.mamh/tickets/milestones/<current>/` — when dispatching or reviewing specific tickets
+- `.mamh/comms/decisions.md` — when making architectural decisions (check precedent)
+- `.mamh/POLICY.md` — when enforcing rules or onboarding a new agent
+- `.mamh/prd.md`, `.mamh/tech-spec.md` — when clarifying requirements
 
 **At session end:**
 1. Update state file

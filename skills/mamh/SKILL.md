@@ -5,7 +5,7 @@ description: Orchestrate teams of specialized AI agents to build complex project
 
 # MAMH - Multi-Agent Multi-Harness
 
-MAMH orchestrates teams of specialized AI agents to build complex projects autonomously. It provisions purpose-built agents, assigns scoped tickets, enforces path boundaries, runs review gates, and iterates through milestones until the project is complete.
+MAMH orchestrates teams of specialized AI agents to build complex projects autonomously. Say `mamh "Build X"` — answer 3 quick questions — approve the generated plan — and agents take it from there. Progress is tracked via inline one-liners and a continuously updated HANDOFF.md.
 
 MAMH supports two execution modes, chosen during planning:
 
@@ -14,7 +14,7 @@ MAMH supports two execution modes, chosen during planning:
 | **Agent Teams** | TeamCreate + SendMessage | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var is available. Persistent teammates with shared task list. |
 | **Subagents** | Task tool parallel dispatches | Fallback when Agent Teams is unavailable. Main session orchestrates via dependency-ordered batch execution. |
 
-When triggered, MAMH runs a structured 6-phase lifecycle: Planning Interview, Agent Definition, Ticket Generation, Execution, Review Gates, and Milestone Iteration. In Agent Teams mode, the orchestrator agent operates in **delegate mode**. In Subagent mode, the **main session** acts as orchestrator.
+When triggered, MAMH uses progressive disclosure: 3 quick questions → auto-generate the full plan → show summary for approval → execute. In Agent Teams mode, the orchestrator agent operates in **delegate mode**. In Subagent mode, the **main session** acts as orchestrator.
 
 ---
 
