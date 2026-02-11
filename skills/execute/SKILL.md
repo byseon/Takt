@@ -372,12 +372,15 @@ After all Tasks in the batch complete:
 1. Read each `.mamh/comms/<ticket-id>-output.md` for results
 2. If a Task failed (no output file, or output indicates failure), mark the ticket per error handling rules
 
-#### 3.2-S.3 — Review
+#### 3.2-S.3 — Review (Full Validation)
 
-Run the review process per the configured `reviewMode` (see `/mamh-review`):
+Run the **full review process** per the configured `reviewMode` (see `/mamh-review` for details). This is different from the `review-gate.mjs` hook, which only checks acceptance criteria checkboxes. The full review includes:
+
 - **Auto:** Run build + test + diagnostics + scope checks in each agent's worktree
 - **Peer:** Dispatch a reviewer Task (same as a ticket Task but with reviewer role and read-only access)
 - **User:** Present changes to user for approval
+
+If any check fails, mark the ticket as `rejected` with failure details and return it to `in_progress` for re-dispatch in a follow-up batch.
 
 #### 3.2-S.4 — Update State & Print Progress
 

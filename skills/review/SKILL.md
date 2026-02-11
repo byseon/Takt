@@ -5,7 +5,9 @@ description: Trigger MAMH review gates on completed tickets. Validates work thro
 
 # MAMH Review — Phase 4
 
-This skill triggers review gates on completed tickets. The review process validates work before marking tickets as approved, using the configured review mode (auto, peer, or user).
+This skill runs the **full review process** on completed tickets — build checks, test runs, peer review, and/or user approval depending on the configured review mode.
+
+> **Two-layer review model:** The `review-gate.mjs` hook (TaskCompleted event) is a lightweight **completion gate** — it only validates that acceptance criteria checkboxes are checked before allowing a ticket to be marked complete. This skill (`/mamh-review`) runs the **full validation**: build, test, diagnostics, scope checks, and optional peer/user review. In subagent mode, the main session invokes this logic inline during Step 3.2-S.3 of execution.
 
 ---
 
@@ -22,7 +24,7 @@ This skill triggers review gates on completed tickets. The review process valida
 
 **Goal:** Validate completed work before marking tickets as approved.
 
-Review gates fire when a ticket transitions to `completed` status. The review process depends on the configured `reviewMode` in `.mamh/state/session.json`.
+Review gates fire when a ticket transitions to `completed` status. The review process depends on the configured `reviewMode` in `.mamh/session.json`.
 
 ### Worktree Context
 

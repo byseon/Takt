@@ -28,6 +28,60 @@ This skill runs planning through a **progressive disclosure** flow:
 
 ## Phase 0: Planning
 
+### Step 0.0 — Existing Project Detection
+
+Check if `.mamh/session.json` exists. If it does, an existing MAMH project is present.
+
+**If NO existing project** → skip to Step 0.1 (fresh start).
+
+**If existing project found**, read `.mamh/session.json` and `.mamh/HANDOFF.md` to understand current state. Then ask:
+
+> "Existing MAMH project found: **<project name>** (<N> milestones completed). Is this new work an extension of the current feature, or a new feature?"
+
+Options:
+- **Extend current feature** — Add more milestones and tickets to the existing project. Keeps all current state.
+- **New feature** — Archive completed work and start a fresh plan. Keeps project-level context (agents, tech spec, constraints).
+
+#### Path A: Extend Current Feature
+
+1. Read existing tech spec, constraints, agent roster, and milestone history
+2. Skip to Step 0.3 (plan generation) — but include existing context:
+   - Pass existing tech spec and constraints to the analyst and architect (they refine, not recreate)
+   - Planner receives the existing milestone history so new milestones continue the numbering (e.g., if M001-M003 are done, new milestones start at M004)
+   - Ticket numbering also continues from where the last feature left off
+3. Existing agents are reused. New agents can be added if the extension requires them.
+4. Skip Steps 0.5 init (`.mamh/` already exists) — jump to Phase 1 for any new agent files, then Phase 2 for new tickets
+
+#### Path B: New Feature
+
+1. **Archive feature-level state** — move ephemeral files to `.mamh/features-archive/<feature-name>-<timestamp>/`:
+   - `.mamh/prd.md`
+   - `.mamh/tickets/milestones/` (any remaining active milestones)
+   - `.mamh/tickets/archive/` (completed milestones — already bundled with artifacts)
+   - `.mamh/comms/` (all files except `decisions.md` — decisions persist across features)
+   - `.mamh/reviews/` (any remaining active reviews)
+   - `.mamh/logs/` (milestone summaries, error logs)
+   - `.mamh/state/mamh-state.json` (reset after archiving)
+2. **Keep project-level state** — these persist across features:
+   - `.mamh/session.json` (update `phase` to 0, `currentMilestone` to null, increment `featureCount`)
+   - `.mamh/constraints.md`
+   - `.mamh/tech-spec.md`
+   - `.mamh/POLICY.md`
+   - `.mamh/agents/registry.json` (reset `ticketsCompleted`/`ticketsAssigned` to 0)
+   - `.mamh/comms/decisions.md` (architectural decisions persist)
+   - `.claude/agents/mamh-*.md` (agent definitions)
+3. **Ask about revisions** (single question):
+   > "Want to revise any project-level docs before planning the new feature?"
+   Options:
+   - "No — current tech spec, constraints, and agents are fine"
+   - "Update constraints" → user provides new/modified constraints, merged into `constraints.md`
+   - "Update tech spec" → re-run architect Task with new context, overwrite `tech-spec.md`
+   - "Update agent roster" → user specifies agent changes (add/remove/modify), applied to registry
+4. **Reset ticket and milestone numbering** — new feature starts from T001, M001
+5. Proceed to Step 0.1 with existing project context available to all planning Tasks
+
+---
+
 ### Step 0.1 — Parse the Project Description
 
 Read the user's project description. Extract:
@@ -37,6 +91,8 @@ Read the user's project description. Extract:
 - Explicit constraints
 
 ### Step 0.2 — Three Quick Questions
+
+**If arriving from Path B (new feature):** Skip Q1 (constraints already known, unless user revised them in Step 0.0) and Q2 (execution mode already chosen). Only ask Q3 (involvement level) — user may want different involvement for a different feature. If arriving from Path A (extend), also skip Q1/Q2 and only ask Q3.
 
 Use `AskUserQuestion` for each. These are the ONLY questions before plan generation.
 
@@ -114,6 +170,7 @@ Output:
    - Forbidden paths
    - Model tier (haiku/sonnet/opus)
 7. Dependency Graph — which components depend on which
+8. Code Standards — naming conventions, file organization, import style, test patterns, and any stack-specific standards (e.g., "use functional components" for React, "use pydantic models" for FastAPI)
 ```
 
 After both complete, run a **third Task delegation**:
@@ -215,6 +272,8 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/init-project.mjs"
     "milestoneAdvanceMode": "<from involvement level>",
     "reviewMode": "<from involvement level>",
     "milestoneGranularity": "<from involvement level>",
+    "featureCount": 1,
+    "currentFeature": "<feature description>",
     "createdAt": "<ISO timestamp>",
     "updatedAt": "<ISO timestamp>"
   }
@@ -256,7 +315,21 @@ Agent file structure:
 - <how this agent coordinates with others>
 ```
 
-### Step 1.2 — Generate Registry
+### Step 1.2 — Render POLICY.md
+
+Generate `.mamh/POLICY.md` from the template at `${CLAUDE_PLUGIN_ROOT}/templates/POLICY.md`. Fill placeholders:
+
+| Placeholder | Source |
+|-------------|--------|
+| `{{PROJECT_NAME}}` | Project name from session.json |
+| `{{TIMESTAMP}}` | Current ISO timestamp |
+| `{{AGENT_ROSTER}}` | Agent table from Step 1.1 |
+| `{{CONSTRAINTS}}` | Content from `.mamh/constraints.md` (written in Step 0.5 from Q1 answers) |
+| `{{CODE_STANDARDS}}` | Code Standards section from the architect output (Task 2, item 8) |
+
+**Cross-check:** Before writing POLICY.md, scan the user's constraints (from `{{CONSTRAINTS}}`) against POLICY's "Hard Prohibitions" section. If any constraint contradicts a prohibition (e.g., user says "install packages freely" vs. prohibition #5 "NEVER install new dependencies without approval"), resolve by noting the override in the rendered POLICY.md under a "Project Overrides" subsection after Hard Prohibitions.
+
+### Step 1.3 — Generate Registry
 
 Write `.mamh/agents/registry.json`:
 ```json
@@ -365,6 +438,7 @@ Write a comprehensive `.mamh/HANDOFF.md` capturing the full plan:
 ## What Has Been Done
 - Planning complete: PRD, tech spec, agent roster, milestones, tickets generated
 - <N> agents defined, <M> tickets across <K> milestones
+- Feature <featureCount>: <currentFeature>
 
 ## Agent Roster
 
@@ -387,6 +461,9 @@ Write a comprehensive `.mamh/HANDOFF.md` capturing the full plan:
 
 ## Milestone History
 (none yet)
+
+## Feature History
+<!-- Populated when starting a new feature via Path B -->
 ```
 
 ### Step 2.4 — Ready for Execution

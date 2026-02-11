@@ -1,6 +1,6 @@
 # MAMH — Project Status
 
-## Current Version: 0.1.5
+## Current Version: 0.1.7
 
 **Date:** 2026-02-10
 
@@ -75,6 +75,35 @@
 ---
 
 ## Changelog
+
+### 2026-02-10 — v0.1.7
+- **Multi-feature support: extend or new feature flow**
+  - When `mamh "description"` is called in a repo with an existing `.mamh/` project, detects it and asks: extend current feature or start a new one
+  - **Extend**: Adds milestones/tickets to existing project, continues numbering, reuses all state
+  - **New feature**: Archives feature-level state (PRD, tickets, comms, reviews, logs) to `.mamh/features-archive/<name>/`, keeps project-level state (agents, tech spec, constraints, POLICY, decisions.md), resets milestone/ticket numbering
+  - User can optionally revise constraints, tech spec, or agent roster before planning the new feature
+  - Q1 (constraints) and Q2 (execution mode) are skipped for both paths — only Q3 (involvement) is asked
+  - session.json gains `featureCount` and `currentFeature` fields
+  - HANDOFF.md gains "Feature History" section
+- Modified 2 files:
+  1. `skills/plan/SKILL.md` — New Step 0.0 (existing project detection), Path A (extend), Path B (new feature), session.json schema update, HANDOFF template update
+  2. `README.md` — "Starting a New Feature" section, features-archive in directory structure
+
+### 2026-02-10 — v0.1.6
+- **Review & organization improvements**
+  - **Artifact bundling on archive**: When a milestone completes, ticket outputs (comms/) and review results (reviews/) are moved into the archive directory alongside ticket files. Each archived milestone is now self-contained.
+  - **Two-layer review model clarified**: review-gate.mjs hook = lightweight completion gate (checkbox + status + commit checks). /mamh-review skill = full validation (build/test/peer/user). Both documented explicitly in execute and review skills.
+  - **review-gate.mjs enhanced**: Now checks ticket status field ("completed"), verifies agent has commits on worktree branch, in addition to acceptance criteria checkboxes. Still fast — no build spawning.
+  - **`{{CODE_STANDARDS}}` documented**: Architect agent (Task 2 in planning) now generates code standards as output item 8. Rendered into POLICY.md during Phase 1 via new Step 1.2.
+  - **Constraint cross-check**: Planning Phase 1 now cross-references user constraints against POLICY Hard Prohibitions, noting overrides in a "Project Overrides" subsection.
+  - **Fixed**: `.mamh/state/session.json` → `.mamh/session.json` in review/SKILL.md
+- Modified 6 files:
+  1. `skills/review/SKILL.md` — Fixed session.json path, added two-layer review model documentation
+  2. `skills/plan/SKILL.md` — Added CODE_STANDARDS to architect output, new Step 1.2 (render POLICY.md with cross-check)
+  3. `skills/next/SKILL.md` — Added artifact bundling step (comms + reviews → archive)
+  4. `skills/execute/SKILL.md` — Clarified review step as "full validation" vs hook gate
+  5. `scripts/review-gate.mjs` — Added status field check, worktree commit check, updated header docs
+  6. `README.md` — Updated archive directory structure to show bundled artifacts
 
 ### 2026-02-10 — v0.1.5
 - **UX overhaul: Progressive disclosure planning**

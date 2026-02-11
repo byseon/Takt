@@ -222,4 +222,4 @@ echo '{"agent_name":"mamh-backend"}' | \
 ---
 
 **Last Updated**: 2026-02-10
-**Plugin Version**: 0.1.5
+**Plugin Version**: 0.1.7

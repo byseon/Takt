@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 
 /**
- * review-gate.mjs - TaskCompleted hook
+ * review-gate.mjs - TaskCompleted hook (completion gate)
  *
- * Enforces review checks before a ticket can be marked as complete.
- * Validates that all acceptance criteria checkboxes are checked and
- * applies the configured review mode (auto/peer/user).
+ * Lightweight gate that blocks premature ticket completion.
+ * This is NOT the full review — /mamh-review handles build/test/peer review.
+ *
+ * Checks:
+ *   1. Ticket status field says "completed" (not still "in_progress")
+ *   2. All acceptance criteria checkboxes are checked
+ *   3. Agent's worktree has commits (agent actually did work)
+ *   4. Review mode routing (peer/user modes always block for full review)
  *
  * Exit codes:
- *   0 = approve completion
+ *   0 = approve completion (gate passes — full review still needed)
  *   2 = block completion (criteria unmet or review required)
  *   1 = internal error
  *
@@ -23,6 +28,7 @@
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { resolve, join } from "node:path";
+import { execSync } from "node:child_process";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -67,6 +73,34 @@ function parseAcceptanceCriteria(content) {
   }
 
   return { checked, unchecked };
+}
+
+/**
+ * Extract the Status field value from ticket markdown content.
+ * Looks for a line like: **Status:** completed
+ */
+function parseTicketStatus(content) {
+  const match = content.match(/\*\*Status:\*\*\s*(\S+)/i);
+  return match ? match[1].toLowerCase() : null;
+}
+
+/**
+ * Check if an agent's worktree branch has any commits ahead of main.
+ * Returns true if commits exist (agent did work), false otherwise.
+ * Fails open (returns true) if git commands fail.
+ */
+function agentHasCommits(agentName) {
+  const branchName = `mamh/${agentName.replace("mamh-", "")}`;
+  try {
+    const result = execSync(`git log main..${branchName} --oneline 2>/dev/null`, {
+      encoding: "utf-8",
+      timeout: 5000,
+    });
+    return result.trim().length > 0;
+  } catch {
+    // Fail open — if git check fails, don't block on this alone
+    return true;
+  }
 }
 
 /**
@@ -213,6 +247,26 @@ async function main() {
     process.exit(0);
   }
 
+  // Check 1: Verify ticket status field says "completed"
+  const ticketStatus = parseTicketStatus(ticketContent);
+  if (ticketStatus && ticketStatus !== "completed" && ticketStatus !== "approved") {
+    const message =
+      `REVIEW GATE: Ticket ${taskId} status is "${ticketStatus}", not "completed". ` +
+      `Update the ticket status to "completed" before marking done.`;
+    process.stdout.write(message);
+    process.exit(2);
+  }
+
+  // Check 2: Verify agent's worktree has commits (agent actually did work)
+  if (agentName !== "unknown" && !agentHasCommits(agentName)) {
+    const message =
+      `REVIEW GATE: Ticket ${taskId} — agent ${agentName} has no commits on their worktree branch. ` +
+      `Commit your changes before marking this ticket as done.`;
+    process.stdout.write(message);
+    process.exit(2);
+  }
+
+  // Check 3: Acceptance criteria
   const { checked, unchecked } = parseAcceptanceCriteria(ticketContent);
   const totalCriteria = checked.length + unchecked.length;
 

@@ -26,14 +26,19 @@ This skill handles milestone completion, roster review, and advancement to the n
 A milestone is complete when ALL of its tickets have `approved` status. When this happens:
 
 1. Move all ticket files from `.mamh/tickets/milestones/<milestone>/` to `.mamh/tickets/archive/<milestone>/`.
-2. Update `_milestone.json`: set `status` → `completed`, add `completedAt` → ISO timestamp.
-3. Update `mamh-state.json` milestones array entry to reflect completion.
-4. Generate a milestone summary in `.mamh/logs/M001-summary.md`:
+2. **Bundle ticket artifacts** into the archive directory alongside the tickets:
+   - Move `.mamh/comms/<ticket-id>-output.md` → `.mamh/tickets/archive/<milestone>/<ticket-id>-output.md` for each ticket
+   - Move `.mamh/reviews/<ticket-id>-review.json` → `.mamh/tickets/archive/<milestone>/<ticket-id>-review.json` for each ticket
+   - Move `.mamh/comms/<ticket-id>-review-output.md` → `.mamh/tickets/archive/<milestone>/` (if peer review was used in subagent mode)
+   - This keeps `comms/` and `reviews/` clean — only active milestone artifacts remain there.
+3. Update `_milestone.json`: set `status` → `completed`, add `completedAt` → ISO timestamp.
+4. Update `mamh-state.json` milestones array entry to reflect completion.
+5. Generate a milestone summary in `.mamh/logs/M001-summary.md`:
    - What was delivered
    - Metrics (tickets completed, time elapsed, agents involved)
    - Issues encountered and how they were resolved
    - Learnings for future milestones
-5. **Update `.mamh/HANDOFF.md`** — This is a critical step. Perform a FULL handoff update:
+6. **Update `.mamh/HANDOFF.md`** — This is a critical step. Perform a FULL handoff update:
    a. Read the existing `.mamh/HANDOFF.md` to preserve Milestone History.
    b. Rewrite the entire file using the current state. Update ALL sections:
       - **What Has Been Done** — add the completed milestone's deliverables

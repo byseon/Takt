@@ -111,6 +111,20 @@ That's it. MAMH:
 
 Check progress anytime with `mamh status`. Update the handoff doc with `mamh handoff`. Stop cleanly with `mamh stop`.
 
+### Starting a New Feature
+
+Already used MAMH in this repo? Just run it again:
+
+```
+mamh "Add notification system with email and push"
+```
+
+MAMH detects the existing project and asks:
+- **Extend** — adds milestones to the current feature (continues numbering)
+- **New feature** — archives completed work, keeps agents and tech spec, plans fresh
+
+For new features, you can optionally revise constraints, tech spec, or the agent roster before planning.
+
 ---
 
 ## Commands
@@ -262,12 +276,20 @@ User: "mamh Build an AI scoring platform"
         T002-setup-ui.md
       M002-auth/
         ...
-    archive/                 # Completed milestones moved here
+    archive/                 # Completed milestones bundled here
+      M001-scaffolding/      # Self-contained: tickets + outputs + reviews
+        T001-setup-api.md
+        T001-output.md       # Agent output (moved from comms/)
+        T001-review.json     # Review result (moved from reviews/)
+        _milestone.json
   comms/
-    decisions.md             # Architectural decisions log
+    decisions.md             # Architectural decisions log (persists across features)
     changelog.md             # Change log
-  reviews/                   # Review results per ticket
+    <ticket-id>-output.md    # Agent outputs (active milestone only; archived on completion)
+  reviews/                   # Review results (active milestone only; archived on completion)
   logs/                      # Milestone summaries, errors, scope violations
+  features-archive/          # Previous features (created when starting a new feature)
+    auth-system-2026-02-10/  # Archived PRD, tickets, comms, logs from prior feature
 ```
 
 ### Agent Definitions (`.claude/agents/`)
@@ -434,4 +456,4 @@ MIT License. See [LICENSE](LICENSE).
 
 ---
 
-**MAMH v0.1.5** — Built for Claude Code. Zero dependencies. 3 questions to autonomous execution.
+**MAMH v0.1.7** — Built for Claude Code. Zero dependencies. 3 questions to autonomous execution.
