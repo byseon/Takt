@@ -224,6 +224,11 @@ async function main() {
   const taskId = input.task_id || input.ticket_id || input.ticketId || "";
   const milestone = input.milestone || input.currentMilestone || null;
 
+  // Only gate MAMH agents — exit immediately for non-MAMH tasks
+  if (!agentName.startsWith("mamh-")) {
+    process.exit(0);
+  }
+
   // If no task ID provided, we can't validate — allow completion
   if (!taskId) {
     process.stderr.write("review-gate: No task_id provided in hook input. Allowing completion.\n");

@@ -216,8 +216,8 @@ async function main() {
 
   const agentName = input.agent_name || process.env.CLAUDE_AGENT_NAME || "";
 
-  if (!agentName) {
-    // Can't identify agent — allow idle
+  if (!agentName || !agentName.startsWith("mamh-")) {
+    // Not a MAMH agent — allow idle
     process.exit(0);
   }
 
