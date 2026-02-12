@@ -1,0 +1,510 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "mcp-excalidraw-server",
+  "elements": [
+    {
+      "id": "arch-title",
+      "type": "text",
+      "x": 280,
+      "y": 0,
+      "strokeColor": "#1e1e1e",
+      "text": "MAMH Architecture",
+      "fontSize": 28,
+      "createdAt": "2026-02-12T17:36:02.543Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "zone-top",
+      "type": "rectangle",
+      "x": 60,
+      "y": 60,
+      "width": 760,
+      "height": 160,
+      "backgroundColor": "#e9ecef",
+      "strokeColor": "#868e96",
+      "roughness": 1,
+      "opacity": 40,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "zone-top-label",
+      "type": "text",
+      "x": 80,
+      "y": 70,
+      "strokeColor": "#868e96",
+      "text": "User Layer",
+      "fontSize": 14,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "user",
+      "type": "rectangle",
+      "x": 300,
+      "y": 100,
+      "width": 280,
+      "height": 70,
+      "backgroundColor": "#a5d8ff",
+      "strokeColor": "#1971c2",
+      "roughness": 1,
+      "label": {
+        "text": "You\nmamh \"Build a todo app\""
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "mljqpmugutkebo48l39",
+      "type": "arrow",
+      "x": 440,
+      "y": 178,
+      "width": 0,
+      "height": 80,
+      "strokeColor": "#1971c2",
+      "label": {
+        "text": "prompt"
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          114
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "user",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "orchestrator",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "zone-orch",
+      "type": "rectangle",
+      "x": 60,
+      "y": 260,
+      "width": 760,
+      "height": 140,
+      "backgroundColor": "#eebefa",
+      "strokeColor": "#9c36b5",
+      "roughness": 1,
+      "opacity": 25,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "zone-orch-label",
+      "type": "text",
+      "x": 80,
+      "y": 270,
+      "strokeColor": "#9c36b5",
+      "text": "Orchestration Layer",
+      "fontSize": 14,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "orchestrator",
+      "type": "rectangle",
+      "x": 280,
+      "y": 300,
+      "width": 320,
+      "height": 70,
+      "backgroundColor": "#eebefa",
+      "strokeColor": "#9c36b5",
+      "roughness": 1,
+      "label": {
+        "text": "Orchestrator (delegate mode)\nplans, assigns tickets, reviews"
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "zone-agents",
+      "type": "rectangle",
+      "x": 60,
+      "y": 440,
+      "width": 760,
+      "height": 220,
+      "backgroundColor": "#b2f2bb",
+      "strokeColor": "#2f9e44",
+      "roughness": 1,
+      "opacity": 20,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "zone-agents-label",
+      "type": "text",
+      "x": 80,
+      "y": 450,
+      "strokeColor": "#2f9e44",
+      "text": "Agent Layer (parallel, scope-enforced)",
+      "fontSize": 14,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "agent-be",
+      "type": "rectangle",
+      "x": 80,
+      "y": 490,
+      "width": 160,
+      "height": 80,
+      "backgroundColor": "#a5d8ff",
+      "strokeColor": "#1971c2",
+      "roughness": 1,
+      "label": {
+        "text": "Backend\nsrc/api/**"
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "agent-fe",
+      "type": "rectangle",
+      "x": 270,
+      "y": 490,
+      "width": 160,
+      "height": 80,
+      "backgroundColor": "#a5d8ff",
+      "strokeColor": "#1971c2",
+      "roughness": 1,
+      "label": {
+        "text": "Frontend\nsrc/ui/**"
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "agent-design",
+      "type": "rectangle",
+      "x": 460,
+      "y": 490,
+      "width": 160,
+      "height": 80,
+      "backgroundColor": "#a5d8ff",
+      "strokeColor": "#1971c2",
+      "roughness": 1,
+      "label": {
+        "text": "Designer\nsrc/styles/**"
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "agent-review",
+      "type": "rectangle",
+      "x": 650,
+      "y": 490,
+      "width": 160,
+      "height": 80,
+      "backgroundColor": "#ffc9c9",
+      "strokeColor": "#e03131",
+      "roughness": 1,
+      "label": {
+        "text": "Reviewer\n(read-only)"
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "mljqpmug7iihejdx1qi",
+      "type": "arrow",
+      "x": 383.1787384183515,
+      "y": 374.5719500300766,
+      "width": -210,
+      "height": 100,
+      "strokeColor": "#9c36b5",
+      "label": {
+        "text": "ticket"
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -159.17798965721582,
+          110.85609993984679
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "orchestrator",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "agent-be",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "mljqpmugvrc9nyzvak",
+      "type": "arrow",
+      "x": 420.49368842645987,
+      "y": 377.2636750760036,
+      "width": -60,
+      "height": 100,
+      "strokeColor": "#9c36b5",
+      "label": {
+        "text": "ticket"
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -48.67968454522742,
+          105.47264984799278
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "orchestrator",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "agent-fe",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "mljqpmugl0xjvoena6h",
+      "type": "arrow",
+      "x": 461.59925112948815,
+      "y": 377.1185397025019,
+      "width": 70,
+      "height": 100,
+      "strokeColor": "#9c36b5",
+      "label": {
+        "text": "ticket"
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          54.23739517692104,
+          105.76292059499622
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "orchestrator",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "agent-design",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "mljqpmug9nwfrwh2yxc",
+      "type": "arrow",
+      "x": 498.6900226058966,
+      "y": 374.4639807177581,
+      "width": 200,
+      "height": 100,
+      "strokeColor": "#e03131",
+      "strokeStyle": "dashed",
+      "label": {
+        "text": "review"
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          165.18405735230942,
+          111.07203856448382
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "orchestrator",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "agent-review",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "branch-be",
+      "type": "text",
+      "x": 100,
+      "y": 580,
+      "strokeColor": "#868e96",
+      "text": "git branch:\nmamh/backend",
+      "fontSize": 12,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "branch-fe",
+      "type": "text",
+      "x": 290,
+      "y": 580,
+      "strokeColor": "#868e96",
+      "text": "git branch:\nmamh/frontend",
+      "fontSize": 12,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "branch-design",
+      "type": "text",
+      "x": 480,
+      "y": 580,
+      "strokeColor": "#868e96",
+      "text": "git branch:\nmamh/designer",
+      "fontSize": 12,
+      "createdAt": "2026-02-12T17:36:02.544Z",
+      "updatedAt": "2026-02-12T17:36:02.544Z",
+      "version": 1
+    },
+    {
+      "id": "zone-hooks",
+      "type": "rectangle",
+      "x": 60,
+      "y": 700,
+      "width": 760,
+      "height": 100,
+      "backgroundColor": "#ffd8a8",
+      "strokeColor": "#e8590c",
+      "roughness": 1,
+      "opacity": 25,
+      "createdAt": "2026-02-12T17:36:02.545Z",
+      "updatedAt": "2026-02-12T17:36:02.545Z",
+      "version": 1
+    },
+    {
+      "id": "zone-hooks-label",
+      "type": "text",
+      "x": 80,
+      "y": 710,
+      "strokeColor": "#e8590c",
+      "text": "Safety Layer",
+      "fontSize": 14,
+      "createdAt": "2026-02-12T17:36:02.545Z",
+      "updatedAt": "2026-02-12T17:36:02.545Z",
+      "version": 1
+    },
+    {
+      "id": "hook-scope",
+      "type": "rectangle",
+      "x": 100,
+      "y": 740,
+      "width": 180,
+      "height": 45,
+      "backgroundColor": "#ffd8a8",
+      "strokeColor": "#e8590c",
+      "roughness": 1,
+      "label": {
+        "text": "scope-guard.mjs"
+      },
+      "fontSize": 14,
+      "createdAt": "2026-02-12T17:36:02.545Z",
+      "updatedAt": "2026-02-12T17:36:02.545Z",
+      "version": 1
+    },
+    {
+      "id": "hook-review",
+      "type": "rectangle",
+      "x": 330,
+      "y": 740,
+      "width": 180,
+      "height": 45,
+      "backgroundColor": "#ffd8a8",
+      "strokeColor": "#e8590c",
+      "roughness": 1,
+      "label": {
+        "text": "review-gate.mjs"
+      },
+      "fontSize": 14,
+      "createdAt": "2026-02-12T17:36:02.545Z",
+      "updatedAt": "2026-02-12T17:36:02.545Z",
+      "version": 1
+    },
+    {
+      "id": "hook-keep",
+      "type": "rectangle",
+      "x": 560,
+      "y": 740,
+      "width": 180,
+      "height": 45,
+      "backgroundColor": "#ffd8a8",
+      "strokeColor": "#e8590c",
+      "roughness": 1,
+      "label": {
+        "text": "keep-working.mjs"
+      },
+      "fontSize": 14,
+      "createdAt": "2026-02-12T17:36:02.545Z",
+      "updatedAt": "2026-02-12T17:36:02.545Z",
+      "version": 1
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff",
+    "gridSize": null
+  }
+}

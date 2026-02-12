@@ -8,6 +8,9 @@ node_modules/
 # Runtime state (generated per-project)
 .mamh/
 
+# Logs
+excalidraw.log
+
 # OS files
 .DS_Store
 Thumbs.db

@@ -1,0 +1,446 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "mcp-excalidraw-server",
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 300,
+      "y": 0,
+      "strokeColor": "#1e1e1e",
+      "text": "MAMH Workflow",
+      "fontSize": 28,
+      "createdAt": "2026-02-12T17:34:59.714Z",
+      "updatedAt": "2026-02-12T17:34:59.714Z",
+      "version": 1
+    },
+    {
+      "id": "user-prompt",
+      "type": "rectangle",
+      "x": 320,
+      "y": 60,
+      "width": 200,
+      "height": 70,
+      "backgroundColor": "#a5d8ff",
+      "strokeColor": "#1971c2",
+      "roughness": 1,
+      "label": {
+        "text": "User Prompt\n\"Build a todo app\""
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:34:59.714Z",
+      "updatedAt": "2026-02-12T17:34:59.714Z",
+      "version": 1
+    },
+    {
+      "id": "mljqoacoe35pxdbrgso",
+      "type": "arrow",
+      "x": 420,
+      "y": 138,
+      "width": 0,
+      "height": 50,
+      "strokeColor": "#1971c2",
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          54
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:34:59.714Z",
+      "updatedAt": "2026-02-12T17:34:59.714Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "user-prompt",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "phase0",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "phase0",
+      "type": "rectangle",
+      "x": 280,
+      "y": 200,
+      "width": 280,
+      "height": 70,
+      "backgroundColor": "#b2f2bb",
+      "strokeColor": "#2f9e44",
+      "roughness": 1,
+      "label": {
+        "text": "Phase 0: Planning\n3 questions → auto-generate plan"
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:34:59.714Z",
+      "updatedAt": "2026-02-12T17:34:59.714Z",
+      "version": 1
+    },
+    {
+      "id": "mljqoacod2894bygcf",
+      "type": "arrow",
+      "x": 420,
+      "y": 278,
+      "width": 0,
+      "height": 50,
+      "strokeColor": "#2f9e44",
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          54
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:34:59.714Z",
+      "updatedAt": "2026-02-12T17:34:59.714Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "phase0",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "approve",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "approve",
+      "type": "diamond",
+      "x": 345,
+      "y": 340,
+      "width": 150,
+      "height": 80,
+      "backgroundColor": "#ffd8a8",
+      "strokeColor": "#e8590c",
+      "roughness": 1,
+      "label": {
+        "text": "Approve?"
+      },
+      "fontSize": 18,
+      "createdAt": "2026-02-12T17:34:59.714Z",
+      "updatedAt": "2026-02-12T17:34:59.714Z",
+      "version": 1
+    },
+    {
+      "id": "mljqoacofb867k2zto",
+      "type": "arrow",
+      "x": 420,
+      "y": 428,
+      "width": 0,
+      "height": 50,
+      "strokeColor": "#2f9e44",
+      "label": {
+        "text": "Yes"
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          54
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "approve",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "phase12",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "phase12",
+      "type": "rectangle",
+      "x": 280,
+      "y": 490,
+      "width": 280,
+      "height": 70,
+      "backgroundColor": "#b2f2bb",
+      "strokeColor": "#2f9e44",
+      "roughness": 1,
+      "label": {
+        "text": "Phase 1-2: Generate Files\nagents, tickets, milestones"
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1
+    },
+    {
+      "id": "mljqoacoikg716j18i",
+      "type": "arrow",
+      "x": 420,
+      "y": 568,
+      "width": 0,
+      "height": 50,
+      "strokeColor": "#2f9e44",
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          54
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "phase12",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "phase3",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "phase3",
+      "type": "rectangle",
+      "x": 260,
+      "y": 630,
+      "width": 320,
+      "height": 80,
+      "backgroundColor": "#eebefa",
+      "strokeColor": "#9c36b5",
+      "roughness": 1,
+      "label": {
+        "text": "Phase 3: Parallel Execution\nagents work on tickets simultaneously\n(scope-enforced, git-isolated)"
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1
+    },
+    {
+      "id": "mljqoaco98vhpd8pucq",
+      "type": "arrow",
+      "x": 420,
+      "y": 718,
+      "width": 0,
+      "height": 50,
+      "strokeColor": "#9c36b5",
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          54
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "phase3",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "phase4",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "phase4",
+      "type": "rectangle",
+      "x": 280,
+      "y": 780,
+      "width": 280,
+      "height": 70,
+      "backgroundColor": "#ffc9c9",
+      "strokeColor": "#e03131",
+      "roughness": 1,
+      "label": {
+        "text": "Phase 4: Review Gates\nbuild + test + peer review"
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1
+    },
+    {
+      "id": "mljqoacoetza2gxyqr5",
+      "type": "arrow",
+      "x": 420,
+      "y": 858,
+      "width": 0,
+      "height": 50,
+      "strokeColor": "#e03131",
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          54
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "phase4",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "milestone-done",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "milestone-done",
+      "type": "diamond",
+      "x": 330,
+      "y": 920,
+      "width": 180,
+      "height": 80,
+      "backgroundColor": "#ffd8a8",
+      "strokeColor": "#e8590c",
+      "roughness": 1,
+      "label": {
+        "text": "More\nmilestones?"
+      },
+      "fontSize": 16,
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1
+    },
+    {
+      "id": "loop-arrow-right",
+      "type": "arrow",
+      "x": 510,
+      "y": 960,
+      "width": 120,
+      "height": 0,
+      "strokeColor": "#e8590c",
+      "label": {
+        "text": "Yes"
+      },
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1
+    },
+    {
+      "id": "loop-arrow-up",
+      "type": "arrow",
+      "x": 630,
+      "y": 960,
+      "width": 0,
+      "height": -320,
+      "strokeColor": "#e8590c",
+      "strokeStyle": "dashed",
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1
+    },
+    {
+      "id": "loop-label",
+      "type": "text",
+      "x": 640,
+      "y": 780,
+      "strokeColor": "#868e96",
+      "text": "← back to\n   Phase 3",
+      "fontSize": 14,
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1
+    },
+    {
+      "id": "mljqoacotcgqgi7tdv",
+      "type": "arrow",
+      "x": 420,
+      "y": 1008,
+      "width": 0,
+      "height": 50,
+      "strokeColor": "#2f9e44",
+      "label": {
+        "text": "No"
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          54
+        ]
+      ],
+      "endArrowhead": "arrow",
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1,
+      "startBinding": {
+        "elementId": "milestone-done",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "done",
+        "focus": 0,
+        "gap": 8
+      }
+    },
+    {
+      "id": "done",
+      "type": "rectangle",
+      "x": 330,
+      "y": 1070,
+      "width": 180,
+      "height": 60,
+      "backgroundColor": "#b2f2bb",
+      "strokeColor": "#2f9e44",
+      "roughness": 1,
+      "label": {
+        "text": "Done!\nProject report"
+      },
+      "fontSize": 18,
+      "createdAt": "2026-02-12T17:34:59.715Z",
+      "updatedAt": "2026-02-12T17:34:59.715Z",
+      "version": 1
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff",
+    "gridSize": null
+  }
+}

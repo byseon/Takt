@@ -1,5 +1,47 @@
 # MAMH — Multi-Agent Multi-Harness
 
+## TL;DR
+
+**MAMH is a Claude Code plugin that turns one prompt into a coordinated team of AI agents that build your project in parallel.**
+
+```
+mamh "Build a todo app with React and FastAPI"
+```
+
+- **3 questions** → auto-generated plan → you approve → agents execute
+- Each agent is **scope-locked** (backend can't touch frontend files) and works on its **own git branch**
+- Built-in **review gates** (build + test + peer review) before anything merges
+- **Zero dependencies** — no `npm install`, just load the plugin and go
+- Stop anytime, `mamh resume` picks up exactly where you left off
+
+### How it works (high level)
+
+[![MAMH Workflow](https://excalidraw.com/#json=2S3qcgA96ooecF7zJ1GjA,bTCh4f-dbsn1bTqZNuxZZQ)](docs/diagrams/workflow.excalidraw)
+
+> *Prompt → Plan → Generate agents & tickets → Execute in parallel → Review → Next milestone → Done*
+
+### Architecture
+
+[![MAMH Architecture](https://excalidraw.com/#json=wHEnDppGao4fBQwYvVB-7,XQrivtB7jy-EOGEX_7T9IQ)](docs/diagrams/architecture.excalidraw)
+
+> *You → Orchestrator → scoped agents (each on their own git branch) → safety hooks enforce boundaries*
+
+### Key things to know
+
+| | |
+|---|---|
+| **Install** | `/plugin marketplace add usespeakeasy/mamh-plugin` or `claude --plugin-dir /path/to/mamh` |
+| **Run** | `mamh "describe your project"` |
+| **Check progress** | `mamh status` |
+| **Resume** | `mamh resume` |
+| **Stop** | `mamh stop` |
+| **Execution modes** | Agent Teams (experimental env var) or Subagents (works everywhere) |
+| **Dependencies** | None. Zero. Just Node.js >= 18 and Git. |
+
+---
+
+## Full Documentation
+
 **Orchestrate teams of specialized AI agents to build complex projects autonomously.**
 
 MAMH is a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that coordinates multiple agents to build projects together. Instead of one LLM doing everything in a single context window, MAMH generates a team of specialists that work in parallel — each with scoped file access, defined responsibilities, and restricted tools.
