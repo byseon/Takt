@@ -14,17 +14,72 @@ mamh "Build a todo app with React and FastAPI"
 - **Zero dependencies** — no `npm install`, just load the plugin and go
 - Stop anytime, `mamh resume` picks up exactly where you left off
 
-### How it works (high level)
+### How it works
 
-[![MAMH Workflow](https://excalidraw.com/#json=2S3qcgA96ooecF7zJ1GjA,bTCh4f-dbsn1bTqZNuxZZQ)](docs/diagrams/workflow.excalidraw)
+```mermaid
+flowchart TD
+    A["mamh 'Build a todo app'"] --> B[Phase 0: Planning]
+    B --> |"3 questions → auto-generate plan"| C{Approve?}
+    C --> |Yes| D[Phase 1-2: Generate Files]
+    D --> |"agents, tickets, milestones"| E[Phase 3: Parallel Execution]
+    E --> |"scope-enforced, git-isolated"| F[Phase 4: Review Gates]
+    F --> |"build + test + peer review"| G{More milestones?}
+    G --> |Yes| E
+    G --> |No| H[Done!]
 
-> *Prompt → Plan → Generate agents & tickets → Execute in parallel → Review → Next milestone → Done*
+    style A fill:#a5d8ff,stroke:#1971c2
+    style B fill:#b2f2bb,stroke:#2f9e44
+    style C fill:#ffd8a8,stroke:#e8590c
+    style D fill:#b2f2bb,stroke:#2f9e44
+    style E fill:#eebefa,stroke:#9c36b5
+    style F fill:#ffc9c9,stroke:#e03131
+    style G fill:#ffd8a8,stroke:#e8590c
+    style H fill:#b2f2bb,stroke:#2f9e44
+```
 
 ### Architecture
 
-[![MAMH Architecture](https://excalidraw.com/#json=wHEnDppGao4fBQwYvVB-7,XQrivtB7jy-EOGEX_7T9IQ)](docs/diagrams/architecture.excalidraw)
+```mermaid
+flowchart TD
+    subgraph User["User Layer"]
+        U["You — mamh 'Build a todo app'"]
+    end
 
-> *You → Orchestrator → scoped agents (each on their own git branch) → safety hooks enforce boundaries*
+    subgraph Orch["Orchestration Layer"]
+        O["Orchestrator (delegate mode)\nplans, assigns tickets, reviews"]
+    end
+
+    subgraph Agents["Agent Layer — parallel, scope-enforced"]
+        BE["Backend\nsrc/api/**"]
+        FE["Frontend\nsrc/ui/**"]
+        DE["Designer\nsrc/styles/**"]
+        RE["Reviewer\n(read-only)"]
+    end
+
+    subgraph Safety["Safety Layer"]
+        S1["scope-guard.mjs"]
+        S2["review-gate.mjs"]
+        S3["keep-working.mjs"]
+    end
+
+    U --> |prompt| O
+    O --> |ticket| BE
+    O --> |ticket| FE
+    O --> |ticket| DE
+    O -.-> |review| RE
+
+    style U fill:#a5d8ff,stroke:#1971c2
+    style O fill:#eebefa,stroke:#9c36b5
+    style BE fill:#a5d8ff,stroke:#1971c2
+    style FE fill:#a5d8ff,stroke:#1971c2
+    style DE fill:#a5d8ff,stroke:#1971c2
+    style RE fill:#ffc9c9,stroke:#e03131
+    style S1 fill:#ffd8a8,stroke:#e8590c
+    style S2 fill:#ffd8a8,stroke:#e8590c
+    style S3 fill:#ffd8a8,stroke:#e8590c
+```
+
+> Editable versions: [workflow.excalidraw](docs/diagrams/workflow.excalidraw) | [architecture.excalidraw](docs/diagrams/architecture.excalidraw)
 
 ### Key things to know
 
