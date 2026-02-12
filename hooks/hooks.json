@@ -13,7 +13,6 @@
     ],
     "TaskCompleted": [
       {
-        "matcher": "mamh-",
         "hooks": [
           {
             "type": "command",
@@ -24,7 +23,6 @@
     ],
     "TeammateIdle": [
       {
-        "matcher": "mamh-",
         "hooks": [
           {
             "type": "command",
