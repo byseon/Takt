@@ -53,7 +53,7 @@ After auto review passes, the peer review mechanism depends on the execution mod
 
 **Agent Teams mode (`executionMode: "agent-teams"`):**
 
-1. Spawn a reviewer teammate agent (use a different agent than the one that wrote the code).
+1. Assign the review to the **mamh-reviewer** teammate (a permanent team member, always present — do NOT spawn a new agent).
 2. The reviewer examines the items listed below.
 3. Reviewer outputs: `approved` with optional suggestions, or `rejected` with required changes.
 4. If rejected, the original agent receives the feedback via SendMessage and reworks the ticket.

@@ -91,7 +91,7 @@ git worktree add .worktrees/mamh-frontend -b mamh/frontend main
 
 Create an agent team by instructing Claude Code to spawn teammates. You are the team lead operating in **delegate mode** (coordination only — do not implement code yourself).
 
-**How to create the team:** Tell Claude Code to create an agent team. Spawn teammates using their registry `modelTier`. For simple mechanical subtasks, prefer haiku to save cost. For each agent in `.mamh/agents/registry.json`, spawn a teammate with a detailed spawn prompt that includes:
+**How to create the team:** Tell Claude Code to create an agent team. Spawn teammates using their registry `modelTier`. For simple mechanical subtasks, prefer haiku to save cost. The **mamh-reviewer** agent is a mandatory team member — always spawn it regardless of project type. For each agent in `.mamh/agents/registry.json`, spawn a teammate with a detailed spawn prompt that includes:
 
 1. The agent's role and responsibilities (from `.claude/agents/mamh-<agent-id>.md`)
 2. The agent's owned paths, readable paths, and forbidden paths

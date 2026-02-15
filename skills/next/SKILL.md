@@ -84,6 +84,8 @@ Before starting the next milestone, the orchestrator evaluates whether the agent
 - Does the next milestone require expertise not in the current roster? Consider adding agents.
 - Did any agent consistently struggle? Consider swapping to a higher model tier.
 
+**Protected agents:** The **mamh-orchestrator** and **mamh-reviewer** are permanent team members and must NEVER be removed during roster review. Every project needs coordination and code review regardless of milestone.
+
 Apply changes based on `agentApprovalMode`.
 
 ### Step 5.3 - Advance Decision

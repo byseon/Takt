@@ -291,6 +291,25 @@ For each agent from the approved plan, generate `.claude/agents/mamh-<agent-id>.
 
 Use templates from `${CLAUDE_PLUGIN_ROOT}/templates/agents/` as base. Merge the architect's scope map.
 
+Also define these **mandatory agents** (always included regardless of project type):
+
+**mamh-orchestrator:**
+- Delegate mode (no code tools: no Edit, Write, Bash for code changes)
+- Can use: Read, Glob, Grep (read-only), TeamCreate, SendMessage, TaskCreate/Update/List/Get, AskUserQuestion
+- Coordinates all other agents
+- Manages ticket assignment and review flow
+
+**mamh-reviewer:**
+- Read-only access to ALL project files and ALL agent worktrees (`.worktrees/**`)
+- Can use: Read, Glob, Grep, Bash (tests/build/lint only)
+- Cannot use: Write, Edit, WebFetch, WebSearch
+- Model: opus
+- Reviews ALL completed tickets for correctness, security, quality, and adherence to acceptance criteria
+- Provides actionable feedback via Agent Teams messaging
+- Uses the template at `${CLAUDE_PLUGIN_ROOT}/templates/agents/reviewer.md`
+
+The reviewer agent is a permanent team member — it is NOT optional and should NOT be removed during roster review (Phase 5). Every project needs code review regardless of size or domain.
+
 Agent file structure:
 ```markdown
 # mamh-<agent-id>
