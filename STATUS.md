@@ -80,7 +80,7 @@
 - **Rebranded: Takt → Takt**
   - Plugin renamed from "Multi-Agent Multi-Harness" to "Takt" — agent orchestration meets ticket-based workflows
   - Updated all user-facing files: README.md, CLAUDE.md, STATUS.md, package.json, plugin.json, marketplace.json
-  - Repository URLs updated to `seonhq/Takt` (public) and `seongjinpark-88/takt` (private)
+  - Repository URLs updated to `byseon/Takt` (public) and `seongjinpark-88/takt` (private)
   - Internal `.takt/` directory name preserved for backward compatibility
 - **Mandatory reviewer agent**
   - `takt-reviewer` is now a permanent team member — always spawned, cannot be removed during roster review
@@ -92,7 +92,7 @@
   1. `README.md` — Full rewrite with Takt branding, mandatory reviewer, multi-feature support
   2. `CLAUDE.md` — Renamed references, updated URLs, added mandatory reviewer decision
   3. `STATUS.md` — Renamed, v0.2.0 changelog
-  4. `package.json` — name: takt, repo: seonhq/Takt
+  4. `package.json` — name: takt, repo: byseon/Takt
   5. `.claude-plugin/plugin.json` — name: takt, URLs updated
   6. `.claude-plugin/marketplace.json` — name: takt, URLs updated
   7. `skills/plan/SKILL.md` — Mandatory reviewer + orchestrator in Phase 1

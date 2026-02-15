@@ -16,8 +16,8 @@
       "author": {
         "name": "seongjinpark"
       },
-      "homepage": "https://github.com/seonhq/Takt",
-      "repository": "https://github.com/seonhq/Takt",
+      "homepage": "https://github.com/byseon/Takt",
+      "repository": "https://github.com/byseon/Takt",
       "license": "MIT",
       "keywords": ["multi-agent", "orchestration", "takt", "autonomous", "scope-enforcement", "ticketing"],
       "category": "development-workflows",
