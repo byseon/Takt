@@ -1,10 +1,10 @@
-# MAMH Plugin — Developer Guide for LLMs
+# Takt Plugin — Developer Guide for LLMs
 
 ## Project Overview
 
-MAMH (Multi-Agent Multi-Harness) is a Claude Code plugin that orchestrates teams of specialized AI agents to build complex projects autonomously. Load it with `claude --plugin-dir /path/to/mamh`.
+Takt (formerly MAMH) is a Claude Code plugin that orchestrates teams of specialized AI agents to build complex projects autonomously. Load it with `claude --plugin-dir /path/to/takt`.
 
-**Core Concept**: Instead of a single LLM context managing everything, MAMH generates a team of specialized agents — each with scoped file access, defined responsibilities, and restricted tools — that work together through a ticket-based workflow, coordinated by an orchestrator agent.
+**Core Concept**: Instead of a single LLM context managing everything, Takt generates a team of specialized agents — each with scoped file access, defined responsibilities, and restricted tools — that work together through a ticket-based workflow, coordinated by an orchestrator agent.
 
 **Key Innovation**: The plugin ships templates; agents are generated dynamically per-project based on the project's needs.
 
@@ -13,37 +13,37 @@ MAMH (Multi-Agent Multi-Harness) is a Claude Code plugin that orchestrates teams
 ## Repository Structure
 
 ```
-mamh/
+takt/
 ├── .claude-plugin/
 │   └── plugin.json              # Plugin manifest (name, version, entry points)
 ├── skills/
-│   ├── mamh/
+│   ├── takt/
 │   │   └── SKILL.md             # Main entry point (help, routing, directory reference)
 │   ├── plan/
-│   │   └── SKILL.md             # /mamh-plan — Phases 0-2 (planning, agents, tickets)
+│   │   └── SKILL.md             # /takt-plan — Phases 0-2 (planning, agents, tickets)
 │   ├── execute/
-│   │   └── SKILL.md             # /mamh-execute — Phase 3 (Agent Teams execution)
+│   │   └── SKILL.md             # /takt-execute — Phase 3 (Agent Teams execution)
 │   ├── review/
-│   │   └── SKILL.md             # /mamh-review — Phase 4 (review gates)
+│   │   └── SKILL.md             # /takt-review — Phase 4 (review gates)
 │   ├── next/
-│   │   └── SKILL.md             # /mamh-next — Phase 5 (milestone iteration)
+│   │   └── SKILL.md             # /takt-next — Phase 5 (milestone iteration)
 │   ├── status/
-│   │   └── SKILL.md             # /mamh-status — Project dashboard
+│   │   └── SKILL.md             # /takt-status — Project dashboard
 │   ├── resume/
-│   │   └── SKILL.md             # /mamh-resume — Resume interrupted session
+│   │   └── SKILL.md             # /takt-resume — Resume interrupted session
 │   ├── handoff/
-│   │   └── SKILL.md             # /mamh-handoff — Update HANDOFF.md
+│   │   └── SKILL.md             # /takt-handoff — Update HANDOFF.md
 │   └── stop/
-│       └── SKILL.md             # /mamh-stop — Graceful shutdown
+│       └── SKILL.md             # /takt-stop — Graceful shutdown
 ├── agents/
-│   └── mamh-orchestrator.md     # Team lead agent (delegate mode, no code tools)
+│   └── takt-orchestrator.md     # Team lead agent (delegate mode, no code tools)
 ├── hooks/
 │   └── hooks.json               # Hook configuration (PreToolUse, TaskCompleted, TeammateIdle)
 ├── scripts/
 │   ├── scope-guard.mjs          # PreToolUse hook: blocks out-of-scope writes
 │   ├── review-gate.mjs          # TaskCompleted hook: enforces review checks
 │   ├── keep-working.mjs         # TeammateIdle hook: prevents premature stopping
-│   ├── init-project.mjs         # Creates .mamh/ directory in user projects
+│   ├── init-project.mjs         # Creates .takt/ directory in user projects
 │   ├── worktree-setup.mjs       # Creates per-agent git worktrees
 │   └── worktree-merge.mjs       # Merges agent branches at milestone completion
 ├── templates/
@@ -79,12 +79,13 @@ mamh/
 | Template-based agent generation | Different projects need different specialists. Templates are customized per-project during Phase 1. |
 | `${CLAUDE_PLUGIN_ROOT}` in hook paths | Plugin works regardless of where it's installed. |
 | Zero external dependencies | All scripts use Node.js built-ins only. No `npm install`, no version conflicts. |
-| Project-scoped state (`.mamh/`) | Multiple projects can use MAMH simultaneously; state is isolated per-project. |
+| Project-scoped state (`.takt/`) | Multiple projects can use Takt simultaneously; state is isolated per-project. |
 | Orchestrator has no Write/Edit tools | Enforces delegation-only pattern. |
 | POLICY.md capped at ~200 lines | Minimize per-agent context consumption (~1,300 tokens vs ~4,500). |
 | ESM modules (`.mjs`) | Modern JavaScript, no CommonJS. |
 | Git worktree isolation | Each writing agent gets its own branch; no merge conflicts during parallel work. |
 | Dual execution mode (agent-teams / subagents) | Agent Teams requires an experimental env var not available to all users. Subagent mode provides a fully functional fallback using Task tool batch dispatch with the main session as orchestrator. Mode is chosen during planning and stored in `session.json`. |
+| Mandatory reviewer agent | Every project includes a permanent opus-tier reviewer that cannot be removed during roster review. Ensures code quality regardless of project type. |
 
 ---
 
@@ -109,9 +110,9 @@ mamh/
 - **Output**: JSON on stdout (for blocking messages)
 - **Mode awareness**: `scope-guard` fires in both execution modes. `TeammateIdle` (keep-working) and `TaskCompleted` (review-gate) only fire in agent-teams mode.
 
-### State Files (`.mamh/*.json`)
+### State Files (`.takt/*.json`)
 - **Format**: JSON with clear schema
-- **Location**: Always in `.mamh/` (project-scoped), never in plugin directory
+- **Location**: Always in `.takt/` (project-scoped), never in plugin directory
 - **Atomicity**: Write to temp file, then rename (avoid corruption)
 
 ---
@@ -121,40 +122,40 @@ mamh/
 ### Plugin Installation
 ```bash
 # Option A: Permanent install (inside Claude Code)
-/plugin marketplace add usespeakeasy/mamh-plugin
-/plugin install mamh@mamh-marketplace
+# Load the plugin
+claude --plugin-dir /path/to/takt
 
 # Option B: Session-only (from shell)
-claude --plugin-dir /path/to/mamh
+claude --plugin-dir /path/to/takt
 ```
 
 ### Integration Testing
 ```bash
 # Create test project
-mkdir /tmp/mamh-test && cd /tmp/mamh-test
+mkdir /tmp/takt-test && cd /tmp/takt-test
 git init
 
 # Launch Claude Code (with plugin loaded via either method above)
 # In Claude Code, run:
-# mamh "Build a REST API for task management"
+# takt "Build a REST API for task management"
 
 # Verify generated files
-ls -la .mamh/
-ls -la .claude/agents/mamh-*
+ls -la .takt/
+ls -la .claude/agents/takt-*
 ```
 
 ### Hook Testing (Direct Script Execution)
 ```bash
 # Test scope-guard
-echo '{"agent_name":"mamh-backend","tool_name":"Write","tool_input":{"file_path":"/project/src/api/auth.py"}}' | \
+echo '{"agent_name":"takt-backend","tool_name":"Write","tool_input":{"file_path":"/project/src/api/auth.py"}}' | \
   node scripts/scope-guard.mjs
 
 # Test review-gate
-echo '{"agent_name":"mamh-backend","ticket_id":"BACKEND-001"}' | \
+echo '{"agent_name":"takt-backend","ticket_id":"BACKEND-001"}' | \
   node scripts/review-gate.mjs
 
 # Test keep-working
-echo '{"agent_name":"mamh-backend"}' | \
+echo '{"agent_name":"takt-backend"}' | \
   node scripts/keep-working.mjs
 ```
 
@@ -173,7 +174,7 @@ echo '{"agent_name":"mamh-backend"}' | \
 ### ALWAYS
 - Use `${CLAUDE_PLUGIN_ROOT}` in `hooks.json` paths
 - Use `{{PLACEHOLDER}}` syntax in templates
-- Put generated files in `.mamh/` or `.claude/agents/mamh-*`
+- Put generated files in `.takt/` or `.claude/agents/takt-*`
 - Handle errors gracefully with clear messages
 - Test plugin in a separate project (not in plugin repo itself)
 
@@ -195,7 +196,7 @@ echo '{"agent_name":"mamh-backend"}' | \
 
 ### Adding a Subcommand
 1. Create a new `skills/<subcommand>/SKILL.md` with YAML frontmatter (`name` + `description`)
-2. Update `skills/mamh/SKILL.md` subcommand routing table
+2. Update `skills/takt/SKILL.md` subcommand routing table
 3. Add usage examples
 4. Document in `README.md`
 
@@ -205,7 +206,7 @@ echo '{"agent_name":"mamh-backend"}' | \
 
 - **[STATUS.md](STATUS.md)**: Current project status and changelog
 - **[README.md](README.md)**: Installation and usage guide
-- **[skills/mamh/SKILL.md](skills/mamh/SKILL.md)**: Main skill entry point (help, routing, directory reference)
+- **[skills/takt/SKILL.md](skills/takt/SKILL.md)**: Main skill entry point (help, routing, directory reference)
 - **[skills/plan/SKILL.md](skills/plan/SKILL.md)**: Planning skill (Phases 0-2)
 - **[skills/execute/SKILL.md](skills/execute/SKILL.md)**: Execution skill (Phase 3)
 - **[skills/review/SKILL.md](skills/review/SKILL.md)**: Review skill (Phase 4)
@@ -221,5 +222,5 @@ echo '{"agent_name":"mamh-backend"}' | \
 
 ---
 
-**Last Updated**: 2026-02-10
-**Plugin Version**: 0.1.7
+**Last Updated**: 2026-02-15
+**Plugin Version**: 0.2.0

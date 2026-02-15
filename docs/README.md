@@ -1,6 +1,6 @@
-# MAMH Plugin Developer Documentation
+# Takt Plugin Developer Documentation
 
-Internal developer documentation for the MAMH (Multi-Agent Multi-Harness) Claude Code plugin.
+Internal developer documentation for the Takt (formerly MAMH) Claude Code plugin.
 
 ---
 
@@ -24,7 +24,7 @@ skills_dev/
 ├── .claude-plugin/
 │   └── plugin.json                 # Plugin manifest (defines skills, agents, hooks)
 ├── agents/
-│   └── mamh-orchestrator.md        # Team lead agent definition
+│   └── takt-orchestrator.md        # Team lead agent definition
 ├── docs/
 │   ├── README.md                   # This file (developer guide)
 │   ├── TEMPLATES.md                # Template customization guide
@@ -38,7 +38,7 @@ skills_dev/
 │   ├── review-gate.mjs             # TaskCompleted hook validates acceptance criteria
 │   └── keep-working.mjs            # TeammateIdle hook prevents premature idling
 ├── skills/
-│   └── mamh/
+│   └── takt/
 │       └── SKILL.md                # Main skill definition (6-phase workflow)
 ├── templates/
 │   ├── agents/
@@ -59,11 +59,11 @@ skills_dev/
 | Directory | Purpose |
 |-----------|---------|
 | `.claude-plugin/` | Plugin manifest read by Claude Code. Defines skills, agents, hooks, and scripts. |
-| `agents/` | Agent definitions. Only contains `mamh-orchestrator.md` (team lead). Other agents are generated per-project in `.claude/agents/` from templates. |
+| `agents/` | Agent definitions. Only contains `takt-orchestrator.md` (team lead). Other agents are generated per-project in `.claude/agents/` from templates. |
 | `docs/` | Documentation for developers and users. |
 | `hooks/` | Hook registration file. Maps hook events to script files. |
 | `scripts/` | Executable Node.js scripts that implement hooks and utilities. |
-| `skills/` | Skill definitions. `mamh/SKILL.md` contains the entire 6-phase workflow. |
+| `skills/` | Skill definitions. `takt/SKILL.md` contains the entire 6-phase workflow. |
 | `templates/` | Reusable templates for generating project-specific agents and policies. |
 
 ---
@@ -85,10 +85,10 @@ To install the plugin locally for development:
 cd ~/dev/skills_dev
 
 # Link to Claude Code's plugin directory
-ln -s "$(pwd)" ~/.claude/plugins/mamh
+ln -s "$(pwd)" ~/.claude/plugins/takt
 
 # Verify installation
-ls -la ~/.claude/plugins/mamh
+ls -la ~/.claude/plugins/takt
 ```
 
 Claude Code automatically discovers plugins in `~/.claude/plugins/`.
@@ -102,13 +102,13 @@ You can test scripts directly:
 node scripts/init-project.mjs /path/to/test-project
 
 # Test scope-guard with mock input
-echo '{"tool_name":"Write","tool_input":{"file_path":"src/api/users.ts"},"agent_name":"mamh-backend"}' | node scripts/scope-guard.mjs
+echo '{"tool_name":"Write","tool_input":{"file_path":"src/api/users.ts"},"agent_name":"takt-backend"}' | node scripts/scope-guard.mjs
 
 # Test review-gate with mock input
-echo '{"agent_name":"mamh-backend","task_id":"T001","milestone":"M001"}' | node scripts/review-gate.mjs
+echo '{"agent_name":"takt-backend","task_id":"T001","milestone":"M001"}' | node scripts/review-gate.mjs
 
 # Test keep-working with mock input
-echo '{"agent_name":"mamh-backend"}' | node scripts/keep-working.mjs
+echo '{"agent_name":"takt-backend"}' | node scripts/keep-working.mjs
 ```
 
 ---
@@ -118,19 +118,19 @@ echo '{"agent_name":"mamh-backend"}' | node scripts/keep-working.mjs
 ### Plugin Lifecycle
 
 ```
-User triggers skill → MAMH phases → Hooks enforce rules → Agents execute → Review gates → Milestone completion
+User triggers skill → Takt phases → Hooks enforce rules → Agents execute → Review gates → Milestone completion
 ```
 
 ### The 6 Phases
 
 | Phase | Name | Purpose | Key Artifacts Generated |
 |-------|------|---------|-------------------------|
-| 0 | Planning Interview | Transform idea into structured PRD | `.mamh/prd.md`, `.mamh/tech-spec.md`, `.mamh/constraints.md` |
-| 1 | Agent Definition | Create specialized agent roster | `.claude/agents/mamh-*.md`, `.mamh/agents/registry.json` |
-| 2 | Ticket Generation | Decompose into milestones and tickets | `.mamh/tickets/milestones/M00X/T00Y.md` |
+| 0 | Planning Interview | Transform idea into structured PRD | `.takt/prd.md`, `.takt/tech-spec.md`, `.takt/constraints.md` |
+| 1 | Agent Definition | Create specialized agent roster | `.claude/agents/takt-*.md`, `.takt/agents/registry.json` |
+| 2 | Ticket Generation | Decompose into milestones and tickets | `.takt/tickets/milestones/M00X/T00Y.md` |
 | 3 | Execution | Launch Agent Teams, autonomous work | Modified source files, test results |
-| 4 | Review Gates | Validate work before approval | `.mamh/reviews/T00Y-review.json` |
-| 5 | Milestone Iteration | Complete milestones sequentially | `.mamh/logs/M00X-summary.md`, `.mamh/logs/project-report.md` |
+| 4 | Review Gates | Validate work before approval | `.takt/reviews/T00Y-review.json` |
+| 5 | Milestone Iteration | Complete milestones sequentially | `.takt/logs/M00X-summary.md`, `.takt/logs/project-report.md` |
 
 ### Agent Spawning Process
 
@@ -140,13 +140,13 @@ User triggers skill → MAMH phases → Hooks enforce rules → Agents execute �
 2. Skill delegates to `architect` agent (via OMC) to create agent roster and scope map
 3. For each agent role, skill reads template from `templates/agents/<role>.md`
 4. Skill substitutes placeholders (`{{PROJECT_NAME}}`, `{{ALLOWED_PATHS}}`, etc.)
-5. Skill writes customized agent file to `.claude/agents/mamh-<role>.md`
-6. Skill updates `.mamh/agents/registry.json` with scope boundaries
+5. Skill writes customized agent file to `.claude/agents/takt-<role>.md`
+6. Skill updates `.takt/agents/registry.json` with scope boundaries
 
 **Phase 3 (Runtime Provisioning):**
 
 1. Orchestrator detects gap (ticket requires uncovered skill)
-2. Orchestrator checks `agentApprovalMode` in `.mamh/session.json`:
+2. Orchestrator checks `agentApprovalMode` in `.takt/session.json`:
    - `auto` → create immediately
    - `suggest` → propose to user, await approval
    - `locked` → do not create, use closest existing agent
@@ -198,14 +198,14 @@ Hooks are registered in `hooks/hooks.json`:
 {
   "tool_name": "Write",
   "tool_input": { "file_path": "/absolute/path/to/file.ts" },
-  "agent_name": "mamh-backend",
+  "agent_name": "takt-backend",
   "session_id": "..."
 }
 ```
 
 **Logic:**
 
-1. Read `.mamh/agents/registry.json`
+1. Read `.takt/agents/registry.json`
 2. Look up agent's `allowedPaths` (glob patterns)
 3. Match `file_path` against patterns using minimal glob matcher
 4. If match → exit 0 (allow)
@@ -218,7 +218,7 @@ Hooks are registered in `hooks/hooks.json`:
 
 **Example Block Message:**
 ```
-SCOPE VIOLATION: mamh-backend cannot write to src/ui/components/Button.tsx. This file belongs to mamh-frontend's scope. Send a message to mamh-frontend instead.
+SCOPE VIOLATION: takt-backend cannot write to src/ui/components/Button.tsx. This file belongs to takt-frontend's scope. Send a message to takt-frontend instead.
 ```
 
 **Glob Matching Logic:**
@@ -242,7 +242,7 @@ Example patterns:
 **Input (via stdin):**
 ```json
 {
-  "agent_name": "mamh-backend",
+  "agent_name": "takt-backend",
   "task_id": "T001",
   "milestone": "M001",
   "session_id": "..."
@@ -251,14 +251,14 @@ Example patterns:
 
 **Logic:**
 
-1. Locate ticket file in `.mamh/tickets/milestones/<milestone>/<task_id>.md`
+1. Locate ticket file in `.takt/tickets/milestones/<milestone>/<task_id>.md`
 2. Parse acceptance criteria checkboxes:
    ```markdown
    ## Acceptance Criteria
    - [x] Criterion 1 (checked)
    - [ ] Criterion 2 (unchecked)
    ```
-3. Read `.mamh/session.json` to get `reviewMode`
+3. Read `.takt/session.json` to get `reviewMode`
 4. Apply review mode logic:
    - **auto**: If all checkboxes checked → approve (exit 0), else block (exit 2)
    - **peer**: Block completion (exit 2), trigger reviewer agent
@@ -287,15 +287,15 @@ Complete all acceptance criteria before marking this ticket as done.
 **Input (via stdin):**
 ```json
 {
-  "agent_name": "mamh-backend",
+  "agent_name": "takt-backend",
   "session_id": "..."
 }
 ```
 
 **Logic:**
 
-1. Read `.mamh/session.json` to get `currentMilestone`
-2. Scan `.mamh/tickets/milestones/<milestone>/` for tickets assigned to agent
+1. Read `.takt/session.json` to get `currentMilestone`
+2. Scan `.takt/tickets/milestones/<milestone>/` for tickets assigned to agent
 3. Parse ticket metadata (status, assignee) from markdown files
 4. Categorize tickets: `pending`, `in_progress`, `done`
 5. If `pending` or `in_progress` tickets exist → block idle (exit 2), direct to next ticket
@@ -318,9 +318,9 @@ Pending tickets: T003, T004
 **Ticket Metadata Parsing:**
 
 The script parses ticket files flexibly, supporting:
-- YAML front matter: `---\nstatus: pending\nassignee: mamh-backend\n---`
+- YAML front matter: `---\nstatus: pending\nassignee: takt-backend\n---`
 - Inline bold: `**Status:** in_progress`
-- Inline code: `Assignee: \`mamh-backend\``
+- Inline code: `Assignee: \`takt-backend\``
 - Checkbox inference: All checked → done, some checked → in_progress, none checked → pending
 
 ---
@@ -333,7 +333,7 @@ Agent templates are markdown files with YAML front matter and placeholder substi
 
 ```markdown
 ---
-name: mamh-<role>
+name: takt-<role>
 description: "<role description> for {{PROJECT_NAME}}"
 model: sonnet
 tools:
@@ -371,12 +371,12 @@ You are the <role> for **{{PROJECT_NAME}}**. <role description>
 
 | Placeholder | Replaced With | Example |
 |-------------|---------------|---------|
-| `{{PROJECT_NAME}}` | Project name from `.mamh/session.json` | "TaskMaster Pro" |
-| `{{AGENT_NAME}}` | Full agent name from registry | "mamh-backend" |
+| `{{PROJECT_NAME}}` | Project name from `.takt/session.json` | "TaskMaster Pro" |
+| `{{AGENT_NAME}}` | Full agent name from registry | "takt-backend" |
 | `{{ALLOWED_PATHS}}` | Formatted list of allowed paths | `- src/api/**\n- src/db/**` |
 | `{{READ_ONLY_PATHS}}` | Formatted list of read-only paths | `- src/shared/**\n- tests/**` |
 | `{{FORBIDDEN_PATHS}}` | Formatted list of forbidden paths | `- src/ui/**\n- docs/**` |
-| `{{CONSTRAINTS}}` | Project-specific constraints from `.mamh/constraints.md` | "Must use PostgreSQL\nNo external APIs" |
+| `{{CONSTRAINTS}}` | Project-specific constraints from `.takt/constraints.md` | "Must use PostgreSQL\nNo external APIs" |
 
 ### Substitution Process
 
@@ -386,17 +386,17 @@ You are the <role> for **{{PROJECT_NAME}}**. <role description>
 // Pseudo-code
 const template = readFile('templates/agents/backend.md');
 const projectName = session.projectName;
-const agentConfig = registry.agents['mamh-backend'];
+const agentConfig = registry.agents['takt-backend'];
 
 let agentFile = template;
 agentFile = agentFile.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
-agentFile = agentFile.replace(/\{\{AGENT_NAME\}\}/g, 'mamh-backend');
+agentFile = agentFile.replace(/\{\{AGENT_NAME\}\}/g, 'takt-backend');
 agentFile = agentFile.replace(/\{\{ALLOWED_PATHS\}\}/g, formatPathList(agentConfig.allowedPaths));
 agentFile = agentFile.replace(/\{\{READ_ONLY_PATHS\}\}/g, formatPathList(agentConfig.readablePaths));
 agentFile = agentFile.replace(/\{\{FORBIDDEN_PATHS\}\}/g, formatPathList(agentConfig.forbiddenPaths));
-agentFile = agentFile.replace(/\{\{CONSTRAINTS\}\}/g, readFile('.mamh/constraints.md'));
+agentFile = agentFile.replace(/\{\{CONSTRAINTS\}\}/g, readFile('.takt/constraints.md'));
 
-writeFile('.claude/agents/mamh-backend.md', agentFile);
+writeFile('.claude/agents/takt-backend.md', agentFile);
 ```
 
 **During Phase 3 (runtime provisioning):**
@@ -407,20 +407,20 @@ Same substitution logic, but initiated by orchestrator agent when gap is detecte
 
 ## State Management
 
-MAMH maintains state across multiple JSON and Markdown files in `.mamh/`.
+Takt maintains state across multiple JSON and Markdown files in `.takt/`.
 
 ### State File Locations
 
-All state files live under `.mamh/` in the user's project directory.
+All state files live under `.takt/` in the user's project directory.
 
 ```
-.mamh/
+.takt/
 ├── session.json              # Session configuration (set once in Phase 0)
 ├── prd.md                    # Product Requirements Document
 ├── tech-spec.md              # Technical specification
 ├── constraints.md            # Hard constraints and preferences
 ├── state/
-│   └── mamh-state.json       # Current operational state (phase, milestone, ticket counts)
+│   └── takt-state.json       # Current operational state (phase, milestone, ticket counts)
 ├── agents/
 │   └── registry.json         # Agent roster with scope boundaries
 ├── tickets/
@@ -455,7 +455,7 @@ Set once during Phase 0, read throughout. Never modified after initialization.
 }
 ```
 
-### mamh-state.json (Operational State)
+### takt-state.json (Operational State)
 
 Updated continuously during execution. Reflects current status.
 
@@ -464,7 +464,7 @@ Updated continuously during execution. Reflects current status.
   "phase": 3,
   "status": "executing",
   "currentMilestone": "M001",
-  "activeAgents": ["mamh-backend", "mamh-frontend"],
+  "activeAgents": ["takt-backend", "takt-frontend"],
   "ticketsSummary": {
     "total": 12,
     "completed": 3,
@@ -486,23 +486,23 @@ Agent definitions with scope boundaries. Updated when agents are added/removed.
 ```json
 {
   "agents": {
-    "mamh-backend": {
-      "id": "mamh-backend",
+    "takt-backend": {
+      "id": "takt-backend",
       "role": "Backend implementation",
       "modelTier": "sonnet",
       "allowedPaths": ["src/api/**", "src/db/**", "tests/api/**"],
-      "readablePaths": ["src/shared/**", ".mamh/**"],
+      "readablePaths": ["src/shared/**", ".takt/**"],
       "forbiddenPaths": ["src/ui/**", "src/client/**"],
       "status": "active",
       "ticketsCompleted": 5,
       "ticketsAssigned": 3
     },
-    "mamh-frontend": {
-      "id": "mamh-frontend",
+    "takt-frontend": {
+      "id": "takt-frontend",
       "role": "Frontend implementation",
       "modelTier": "sonnet",
       "allowedPaths": ["src/ui/**", "src/client/**", "tests/ui/**"],
-      "readablePaths": ["src/shared/**", ".mamh/**"],
+      "readablePaths": ["src/shared/**", ".takt/**"],
       "forbiddenPaths": ["src/api/**", "src/db/**"],
       "status": "active",
       "ticketsCompleted": 4,
@@ -518,12 +518,12 @@ Agent definitions with scope boundaries. Updated when agents are added/removed.
 
 Each ticket is a markdown file with metadata and checkboxes.
 
-**Example:** `.mamh/tickets/milestones/M001-scaffolding/T001-setup-project.md`
+**Example:** `.takt/tickets/milestones/M001-scaffolding/T001-setup-project.md`
 
 ```markdown
 # T001: Setup Project Structure
 
-**Agent:** mamh-backend
+**Agent:** takt-backend
 **Milestone:** M001
 **Status:** pending
 **Priority:** critical
@@ -559,25 +559,25 @@ Test hooks in isolation with mock inputs:
 
 ```bash
 # Test scope-guard - should ALLOW (backend writing to api)
-echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/api/users.ts"},"agent_name":"mamh-backend"}' \
+echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/api/users.ts"},"agent_name":"takt-backend"}' \
   | node scripts/scope-guard.mjs
 echo "Exit code: $?"  # Should be 0
 
 # Test scope-guard - should BLOCK (backend writing to ui)
-echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/ui/Button.tsx"},"agent_name":"mamh-backend"}' \
+echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/ui/Button.tsx"},"agent_name":"takt-backend"}' \
   | node scripts/scope-guard.mjs
 echo "Exit code: $?"  # Should be 2
 
 # Test review-gate - create mock ticket first
-mkdir -p .mamh/tickets/milestones/M001
-cat > .mamh/tickets/milestones/M001/T001.md <<'EOF'
+mkdir -p .takt/tickets/milestones/M001
+cat > .takt/tickets/milestones/M001/T001.md <<'EOF'
 # T001: Test Ticket
 **Status:** pending
 ## Acceptance Criteria
 - [ ] Unchecked item
 EOF
 
-echo '{"agent_name":"mamh-backend","task_id":"T001","milestone":"M001"}' \
+echo '{"agent_name":"takt-backend","task_id":"T001","milestone":"M001"}' \
   | node scripts/review-gate.mjs
 echo "Exit code: $?"  # Should be 2 (blocked, criteria unchecked)
 ```
@@ -588,27 +588,27 @@ Test the full workflow in a scratch project:
 
 ```bash
 # Create test project
-mkdir ~/test-mamh-project
-cd ~/test-mamh-project
+mkdir ~/test-takt-project
+cd ~/test-takt-project
 git init
 
 # Set environment variable
 export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 # Trigger skill in Claude Code
-# Say: "mamh: build a simple REST API for managing tasks"
+# Say: "takt: build a simple REST API for managing tasks"
 
 # Monitor state files
-watch -n 2 'cat .mamh/state/mamh-state.json | jq'
+watch -n 2 'cat .takt/state/takt-state.json | jq'
 
 # Check generated agents
 ls -la .claude/agents/
 
 # Check tickets
-find .mamh/tickets/milestones -name "*.md"
+find .takt/tickets/milestones -name "*.md"
 
 # Check logs
-tail -f .mamh/logs/*.md
+tail -f .takt/logs/*.md
 ```
 
 ### Testing Agent Templates
@@ -617,19 +617,19 @@ Validate that templates substitute correctly:
 
 ```bash
 # Create mock session and registry
-mkdir -p .mamh/{state,agents}
+mkdir -p .takt/{state,agents}
 
-cat > .mamh/session.json <<'EOF'
+cat > .takt/session.json <<'EOF'
 {
   "projectName": "Test Project",
   "agentApprovalMode": "auto"
 }
 EOF
 
-cat > .mamh/agents/registry.json <<'EOF'
+cat > .takt/agents/registry.json <<'EOF'
 {
   "agents": {
-    "mamh-backend": {
+    "takt-backend": {
       "allowedPaths": ["src/api/**"],
       "readablePaths": ["src/shared/**"],
       "forbiddenPaths": ["src/ui/**"]
@@ -638,7 +638,7 @@ cat > .mamh/agents/registry.json <<'EOF'
 }
 EOF
 
-cat > .mamh/constraints.md <<'EOF'
+cat > .takt/constraints.md <<'EOF'
 - Must use TypeScript strict mode
 - No external API calls without user approval
 EOF
@@ -678,12 +678,12 @@ Validate state file integrity:
 
 ```bash
 # Check JSON syntax
-jq . .mamh/state/mamh-state.json
-jq . .mamh/agents/registry.json
-jq . .mamh/session.json
+jq . .takt/state/takt-state.json
+jq . .takt/agents/registry.json
+jq . .takt/session.json
 
 # Watch state changes in real-time
-watch -n 1 'jq . .mamh/state/mamh-state.json'
+watch -n 1 'jq . .takt/state/takt-state.json'
 ```
 
 ### Debug Glob Matching
@@ -705,7 +705,7 @@ console.error(`Match: ${regex.test(normPath)}`);
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | Hooks not firing | Hooks not registered in `hooks.json` | Verify `hooks.json` matches `plugin.json` reference |
-| Scope violations not blocked | Registry not found or malformed | Check `.mamh/agents/registry.json` exists and has valid JSON |
+| Scope violations not blocked | Registry not found or malformed | Check `.takt/agents/registry.json` exists and has valid JSON |
 | Agents write to wrong paths | Glob patterns too broad | Narrow patterns in registry, test with mock inputs |
 | Tickets not found by hooks | File naming mismatch | Ensure ticket IDs match filenames exactly |
 | Review gate always passes | Acceptance criteria not parseable | Use standard markdown checkbox format: `- [ ]` and `- [x]` |
@@ -715,13 +715,13 @@ console.error(`Match: ${regex.test(normPath)}`);
 Enable verbose mode by setting environment variable:
 
 ```bash
-export MAMH_DEBUG=1
+export TAKT_DEBUG=1
 ```
 
 Then add debug statements to scripts:
 
 ```javascript
-if (process.env.MAMH_DEBUG) {
+if (process.env.TAKT_DEBUG) {
   console.error(`[DEBUG] ${message}`);
 }
 ```
@@ -735,7 +735,7 @@ When modifying the plugin:
 1. **Test hooks in isolation** before integration testing
 2. **Update templates** when adding new placeholders
 3. **Document new hooks** in this file and in hook comments
-4. **Version state schemas** when changing `.mamh/*.json` formats
+4. **Version state schemas** when changing `.takt/*.json` formats
 5. **Maintain backward compatibility** or provide migration scripts
 
 ---
@@ -744,4 +744,4 @@ When modifying the plugin:
 
 - [TEMPLATES.md](./TEMPLATES.md) - Guide to customizing agent templates
 - [CONFIGURATION.md](./CONFIGURATION.md) - Configuration reference
-- [SKILL.md](../skills/mamh/SKILL.md) - Full 6-phase workflow specification
+- [SKILL.md](../skills/takt/SKILL.md) - Full 6-phase workflow specification

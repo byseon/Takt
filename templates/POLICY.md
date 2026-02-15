@@ -1,6 +1,6 @@
-# {{PROJECT_NAME}} — MAMH Policy
+# {{PROJECT_NAME}} — Takt Policy
 
-> Shared rules for all MAMH agents. Read at session start. Violate nothing.
+> Shared rules for all Takt agents. Read at session start. Violate nothing.
 > Last updated: {{TIMESTAMP}}
 > **Keep this file under ~200 lines.** If it grows beyond that, consolidate.
 
@@ -17,7 +17,7 @@
 - You may ONLY write to files within your allowed paths (enforced by scope-guard hook).
 - You may read files outside your scope unless they are listed as forbidden.
 - You may NOT write to another agent's domain. Message them instead.
-- If unsure who owns a file, check `.mamh/agents/registry.json`.
+- If unsure who owns a file, check `.takt/agents/registry.json`.
 
 ---
 
@@ -28,7 +28,7 @@ These rules are absolute. Violating any of them causes immediate ticket rejectio
 ### Never Do
 
 1. **NEVER write outside your scope.** The scope-guard hook will block you. Do not attempt workarounds.
-2. **NEVER write to the main working directory** if you have a worktree. All writes go to `.worktrees/mamh-<your-id>/`.
+2. **NEVER write to the main working directory** if you have a worktree. All writes go to `.worktrees/takt-<your-id>/`.
 3. **NEVER merge your branch into main.** The orchestrator handles all merges.
 4. **NEVER commit secrets, API keys, tokens, passwords, or credentials** to any file.
 5. **NEVER install new dependencies** without orchestrator approval. No `npm install`, `pip install`, etc.
@@ -81,14 +81,14 @@ These rules are absolute. Violating any of them causes immediate ticket rejectio
 ### Subagent Mode (`executionMode: "subagents"`)
 
 - There is no Agent Teams messaging. Communication is file-based.
-- When you complete a ticket, write your output summary to `.mamh/comms/<ticket-id>-output.md`.
+- When you complete a ticket, write your output summary to `.takt/comms/<ticket-id>-output.md`.
 - Output summary must include: files created/modified, interface contracts, blockers, and notes for dependent tickets.
 - Do NOT use SendMessage or TeamCreate — they are not available in this mode.
 
 ### Both Modes
 
-- Log architectural decisions to `.mamh/comms/decisions.md`.
-- Log notable changes to `.mamh/comms/changelog.md`.
+- Log architectural decisions to `.takt/comms/decisions.md`.
+- Log notable changes to `.takt/comms/changelog.md`.
 
 ---
 
@@ -144,11 +144,11 @@ Agents should default to their assigned model tier but may request escalation fr
 
 ## Git Worktree Rules
 
-- Your working directory: `.worktrees/mamh-<your-id>/` (NOT project root)
-- Your branch: `mamh/<your-id>`
-- `.mamh/` is shared — all agents can write to it
+- Your working directory: `.worktrees/takt-<your-id>/` (NOT project root)
+- Your branch: `takt/<your-id>`
+- `.takt/` is shared — all agents can write to it
 - Do NOT merge to main. Orchestrator merges at milestone boundaries.
-- Worktree path is in `.mamh/agents/registry.json` → `worktreePath`
+- Worktree path is in `.takt/agents/registry.json` → `worktreePath`
 
 ---
 
@@ -156,10 +156,10 @@ Agents should default to their assigned model tier but may request escalation fr
 
 | File | Purpose |
 |------|---------|
-| `.mamh/POLICY.md` | This file — shared rules |
-| `.mamh/HANDOFF.md` | Session handoff — what's done, decisions, next steps |
-| `.mamh/state/mamh-state.json` | Current project state |
-| `.mamh/agents/registry.json` | Agent roster + scope boundaries |
-| `.mamh/tickets/milestones/` | Active milestone tickets |
-| `.mamh/comms/decisions.md` | Decision log |
-| `.mamh/comms/changelog.md` | Change log |
+| `.takt/POLICY.md` | This file — shared rules |
+| `.takt/HANDOFF.md` | Session handoff — what's done, decisions, next steps |
+| `.takt/state/takt-state.json` | Current project state |
+| `.takt/agents/registry.json` | Agent roster + scope boundaries |
+| `.takt/tickets/milestones/` | Active milestone tickets |
+| `.takt/comms/decisions.md` | Decision log |
+| `.takt/comms/changelog.md` | Change log |

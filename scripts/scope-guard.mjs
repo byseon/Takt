@@ -4,7 +4,7 @@
  * scope-guard.mjs - PreToolUse hook for Write/Edit tools
  *
  * Enforces agent scope boundaries by checking whether the target file path
- * falls within the agent's allowed paths as defined in the MAMH agent registry.
+ * falls within the agent's allowed paths as defined in the Takt agent registry.
  *
  * Exit codes:
  *   0 = allow the write
@@ -15,7 +15,7 @@
  * {
  *   "tool_name": "Write" | "Edit",
  *   "tool_input": { "file_path": "/path/to/file" },
- *   "agent_name": "mamh-backend",
+ *   "agent_name": "takt-backend",
  *   "session_id": "..."
  * }
  */
@@ -182,8 +182,8 @@ async function main() {
 
   // Locate and read the agent registry
   const registryPaths = [
-    resolve(".mamh", "agents", "registry.json"),
-    resolve(process.cwd(), ".mamh", "agents", "registry.json"),
+    resolve(".takt", "agents", "registry.json"),
+    resolve(process.cwd(), ".takt", "agents", "registry.json"),
   ];
 
   let registry = null;
@@ -198,7 +198,7 @@ async function main() {
     }
   }
 
-  // If no registry exists, allow the operation (MAMH not initialized)
+  // If no registry exists, allow the operation (Takt not initialized)
   if (!registry || !registry.agents) {
     process.exit(0);
   }
@@ -254,9 +254,9 @@ async function main() {
     const isInWorktree = normalizedFile.startsWith(normalizedWorktree) ||
       normalizedFile === absoluteWorktreePath;
 
-    // Also allow writes to .mamh/ directory (shared state that all agents need)
-    const mamhDir = resolve(".mamh") + sep;
-    const isInMamh = normalizedFile.startsWith(mamhDir);
+    // Also allow writes to .takt/ directory (shared state that all agents need)
+    const taktDir = resolve(".takt") + sep;
+    const isInMamh = normalizedFile.startsWith(taktDir);
 
     if (!isInWorktree && !isInMamh) {
       const message =

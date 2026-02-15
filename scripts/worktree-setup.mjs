@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * worktree-setup.mjs - Git worktree management for MAMH agents
+ * worktree-setup.mjs - Git worktree management for Takt agents
  *
  * Creates isolated git worktrees for each agent with write access, ensuring
  * agents cannot step on each other's files during parallel execution.
@@ -12,13 +12,13 @@
  *   node worktree-setup.mjs --merge [project-directory]
  *
  * Behavior:
- *   - Reads .mamh/agents/registry.json for agent list
+ *   - Reads .takt/agents/registry.json for agent list
  *   - Creates a git worktree per write-capable agent
  *   - Updates registry.json with worktreePath for each agent
  *   - Idempotent: safe to run multiple times
  *
  * Flags:
- *   --cleanup   Remove all MAMH worktrees and clean up branches
+ *   --cleanup   Remove all Takt worktrees and clean up branches
  *   --merge     Merge all agent branches back to main (delegates to worktree-merge.mjs)
  *
  * Exit codes:
@@ -35,8 +35,8 @@ import { execSync } from "node:child_process";
 // ---------------------------------------------------------------------------
 
 const WORKTREE_DIR = ".worktrees";
-const WORKTREE_PREFIX = "mamh-";
-const BRANCH_PREFIX = "mamh/";
+const WORKTREE_PREFIX = "takt-";
+const BRANCH_PREFIX = "takt/";
 
 // Tools that indicate write access
 const WRITE_TOOLS = [
@@ -165,10 +165,10 @@ function setupWorktrees(projectDir) {
   }
 
   // Read registry
-  const registryPath = join(projectDir, ".mamh", "agents", "registry.json");
+  const registryPath = join(projectDir, ".takt", "agents", "registry.json");
   if (!existsSync(registryPath)) {
-    process.stderr.write("Error: Agent registry not found at .mamh/agents/registry.json\n");
-    process.stderr.write("Run init-project.mjs first to initialize the MAMH project.\n");
+    process.stderr.write("Error: Agent registry not found at .takt/agents/registry.json\n");
+    process.stderr.write("Run init-project.mjs first to initialize the Takt project.\n");
     process.exit(1);
   }
 
@@ -246,7 +246,7 @@ function setupWorktrees(projectDir) {
   }
 
   // --- Print summary ---
-  process.stdout.write("\nMAMH Worktree Setup\n");
+  process.stdout.write("\nTakt Worktree Setup\n");
   process.stdout.write("=".repeat(50) + "\n\n");
 
   if (gitignoreUpdated) {
@@ -288,7 +288,7 @@ function setupWorktrees(projectDir) {
 }
 
 /**
- * Cleanup: remove all MAMH worktrees and optionally delete branches.
+ * Cleanup: remove all Takt worktrees and optionally delete branches.
  */
 function cleanupWorktrees(projectDir) {
   if (!isGitRepo(projectDir)) {
@@ -296,7 +296,7 @@ function cleanupWorktrees(projectDir) {
     process.exit(1);
   }
 
-  const registryPath = join(projectDir, ".mamh", "agents", "registry.json");
+  const registryPath = join(projectDir, ".takt", "agents", "registry.json");
   let registry = null;
   if (existsSync(registryPath)) {
     try {
@@ -311,7 +311,7 @@ function cleanupWorktrees(projectDir) {
   const removed = [];
   const errors = [];
 
-  // Remove worktrees that are under .worktrees/mamh-*
+  // Remove worktrees that are under .worktrees/takt-*
   for (const wtPath of existingWorktrees) {
     if (wtPath.startsWith(worktreeBase) && wtPath.includes(WORKTREE_PREFIX)) {
       try {
@@ -353,7 +353,7 @@ function cleanupWorktrees(projectDir) {
   }
 
   // --- Print summary ---
-  process.stdout.write("\nMAMH Worktree Cleanup\n");
+  process.stdout.write("\nTakt Worktree Cleanup\n");
   process.stdout.write("=".repeat(50) + "\n\n");
 
   if (removed.length > 0) {
@@ -373,7 +373,7 @@ function cleanupWorktrees(projectDir) {
   }
 
   if (removed.length === 0 && errors.length === 0) {
-    process.stdout.write("No MAMH worktrees found. Nothing to clean up.\n");
+    process.stdout.write("No Takt worktrees found. Nothing to clean up.\n");
   } else {
     process.stdout.write(`Done. Removed ${removed.length} worktrees.\n`);
   }

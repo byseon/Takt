@@ -1,13 +1,13 @@
 {
-  "name": "mamh",
-  "version": "0.1.7",
-  "description": "Multi-Agent Multi-Harness (MAMH) — orchestrate teams of specialized AI agents to build complex projects autonomously with scope enforcement, review gates, and milestone-driven execution.",
+  "name": "takt",
+  "version": "0.2.0",
+  "description": "Takt — orchestrate teams of specialized AI agents to build complex projects autonomously with scope enforcement, review gates, and ticket-based milestone execution.",
   "author": {
     "name": "seongjinpark"
   },
-  "homepage": "https://github.com/usespeakeasy/mamh-plugin",
-  "repository": "https://github.com/usespeakeasy/mamh-plugin",
+  "homepage": "https://github.com/seonhq/Takt",
+  "repository": "https://github.com/seonhq/Takt",
   "license": "MIT",
-  "keywords": ["multi-agent", "orchestration", "team", "autonomous", "scope-enforcement"],
+  "keywords": ["multi-agent", "orchestration", "takt", "autonomous", "scope-enforcement", "ticketing"],
   "hooks": "./hooks/hooks.json"
 }

@@ -1,18 +1,18 @@
 ---
-name: mamh-handoff
-description: Update the MAMH handoff document with current project state, progress, decisions, and next steps. Triggers on "mamh handoff", "update handoff".
+name: takt-handoff
+description: Update the Takt handoff document with current project state, progress, decisions, and next steps. Triggers on "takt handoff", "update handoff".
 ---
 
-# MAMH Handoff — Update Handoff Document
+# Takt Handoff — Update Handoff Document
 
-This skill reads all current project state and generates a comprehensive `.mamh/HANDOFF.md` that captures everything needed for session continuity.
+This skill reads all current project state and generates a comprehensive `.takt/HANDOFF.md` that captures everything needed for session continuity.
 
 ---
 
 ## Prerequisites
 
-1. **MAMH project exists.** Verify `.mamh/state/mamh-state.json` exists. If not:
-   > "No MAMH session found. Use `/mamh-plan` to start a new project."
+1. **Takt project exists.** Verify `.takt/state/takt-state.json` exists. If not:
+   > "No Takt session found. Use `/takt-plan` to start a new project."
 
 ---
 
@@ -22,28 +22,28 @@ This skill reads all current project state and generates a comprehensive `.mamh/
 
 Read the following files to build a complete picture:
 
-1. `.mamh/state/mamh-state.json` — current phase, milestone, ticket summary
-2. `.mamh/session.json` — project name, execution mode, configuration
-3. `.mamh/agents/registry.json` — agent roster, stats, scopes
-4. `.mamh/HANDOFF.md` — existing handoff (preserve Milestone History)
-5. `.mamh/comms/decisions.md` — key decisions made
-6. `.mamh/comms/changelog.md` — completed work log
-7. `.mamh/prd.md` — product requirements (read first 50 lines for summary)
-8. `.mamh/constraints.md` — project constraints
+1. `.takt/state/takt-state.json` — current phase, milestone, ticket summary
+2. `.takt/session.json` — project name, execution mode, configuration
+3. `.takt/agents/registry.json` — agent roster, stats, scopes
+4. `.takt/HANDOFF.md` — existing handoff (preserve Milestone History)
+5. `.takt/comms/decisions.md` — key decisions made
+6. `.takt/comms/changelog.md` — completed work log
+7. `.takt/prd.md` — product requirements (read first 50 lines for summary)
+8. `.takt/constraints.md` — project constraints
 
 Also read:
-- All ticket files in the current milestone: `.mamh/tickets/milestones/<current-milestone>/`
-- Milestone metadata: `.mamh/tickets/milestones/<current-milestone>/_milestone.json`
-- Any milestone summaries in `.mamh/logs/M*-summary.md`
+- All ticket files in the current milestone: `.takt/tickets/milestones/<current-milestone>/`
+- Milestone metadata: `.takt/tickets/milestones/<current-milestone>/_milestone.json`
+- Any milestone summaries in `.takt/logs/M*-summary.md`
 
 ### Step 2 — Generate HANDOFF.md
 
-Rewrite `.mamh/HANDOFF.md` using the template below. Preserve the **Milestone History** section from the existing file — append to it, never truncate.
+Rewrite `.takt/HANDOFF.md` using the template below. Preserve the **Milestone History** section from the existing file — append to it, never truncate.
 
 ```markdown
-# MAMH Handoff
+# Takt Handoff
 
-> Auto-updated by MAMH. Last updated: <ISO timestamp>
+> Auto-updated by Takt. Last updated: <ISO timestamp>
 
 ## Project Overview
 

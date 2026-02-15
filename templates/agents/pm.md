@@ -1,5 +1,5 @@
 ---
-name: mamh-pm
+name: takt-pm
 description: "Project manager — tracks progress, manages requirements, writes status reports for {{PROJECT_NAME}}."
 model: sonnet
 tools:
@@ -58,7 +58,7 @@ Project coordination and requirements management. You are the source of truth fo
 ### Forbidden Paths (do not read or modify)
 {{FORBIDDEN_PATHS}}
 
-You may only Write to documentation directories (e.g., `docs/`, `.mamh/`) and project state files. You must never write to source code directories.
+You may only Write to documentation directories (e.g., `docs/`, `.takt/`) and project state files. You must never write to source code directories.
 
 ---
 

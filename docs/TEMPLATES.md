@@ -1,6 +1,6 @@
-# MAMH Agent Templates Guide
+# Takt Agent Templates Guide
 
-Guide to customizing and creating agent templates for the MAMH plugin.
+Guide to customizing and creating agent templates for the Takt plugin.
 
 ---
 
@@ -20,7 +20,7 @@ Guide to customizing and creating agent templates for the MAMH plugin.
 
 ## Overview
 
-Agent templates are reusable blueprints for creating specialized agents in MAMH projects. Each template defines:
+Agent templates are reusable blueprints for creating specialized agents in Takt projects. Each template defines:
 
 - Agent role and responsibilities
 - Allowed tools and restrictions
@@ -57,7 +57,7 @@ Templates are markdown files with YAML front matter:
 
 ```markdown
 ---
-name: mamh-<role>
+name: takt-<role>
 description: "<role description> for {{PROJECT_NAME}}"
 model: sonnet
 tools:
@@ -99,7 +99,7 @@ Agent instructions and guidelines...
 
 | Field | Type | Description | Example |
 |-------|------|-------------|---------|
-| `name` | string | Agent identifier template | `mamh-backend` |
+| `name` | string | Agent identifier template | `takt-backend` |
 | `description` | string | Human-readable description with placeholders | `"Backend engineer for {{PROJECT_NAME}}"` |
 | `model` | string | Model tier: `haiku`, `sonnet`, or `opus` | `sonnet` |
 | `tools` | array | Allowed tools | `["Read", "Write", "Edit", "Bash"]` |
@@ -117,7 +117,7 @@ Placeholders are replaced during agent generation. Use double curly braces: `{{P
 | Placeholder | Replaced With | When Populated | Example Value |
 |-------------|---------------|----------------|---------------|
 | `{{PROJECT_NAME}}` | Project name from session | Phase 1 | "TaskMaster Pro" |
-| `{{AGENT_NAME}}` | Full agent identifier | Phase 1/3 | "mamh-backend" |
+| `{{AGENT_NAME}}` | Full agent identifier | Phase 1/3 | "takt-backend" |
 | `{{ALLOWED_PATHS}}` | Formatted list of allowed paths | Phase 1/3 | `- src/api/**\n- src/db/**` |
 | `{{READ_ONLY_PATHS}}` | Formatted list of read-only paths | Phase 1/3 | `- src/shared/**\n- tests/**` |
 | `{{FORBIDDEN_PATHS}}` | Formatted list of forbidden paths | Phase 1/3 | `- src/ui/**\n- docs/**` |
@@ -135,7 +135,7 @@ Paths are formatted as markdown bullet lists:
 
 ### Read-Only Paths (read only, no modifications)
 - src/shared/**
-- .mamh/**
+- .takt/**
 
 ### Forbidden Paths (do not read or modify)
 - src/ui/**
@@ -144,7 +144,7 @@ Paths are formatted as markdown bullet lists:
 
 ### Constraints Formatting
 
-Constraints are inserted verbatim from `.mamh/constraints.md`:
+Constraints are inserted verbatim from `.takt/constraints.md`:
 
 ```markdown
 ## Constraints
@@ -183,11 +183,11 @@ Constraints are inserted verbatim from `.mamh/constraints.md`:
    - Replace `{{ALLOWED_PATHS}}` with formatted scope from architect
    - Replace `{{READ_ONLY_PATHS}}` with formatted readable paths
    - Replace `{{FORBIDDEN_PATHS}}` with formatted forbidden paths
-   - Replace `{{CONSTRAINTS}}` with `.mamh/constraints.md` content
+   - Replace `{{CONSTRAINTS}}` with `.takt/constraints.md` content
 
 4. **Agent File Creation**
-   - Write customized agent to `.claude/agents/mamh-<role>.md`
-   - Register in `.mamh/agents/registry.json`
+   - Write customized agent to `.claude/agents/takt-<role>.md`
+   - Register in `.takt/agents/registry.json`
 
 5. **Spawn Agent**
    - Launch as Agent Teams teammate
@@ -204,7 +204,7 @@ Constraints are inserted verbatim from `.mamh/constraints.md`:
    - Example: ML ticket assigned, no ML agent exists
 
 2. **Approval Check**
-   - Read `agentApprovalMode` from `.mamh/session.json`
+   - Read `agentApprovalMode` from `.takt/session.json`
    - `auto` → proceed immediately
    - `suggest` → propose to user, wait for approval
    - `locked` → abort provisioning, use closest existing agent
@@ -237,7 +237,7 @@ Constraints are inserted verbatim from `.mamh/constraints.md`:
 
 **Typical Scope:**
 - Allowed: `src/api/**`, `src/db/**`, `src/server/**`, `tests/api/**`, `tests/integration/**`
-- Read-only: `src/shared/**`, `src/types/**`, `.mamh/**`
+- Read-only: `src/shared/**`, `src/types/**`, `.takt/**`
 - Forbidden: `src/ui/**`, `src/client/**`, `public/**`
 
 **Responsibilities:**
@@ -264,7 +264,7 @@ Constraints are inserted verbatim from `.mamh/constraints.md`:
 
 **Typical Scope:**
 - Allowed: `src/ui/**`, `src/client/**`, `src/components/**`, `public/**`, `tests/ui/**`
-- Read-only: `src/shared/**`, `src/types/**`, `.mamh/**`
+- Read-only: `src/shared/**`, `src/types/**`, `.takt/**`
 - Forbidden: `src/api/**`, `src/db/**`, `src/server/**`
 
 **Responsibilities:**
@@ -328,7 +328,7 @@ Constraints are inserted verbatim from `.mamh/constraints.md`:
 **Disallowed Tools:** Edit, Bash, WebFetch, WebSearch
 
 **Typical Scope:**
-- Allowed: `docs/**`, `.mamh/**`, `README.md`, `CHANGELOG.md`
+- Allowed: `docs/**`, `.takt/**`, `README.md`, `CHANGELOG.md`
 - Read-only: All project paths (for tracking progress)
 - Forbidden: Source code directories (`src/**`, `tests/**`)
 
@@ -363,7 +363,7 @@ Constraints are inserted verbatim from `.mamh/constraints.md`:
 
 **Typical Scope:**
 - Allowed: `src/ui/**`, `src/styles/**`, `src/components/**`, `public/assets/**`, `design-tokens/**`
-- Read-only: `src/shared/**`, `.mamh/**`
+- Read-only: `src/shared/**`, `.takt/**`
 - Forbidden: `src/api/**`, `src/db/**`, `src/server/**`
 
 **Responsibilities:**
@@ -604,7 +604,7 @@ cp templates/agents/backend.md templates/agents/database-architect.md
 
 ```yaml
 ---
-name: mamh-database-architect
+name: takt-database-architect
 description: "Database architect — schema design, query optimization, migrations for {{PROJECT_NAME}}"
 model: opus  # Complex reasoning for schema design
 tools:
@@ -665,7 +665,7 @@ You are the database architect for **{{PROJECT_NAME}}**. You design schemas, opt
 ### Typical Read-Only Paths
 - `src/api/**` — To understand what data APIs need
 - `src/models/**` — To understand data models
-- `.mamh/**` — Project state and requirements
+- `.takt/**` — Project state and requirements
 
 ### Typical Forbidden Paths
 - `src/ui/**` — Frontend code
@@ -715,24 +715,24 @@ Test placeholder substitution manually:
 
 ```bash
 # Create test environment
-mkdir -p test-template/.mamh/{state,agents}
+mkdir -p test-template/.takt/{state,agents}
 
-cat > test-template/.mamh/session.json <<'EOF'
+cat > test-template/.takt/session.json <<'EOF'
 {"projectName": "TestDB"}
 EOF
 
-cat > test-template/.mamh/constraints.md <<'EOF'
+cat > test-template/.takt/constraints.md <<'EOF'
 - Must use PostgreSQL 15+
 - All queries must have query timeout of 5 seconds
 EOF
 
 # Manually substitute (or write a test script)
 export PROJECT_NAME="TestDB"
-export AGENT_NAME="mamh-database-architect"
+export AGENT_NAME="takt-database-architect"
 export ALLOWED_PATHS="- src/db/schema/**\n- src/db/migrations/**"
 export READ_ONLY_PATHS="- src/api/**\n- src/models/**"
 export FORBIDDEN_PATHS="- src/ui/**"
-export CONSTRAINTS="$(cat test-template/.mamh/constraints.md)"
+export CONSTRAINTS="$(cat test-template/.takt/constraints.md)"
 
 # Substitute and validate
 sed "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" templates/agents/database-architect.md | \
@@ -835,15 +835,15 @@ sed "s/{{AGENT_NAME}}/$AGENT_NAME/g"
 
 ```json
 {
-  "mamh-backend": {
+  "takt-backend": {
     "allowedPaths": ["src/api/**"],
     "readablePaths": ["src/shared/**"]
   },
-  "mamh-frontend": {
+  "takt-frontend": {
     "allowedPaths": ["src/ui/**"],
     "readablePaths": ["src/shared/**"]
   },
-  "mamh-types": {
+  "takt-types": {
     "allowedPaths": ["src/shared/**"],
     "readablePaths": ["src/api/**", "src/ui/**"]
   }
@@ -856,11 +856,11 @@ Use `scope-guard.mjs` to test patterns:
 
 ```bash
 # Test backend writing to API (should allow)
-echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/api/users.ts"},"agent_name":"mamh-backend"}' \
+echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/api/users.ts"},"agent_name":"takt-backend"}' \
   | node scripts/scope-guard.mjs
 
 # Test backend writing to UI (should block)
-echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/ui/App.tsx"},"agent_name":"mamh-backend"}' \
+echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/ui/App.tsx"},"agent_name":"takt-backend"}' \
   | node scripts/scope-guard.mjs
 ```
 
@@ -875,7 +875,7 @@ echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/ui/App.tsx"},
 **Agent Config (from registry.json):**
 ```json
 {
-  "mamh-backend": {
+  "takt-backend": {
     "allowedPaths": [
       "src/api/**",
       "src/db/**",
@@ -883,7 +883,7 @@ echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/ui/App.tsx"},
     ],
     "readablePaths": [
       "src/shared/**",
-      ".mamh/**"
+      ".takt/**"
     ],
     "forbiddenPaths": [
       "src/ui/**",
@@ -893,11 +893,11 @@ echo '{"tool_name":"Write","tool_input":{"file_path":"'$(pwd)'/src/ui/App.tsx"},
 }
 ```
 
-**Generated Agent File (`.claude/agents/mamh-backend.md`):**
+**Generated Agent File (`.claude/agents/takt-backend.md`):**
 
 ```markdown
 ---
-name: mamh-backend
+name: takt-backend
 description: "Backend implementation — APIs, server logic, database for TaskMaster Pro"
 model: sonnet
 tools:
@@ -913,7 +913,7 @@ disallowedTools:
 memory: project
 ---
 
-# mamh-backend — Backend Engineer
+# takt-backend — Backend Engineer
 
 You are the backend engineer for **TaskMaster Pro**. You own all server-side code...
 
@@ -926,7 +926,7 @@ You are the backend engineer for **TaskMaster Pro**. You own all server-side cod
 
 ### Read-Only Paths (read only, no modifications)
 - src/shared/**
-- .mamh/**
+- .takt/**
 
 ### Forbidden Paths (do not read or modify)
 - src/ui/**
@@ -966,17 +966,17 @@ You are the backend engineer for **TaskMaster Pro**. You own all server-side cod
 5. Orchestrator reads template (creates new or adapts backend template)
 6. Substitutes placeholders:
    - `{{PROJECT_NAME}}` → "TaskMaster Pro"
-   - `{{AGENT_NAME}}` → "mamh-ml"
+   - `{{AGENT_NAME}}` → "takt-ml"
    - `{{ALLOWED_PATHS}}` → "- src/ml/**\n- models/**\n- tests/ml/**"
    - `{{READ_ONLY_PATHS}}` → "- src/api/**\n- src/shared/**"
    - `{{FORBIDDEN_PATHS}}` → "- src/ui/**"
    - `{{CONSTRAINTS}}` → (from constraints.md)
 
-7. Writes `.claude/agents/mamh-ml.md`
+7. Writes `.claude/agents/takt-ml.md`
 8. Updates registry:
    ```json
    {
-     "mamh-ml": {
+     "takt-ml": {
        "allowedPaths": ["src/ml/**", "models/**", "tests/ml/**"],
        "readablePaths": ["src/api/**", "src/shared/**"],
        "forbiddenPaths": ["src/ui/**"],
@@ -996,4 +996,4 @@ You are the backend engineer for **TaskMaster Pro**. You own all server-side cod
 
 - [README.md](./README.md) - Developer guide
 - [CONFIGURATION.md](./CONFIGURATION.md) - Configuration reference
-- [SKILL.md](../skills/mamh/SKILL.md) - Full workflow specification
+- [SKILL.md](../skills/takt/SKILL.md) - Full workflow specification

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * init-project.mjs - MAMH project initialization script
+ * init-project.mjs - Takt project initialization script
  *
- * Creates the .mamh/ directory structure with all required files and
+ * Creates the .takt/ directory structure with all required files and
  * subdirectories. Called by the skill during Phase 0 (project setup).
  *
  * Usage:
@@ -29,13 +29,13 @@ import { resolve, join, relative } from "node:path";
 // ---------------------------------------------------------------------------
 
 const DIRECTORIES = [
-  ".mamh",
-  ".mamh/agents",
-  ".mamh/tickets",
-  ".mamh/tickets/milestones",
-  ".mamh/tickets/archive",
-  ".mamh/comms",
-  ".mamh/state",
+  ".takt",
+  ".takt/agents",
+  ".takt/tickets",
+  ".takt/tickets/milestones",
+  ".takt/tickets/archive",
+  ".takt/comms",
+  ".takt/state",
 ];
 
 // ---------------------------------------------------------------------------
@@ -50,7 +50,7 @@ function getDefaultFiles() {
   const now = getTimestamp();
 
   return {
-    ".mamh/session.json": JSON.stringify(
+    ".takt/session.json": JSON.stringify(
       {
         name: "",
         description: "",
@@ -69,13 +69,13 @@ function getDefaultFiles() {
       2
     ),
 
-    ".mamh/prd.md": "",
+    ".takt/prd.md": "",
 
-    ".mamh/tech-spec.md": "",
+    ".takt/tech-spec.md": "",
 
-    ".mamh/constraints.md": "",
+    ".takt/constraints.md": "",
 
-    ".mamh/agents/registry.json": JSON.stringify(
+    ".takt/agents/registry.json": JSON.stringify(
       {
         agents: {},
         version: 1,
@@ -84,14 +84,14 @@ function getDefaultFiles() {
       2
     ),
 
-    ".mamh/comms/decisions.md": "",
+    ".takt/comms/decisions.md": "",
 
-    ".mamh/comms/changelog.md": "",
+    ".takt/comms/changelog.md": "",
 
-    ".mamh/HANDOFF.md": [
-      "# MAMH Handoff",
+    ".takt/HANDOFF.md": [
+      "# Takt Handoff",
       "",
-      `> Auto-updated by MAMH orchestrator. Last updated: ${now}`,
+      `> Auto-updated by Takt orchestrator. Last updated: ${now}`,
       "",
       "## What Has Been Done",
       "- Project initialized",
@@ -112,7 +112,7 @@ function getDefaultFiles() {
       "",
     ].join("\n"),
 
-    ".mamh/state/mamh-state.json": JSON.stringify(
+    ".takt/state/takt-state.json": JSON.stringify(
       {
         phase: "planning",
         phaseHistory: [],
@@ -185,8 +185,8 @@ function main() {
   }
 
   // --- Print summary ---
-  const mamhRoot = join(absoluteProjectDir, ".mamh");
-  process.stdout.write(`\nMAMH Project Initialized: ${mamhRoot}\n`);
+  const taktRoot = join(absoluteProjectDir, ".takt");
+  process.stdout.write(`\nTakt Project Initialized: ${taktRoot}\n`);
   process.stdout.write("=".repeat(50) + "\n\n");
 
   if (created.dirs.length > 0) {

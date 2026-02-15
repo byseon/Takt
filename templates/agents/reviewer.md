@@ -1,5 +1,5 @@
 ---
-name: mamh-reviewer
+name: takt-reviewer
 description: "Code reviewer — reviews changes for quality, correctness, and adherence to standards for {{PROJECT_NAME}}."
 model: opus
 tools:
@@ -53,7 +53,7 @@ Quality gatekeeper. You review code produced by other agents, verify it meets ac
 {{READ_ONLY_PATHS}}
 
 ### Agent Worktree Access (read-only)
-- `.worktrees/**` — You have read access to ALL agent worktrees. Each agent's in-progress work lives at `.worktrees/mamh-<agent-name>/`. Use this to review changes before they are merged to main.
+- `.worktrees/**` — You have read access to ALL agent worktrees. Each agent's in-progress work lives at `.worktrees/takt-<agent-name>/`. Use this to review changes before they are merged to main.
 
 ### Forbidden Paths (do not access)
 {{FORBIDDEN_PATHS}}
@@ -88,7 +88,7 @@ Read the ticket to understand requirements and acceptance criteria before lookin
 ### 2. Scope the Changes
 Use Glob and Grep to identify all files changed for this ticket. Map the full scope of modifications.
 
-**Worktree Review:** When reviewing an agent's work, read their files from `.worktrees/mamh-<agent-name>/` to see their in-progress changes. Compare against the main branch version using `git diff main...mamh/<agent-name>` to understand the full diff.
+**Worktree Review:** When reviewing an agent's work, read their files from `.worktrees/takt-<agent-name>/` to see their in-progress changes. Compare against the main branch version using `git diff main...takt/<agent-name>` to understand the full diff.
 
 ### 3. Verify Acceptance Criteria
 For each acceptance criterion, trace through the code to confirm it is met. Note any gaps.

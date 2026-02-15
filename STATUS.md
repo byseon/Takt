@@ -1,8 +1,8 @@
-# MAMH — Project Status
+# Takt — Project Status
 
-## Current Version: 0.1.7
+## Current Version: 0.2.0
 
-**Date:** 2026-02-10
+**Date:** 2026-02-15
 
 ---
 
@@ -10,9 +10,9 @@
 
 ### Core Plugin
 - [x] Plugin manifest (`.claude-plugin/plugin.json`)
-- [x] Main skill entry point (`skills/mamh/SKILL.md`) — help + routing
-- [x] Split subcommand skills (`plan`, `execute`, `review`, `next`, `status`, `resume`, `stop`)
-- [x] Orchestrator agent in delegate mode (`agents/mamh-orchestrator.md`)
+- [x] Main skill entry point (`skills/takt/SKILL.md`) — help + routing
+- [x] Split subcommand skills (`plan`, `execute`, `review`, `next`, `status`, `resume`, `stop`, `handoff`)
+- [x] Orchestrator agent in delegate mode (`agents/takt-orchestrator.md`)
 - [x] Package metadata (`package.json`)
 
 ### Agent Templates (8)
@@ -29,7 +29,7 @@
 - [x] `scope-guard.mjs` — PreToolUse: blocks out-of-scope writes + worktree enforcement
 - [x] `review-gate.mjs` — TaskCompleted: enforces acceptance criteria
 - [x] `keep-working.mjs` — TeammateIdle: directs agents to next ticket
-- [x] `init-project.mjs` — Creates `.mamh/` directory in user projects
+- [x] `init-project.mjs` — Creates `.takt/` directory in user projects
 
 ### Git Worktree Isolation
 - [x] `worktree-setup.mjs` — Creates per-agent worktrees from main
@@ -76,11 +76,35 @@
 
 ## Changelog
 
+### 2026-02-15 — v0.2.0
+- **Rebranded: Takt → Takt**
+  - Plugin renamed from "Multi-Agent Multi-Harness" to "Takt" — agent orchestration meets ticket-based workflows
+  - Updated all user-facing files: README.md, CLAUDE.md, STATUS.md, package.json, plugin.json, marketplace.json
+  - Repository URLs updated to `seonhq/Takt` (public) and `seongjinpark-88/takt` (private)
+  - Internal `.takt/` directory name preserved for backward compatibility
+- **Mandatory reviewer agent**
+  - `takt-reviewer` is now a permanent team member — always spawned, cannot be removed during roster review
+  - Added to Phase 1 agent definition as mandatory alongside orchestrator
+  - Execute skill ensures reviewer is always part of the team
+  - Review skill assigns peer review to existing reviewer teammate (no new agent spawned)
+  - Next skill protects reviewer and orchestrator from removal during roster evaluation
+- Modified 9 files:
+  1. `README.md` — Full rewrite with Takt branding, mandatory reviewer, multi-feature support
+  2. `CLAUDE.md` — Renamed references, updated URLs, added mandatory reviewer decision
+  3. `STATUS.md` — Renamed, v0.2.0 changelog
+  4. `package.json` — name: takt, repo: seonhq/Takt
+  5. `.claude-plugin/plugin.json` — name: takt, URLs updated
+  6. `.claude-plugin/marketplace.json` — name: takt, URLs updated
+  7. `skills/plan/SKILL.md` — Mandatory reviewer + orchestrator in Phase 1
+  8. `skills/execute/SKILL.md` — Reviewer as mandatory team member in Step 3.1
+  9. `skills/review/SKILL.md` — Assign to existing takt-reviewer teammate
+  10. `skills/next/SKILL.md` — Protected agents during roster review
+
 ### 2026-02-10 — v0.1.7
 - **Multi-feature support: extend or new feature flow**
-  - When `mamh "description"` is called in a repo with an existing `.mamh/` project, detects it and asks: extend current feature or start a new one
+  - When `takt "description"` is called in a repo with an existing `.takt/` project, detects it and asks: extend current feature or start a new one
   - **Extend**: Adds milestones/tickets to existing project, continues numbering, reuses all state
-  - **New feature**: Archives feature-level state (PRD, tickets, comms, reviews, logs) to `.mamh/features-archive/<name>/`, keeps project-level state (agents, tech spec, constraints, POLICY, decisions.md), resets milestone/ticket numbering
+  - **New feature**: Archives feature-level state (PRD, tickets, comms, reviews, logs) to `.takt/features-archive/<name>/`, keeps project-level state (agents, tech spec, constraints, POLICY, decisions.md), resets milestone/ticket numbering
   - User can optionally revise constraints, tech spec, or agent roster before planning the new feature
   - Q1 (constraints) and Q2 (execution mode) are skipped for both paths — only Q3 (involvement) is asked
   - session.json gains `featureCount` and `currentFeature` fields
@@ -92,11 +116,11 @@
 ### 2026-02-10 — v0.1.6
 - **Review & organization improvements**
   - **Artifact bundling on archive**: When a milestone completes, ticket outputs (comms/) and review results (reviews/) are moved into the archive directory alongside ticket files. Each archived milestone is now self-contained.
-  - **Two-layer review model clarified**: review-gate.mjs hook = lightweight completion gate (checkbox + status + commit checks). /mamh-review skill = full validation (build/test/peer/user). Both documented explicitly in execute and review skills.
+  - **Two-layer review model clarified**: review-gate.mjs hook = lightweight completion gate (checkbox + status + commit checks). /takt-review skill = full validation (build/test/peer/user). Both documented explicitly in execute and review skills.
   - **review-gate.mjs enhanced**: Now checks ticket status field ("completed"), verifies agent has commits on worktree branch, in addition to acceptance criteria checkboxes. Still fast — no build spawning.
   - **`{{CODE_STANDARDS}}` documented**: Architect agent (Task 2 in planning) now generates code standards as output item 8. Rendered into POLICY.md during Phase 1 via new Step 1.2.
   - **Constraint cross-check**: Planning Phase 1 now cross-references user constraints against POLICY Hard Prohibitions, noting overrides in a "Project Overrides" subsection.
-  - **Fixed**: `.mamh/state/session.json` → `.mamh/session.json` in review/SKILL.md
+  - **Fixed**: `.takt/state/session.json` → `.takt/session.json` in review/SKILL.md
 - Modified 6 files:
   1. `skills/review/SKILL.md` — Fixed session.json path, added two-layer review model documentation
   2. `skills/plan/SKILL.md` — Added CODE_STANDARDS to architect output, new Step 1.2 (render POLICY.md with cross-check)
@@ -116,25 +140,25 @@
   - Single plan summary shown for approval (agents, milestones, tickets in one block)
   - User approves once, then Phases 1-2 auto-execute without further input
 - **Inline progress output**
-  - One-liner printed after each ticket approval: `[MAMH] T001 approved (mamh-backend) — title`
-  - Batch summary after each batch: `[MAMH] Batch 2/4 complete. 8/14 tickets done.`
-  - Milestone completion announcement: `[MAMH] Milestone M001 complete! 6/6 tickets approved.`
-  - Blocker/failure alerts: `[MAMH] T007 BLOCKED — dependency T005 failed.`
+  - One-liner printed after each ticket approval: `[Takt] T001 approved (takt-backend) — title`
+  - Batch summary after each batch: `[Takt] Batch 2/4 complete. 8/14 tickets done.`
+  - Milestone completion announcement: `[Takt] Milestone M001 complete! 6/6 tickets approved.`
+  - Blocker/failure alerts: `[Takt] T007 BLOCKED — dependency T005 failed.`
 - **Simplified orchestrator cold start**
-  - Reduced from 10 mandatory file reads to 2: HANDOFF.md + mamh-state.json
+  - Reduced from 10 mandatory file reads to 2: HANDOFF.md + takt-state.json
   - All other docs read on-demand when needed for specific operations
   - HANDOFF.md is the primary context source; CLAUDE.md is system-loaded anyway
 - Modified 7 files:
   1. `skills/plan/SKILL.md` — Complete rewrite: 3 questions, parallel plan generation, plan summary, single approval gate
   2. `skills/execute/SKILL.md` — New Step 3.6d (inline progress output), startup print, batch progress in subagent mode
-  3. `agents/mamh-orchestrator.md` — Cold start reduced to HANDOFF.md + state, lazy-load rest
+  3. `agents/takt-orchestrator.md` — Cold start reduced to HANDOFF.md + state, lazy-load rest
   4. `skills/resume/SKILL.md` — Cold start simplified to HANDOFF.md + state
-  5. `skills/mamh/SKILL.md` — Updated description for progressive disclosure
+  5. `skills/takt/SKILL.md` — Updated description for progressive disclosure
   6. `README.md` — Rewrote example session, updated feature description
   7. `STATUS.md` — This changelog entry
 
 ### 2026-02-10 — v0.1.4
-- Added `/mamh-handoff` skill for manual HANDOFF.md updates
+- Added `/takt-handoff` skill for manual HANDOFF.md updates
   - Reads all state files, registry, tickets, decisions, changelog
   - Generates comprehensive HANDOFF.md with structured template
   - Preserves Milestone History across rewrites
@@ -146,20 +170,20 @@
   - HANDOFF.md, POLICY.md, session.json, prd.md, decisions.md, registry.json — all read before any action
 - Resume skill now reads key docs (HANDOFF.md, POLICY.md, prd.md, decisions.md, registry.json) before state assessment
 - Modified 8 files:
-  1. `skills/handoff/SKILL.md` — NEW: `/mamh-handoff` skill
-  2. `agents/mamh-orchestrator.md` — Expanded session start reads (6→10 items), enhanced Handoff section
+  1. `skills/handoff/SKILL.md` — NEW: `/takt-handoff` skill
+  2. `agents/takt-orchestrator.md` — Expanded session start reads (6→10 items), enhanced Handoff section
   3. `skills/execute/SKILL.md` — Structured HANDOFF.md update checkpoints (Step 3.6c), subagent progress tracking
   4. `skills/next/SKILL.md` — Structured milestone HANDOFF.md template with History entry format
   5. `skills/resume/SKILL.md` — Expanded step 1 to read key docs (not just HANDOFF.md)
-  6. `skills/mamh/SKILL.md` — Added `/mamh-handoff` to routing table
-  7. `README.md` — Added `/mamh-handoff` to commands table and plugin structure
+  6. `skills/takt/SKILL.md` — Added `/takt-handoff` to routing table
+  7. `README.md` — Added `/takt-handoff` to commands table and plugin structure
   8. `CLAUDE.md` — Added handoff skill to repository structure and related docs
 
 ### 2026-02-10 — v0.1.3
 - Added dual execution mode: **Agent Teams** + **Subagent fallback**
   - `executionMode` field added to `session.json` (auto-detected from env var, user-selectable during planning)
   - **Agent Teams mode**: Unchanged from v0.1.2 — TeamCreate + SendMessage, orchestrator agent, shared task list
-  - **Subagent mode**: Main session orchestrates via Task tool parallel batch dispatch, file-based communication via `.mamh/comms/<ticket-id>-output.md`, dependency-ordered topological sort
+  - **Subagent mode**: Main session orchestrates via Task tool parallel batch dispatch, file-based communication via `.takt/comms/<ticket-id>-output.md`, dependency-ordered topological sort
   - Agent Teams is no longer a hard requirement — all skills use conditional checks
 - Modified 12 files:
   1. `scripts/init-project.mjs` — `executionMode` field with env var auto-detection
@@ -170,7 +194,7 @@
   6. `skills/stop/SKILL.md` — Mode-aware shutdown (signal teammates vs stop dispatching)
   7. `skills/review/SKILL.md` — Mode-aware peer review (teammate agent vs reviewer Task)
   8. `skills/next/SKILL.md` — Mode-aware auto-advance (load into team vs rebuild graph)
-  9. `skills/mamh/SKILL.md` — Updated description and conditional prereqs
+  9. `skills/takt/SKILL.md` — Updated description and conditional prereqs
   10. `docs/CONFIGURATION.md` — `executionMode` field docs, env var requirement updated to conditional
   11. `CLAUDE.md` — Architectural decision, hook mode awareness notes
   12. `STATUS.md` — This changelog entry
@@ -179,18 +203,18 @@
 - Fixed 5 issues discovered during real-world usage:
   1. **Subagents vs Agent Teams**: Clarified Task tool (planning) vs Agent Teams (execution) in plan/SKILL.md, execute/SKILL.md, orchestrator
   2. **Tickets/milestones not marked done**: Added post-review state mutation instructions (ticket status, registry stats, state file, HANDOFF.md), explicit archival steps, milestone completion chain
-  3. **`mamh:plan` vs `plan` routing**: Added disambiguation to mamh/SKILL.md and identity header to plan/SKILL.md
-  4. **Per-project handoff**: Added `.mamh/HANDOFF.md` (created by init-project.mjs, updated by execute/next/stop/resume), restructured docs/POLICY.md with lessons learned
+  3. **`takt:plan` vs `plan` routing**: Added disambiguation to takt/SKILL.md and identity header to plan/SKILL.md
+  4. **Per-project handoff**: Added `.takt/HANDOFF.md` (created by init-project.mjs, updated by execute/next/stop/resume), restructured docs/POLICY.md with lessons learned
   5. **Model tiering**: Added model selection table to POLICY.md template, model delegation guidance to orchestrator, model usage section to all 8 agent templates
 - Changed planner delegation tier from opus to sonnet (structured decomposition, not deep reasoning)
 - Added `ApprovedAt` field to ticket file template
 - Updated CLAUDE.md structure to reference HANDOFF.md
 
 ### 2026-02-08 — v0.1.1
-- Split monolithic `skills/mamh/SKILL.md` (923 lines) into 8 focused skill files
-  - `/mamh-plan` (Phases 0-2), `/mamh-execute` (Phase 3), `/mamh-review` (Phase 4), `/mamh-next` (Phase 5)
-  - `/mamh-status` (dashboard), `/mamh-resume` (resume protocol), `/mamh-stop` (stop protocol)
-  - `/mamh` (help + routing, ~83 lines)
+- Split monolithic `skills/takt/SKILL.md` (923 lines) into 8 focused skill files
+  - `/takt-plan` (Phases 0-2), `/takt-execute` (Phase 3), `/takt-review` (Phase 4), `/takt-next` (Phase 5)
+  - `/takt-status` (dashboard), `/takt-resume` (resume protocol), `/takt-stop` (stop protocol)
+  - `/takt` (help + routing, ~83 lines)
 - Each subcommand now has its own slash command with tab-completion
 - Fixed orchestrator using Task tool instead of Agent Teams:
   - Removed `Task` from orchestrator allowed tools, added to `disallowedTools`
@@ -199,7 +223,7 @@
 - Updated CLAUDE.md, README.md, STATUS.md with new skill structure
 
 ### 2026-02-08 — v0.1.0 (Initial Release)
-- Created complete MAMH plugin with 28 files
+- Created complete Takt plugin with 28 files
 - 8 agent templates covering backend, frontend, reviewer, PM, designer, researcher, content, devops
 - Scope enforcement via PreToolUse hook with zero-dependency glob matcher
 - Review gates via TaskCompleted hook

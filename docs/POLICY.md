@@ -1,32 +1,32 @@
 # POLICY.md — Shared Agent Policy System
 
-This document explains the MAMH shared policy system: what it is, how it works, and how to customize it.
+This document explains the Takt shared policy system: what it is, how it works, and how to customize it.
 
 ---
 
 ## What Is POLICY.md?
 
-POLICY.md is a shared rulebook that governs the behavior of ALL agents in a MAMH project. It defines communication protocols, file ownership rules, code standards, ticket workflow, review requirements, safety constraints, and session procedures.
+POLICY.md is a shared rulebook that governs the behavior of ALL agents in a Takt project. It defines communication protocols, file ownership rules, code standards, ticket workflow, review requirements, safety constraints, and session procedures.
 
 Every agent reads POLICY.md at the start of every session and follows its rules throughout execution. It is the single source of truth for "how we work together" within a project.
 
-Think of it as a team charter for AI agents. Humans have engineering handbooks and onboarding docs; MAMH agents have POLICY.md.
+Think of it as a team charter for AI agents. Humans have engineering handbooks and onboarding docs; Takt agents have POLICY.md.
 
 ---
 
 ## How It Gets Generated
 
-POLICY.md is generated during **Phase 0 (Planning Interview)** of the MAMH lifecycle, after the PRD, tech spec, and constraints have been established.
+POLICY.md is generated during **Phase 0 (Planning Interview)** of the Takt lifecycle, after the PRD, tech spec, and constraints have been established.
 
 ### Generation Flow
 
 ```
-1. User triggers MAMH with a project description
+1. User triggers Takt with a project description
 2. Phase 0 runs: analyst expands requirements, architect creates tech spec
 3. User answers planning interview questions (constraints, tech stack, review mode)
-4. MAMH reads the template from:
+4. Takt reads the template from:
      ${CLAUDE_PLUGIN_ROOT}/templates/POLICY.md
-5. MAMH substitutes placeholders with project-specific content:
+5. Takt substitutes placeholders with project-specific content:
      {{PROJECT_NAME}}      <-- derived from project description
      {{TIMESTAMP}}         <-- current ISO timestamp
      {{AGENT_ROSTER}}      <-- generated from registry.json after Phase 1
@@ -34,7 +34,7 @@ POLICY.md is generated during **Phase 0 (Planning Interview)** of the MAMH lifec
      {{TECHNOLOGY_STACK}}  <-- from tech spec + user preferences
      {{CODE_STANDARDS}}    <-- detected from codebase or user-specified
 6. The customized file is written to:
-     .mamh/POLICY.md
+     .takt/POLICY.md
 ```
 
 The `{{AGENT_ROSTER}}` placeholder is filled after Phase 1 (Agent Definition) completes, since the roster is not known until agents are defined. POLICY.md may be written in two passes: once with partial content after Phase 0, and updated with the full roster after Phase 1.
@@ -45,8 +45,8 @@ The `{{AGENT_ROSTER}}` placeholder is filled after Phase 1 (Agent Definition) co
 |-------------|--------|---------------|
 | `{{PROJECT_NAME}}` | Derived from user's project description | `TaskFlow API` |
 | `{{TIMESTAMP}}` | Generation time | `2026-02-08T14:30:00Z` |
-| `{{AGENT_ROSTER}}` | `.mamh/agents/registry.json` | Table of agent IDs, roles, owned paths |
-| `{{CONSTRAINTS}}` | User interview answers + `.mamh/constraints.md` | `- Must use PostgreSQL\n- No external API calls` |
+| `{{AGENT_ROSTER}}` | `.takt/agents/registry.json` | Table of agent IDs, roles, owned paths |
+| `{{CONSTRAINTS}}` | User interview answers + `.takt/constraints.md` | `- Must use PostgreSQL\n- No external API calls` |
 | `{{TECHNOLOGY_STACK}}` | Tech spec + user preferences | `- Runtime: Node.js 20\n- Framework: Express` |
 | `{{CODE_STANDARDS}}` | Detected from codebase or user-specified | `- Use ESLint with Airbnb config\n- Prefer async/await` |
 
@@ -60,15 +60,15 @@ The `{{AGENT_ROSTER}}` placeholder is filled after Phase 1 (Agent Definition) co
 templates/POLICY.md
 ```
 
-This is the canonical template that ships with the MAMH plugin. It contains all placeholder variables and the full structure of sections. It is never modified at runtime.
+This is the canonical template that ships with the Takt plugin. It contains all placeholder variables and the full structure of sections. It is never modified at runtime.
 
 ### Per-Project Location (generated per project)
 
 ```
-.mamh/POLICY.md
+.takt/POLICY.md
 ```
 
-This is the customized, project-specific version. It lives inside the `.mamh/` directory alongside other project state files. Each MAMH project gets its own copy with its own content.
+This is the customized, project-specific version. It lives inside the `.takt/` directory alongside other project state files. Each Takt project gets its own copy with its own content.
 
 ---
 
@@ -77,15 +77,15 @@ This is the customized, project-specific version. It lives inside the `.mamh/` d
 Every agent follows the **Session Protocol** defined in Section 10 of POLICY.md. The first step of every session is:
 
 ```
-1. Read .mamh/POLICY.md
-2. Read .mamh/state/mamh-state.json
-3. Read .mamh/state/session.json
+1. Read .takt/POLICY.md
+2. Read .takt/state/takt-state.json
+3. Read .takt/state/session.json
 4. Read assigned tickets
 5. Check for unread messages
 6. Resume or claim work
 ```
 
-Agents treat POLICY.md as authoritative. If an agent's individual instructions (in `.claude/agents/mamh-<id>.md`) conflict with POLICY.md, the policy wins for team-wide rules (communication, workflow, safety) while the agent definition wins for role-specific rules (allowed paths, tools, responsibilities).
+Agents treat POLICY.md as authoritative. If an agent's individual instructions (in `.claude/agents/takt-<id>.md`) conflict with POLICY.md, the policy wins for team-wide rules (communication, workflow, safety) while the agent definition wins for role-specific rules (allowed paths, tools, responsibilities).
 
 ### What Agents Get From POLICY.md
 
@@ -112,7 +112,7 @@ Users have two customization points:
 
 ### 1. Customize the Template (affects all future projects)
 
-Edit `templates/POLICY.md` in the plugin repository. This changes the policy for every new project initialized with MAMH going forward. Existing projects are not affected.
+Edit `templates/POLICY.md` in the plugin repository. This changes the policy for every new project initialized with Takt going forward. Existing projects are not affected.
 
 Common template customizations:
 - Add company-specific coding standards to Section 4
@@ -123,7 +123,7 @@ Common template customizations:
 
 ### 2. Customize the Generated File (affects one project)
 
-Edit `.mamh/POLICY.md` directly in the project directory. This changes the policy for that specific project only.
+Edit `.takt/POLICY.md` directly in the project directory. This changes the policy for that specific project only.
 
 Common per-project customizations:
 - Tighten constraints for a security-sensitive project
@@ -180,7 +180,7 @@ The init-project script and agent generation scripts may also update POLICY.md:
 
 ## Relationship to the Napkin Pattern
 
-MAMH's POLICY.md is inspired by the **napkin pattern** (persistent learning files that accumulate knowledge over time) but serves a different purpose:
+Takt's POLICY.md is inspired by the **napkin pattern** (persistent learning files that accumulate knowledge over time) but serves a different purpose:
 
 | Aspect | Napkin Files | POLICY.md |
 |--------|-------------|-----------|
@@ -189,7 +189,7 @@ MAMH's POLICY.md is inspired by the **napkin pattern** (persistent learning file
 | **Growth** | Organic (agents add learnings as they discover them) | Structured (orchestrator adds rules at defined points) |
 | **Authority** | Advisory (suggestions for the agent's own behavior) | Authoritative (mandatory rules all agents must follow) |
 | **Persistence** | Across sessions for one agent | Across sessions for all agents |
-| **Location** | Agent-specific memory files | `.mamh/POLICY.md` (shared) |
+| **Location** | Agent-specific memory files | `.takt/POLICY.md` (shared) |
 
 ### How They Complement Each Other
 
@@ -215,18 +215,18 @@ This ensures POLICY.md stays focused on team-wide concerns while agents retain d
 
 ---
 
-## File Structure Within .mamh/
+## File Structure Within .takt/
 
-For reference, here is where POLICY.md sits relative to other MAMH state files:
+For reference, here is where POLICY.md sits relative to other Takt state files:
 
 ```
-.mamh/
+.takt/
   POLICY.md                  <-- THIS FILE (generated, shared rulebook)
   prd.md                     # Product Requirements Document
   tech-spec.md               # Technical Specification
   constraints.md             # Hard constraints and preferences
   state/
-    mamh-state.json          # Current operational state
+    takt-state.json          # Current operational state
     session.json             # Session configuration
   agents/
     registry.json            # Agent roster with path boundaries
@@ -249,9 +249,9 @@ For reference, here is where POLICY.md sits relative to other MAMH state files:
 
 | Question | Answer |
 |----------|--------|
-| What is it? | A shared rulebook for all MAMH agents in a project |
+| What is it? | A shared rulebook for all Takt agents in a project |
 | Where is the template? | `templates/POLICY.md` in the plugin repo |
-| Where is the generated file? | `.mamh/POLICY.md` in each project |
+| Where is the generated file? | `.takt/POLICY.md` in each project |
 | When is it created? | During Phase 0 (Planning Interview) |
 | Who reads it? | Every agent, at the start of every session |
 | Who writes it? | The orchestrator (generated from template + project details) |
@@ -266,10 +266,10 @@ For reference, here is where POLICY.md sits relative to other MAMH state files:
 |------|---------|-------------|
 | CLAUDE.md | Plugin developer guide | When modifying plugin code |
 | STATUS.md | Plugin changelog & roadmap | To check version history |
-| skills/mamh/SKILL.md | Main entry point + routing | Understanding command routing |
+| skills/takt/SKILL.md | Main entry point + routing | Understanding command routing |
 | skills/plan/SKILL.md | Planning phases 0-2 | Before modifying planning flow |
 | skills/execute/SKILL.md | Execution phase 3 | Before modifying execution |
-| agents/mamh-orchestrator.md | Orchestrator behavior | Understanding coordination |
+| agents/takt-orchestrator.md | Orchestrator behavior | Understanding coordination |
 | templates/POLICY.md | Shared rules template | Modifying team rules |
 | scripts/*.mjs | Hook scripts | Modifying enforcement |
 

@@ -1,28 +1,28 @@
 ---
-name: mamh-status
-description: Show the MAMH project dashboard with agent roster, ticket board, and progress. Triggers on "mamh status".
+name: takt-status
+description: Show the Takt project dashboard with agent roster, ticket board, and progress. Triggers on "takt status".
 ---
 
-# MAMH Status — Project Dashboard
+# Takt Status — Project Dashboard
 
-This skill displays the current MAMH project status, including the agent roster, ticket board, milestone progress, and any blockers.
+This skill displays the current Takt project status, including the agent roster, ticket board, milestone progress, and any blockers.
 
 ---
 
 ## Prerequisites
 
-1. **MAMH project exists.** Verify `.mamh/state/mamh-state.json` exists. If not:
-   > "No MAMH session found. Use `/mamh-plan` to start a new project."
+1. **Takt project exists.** Verify `.takt/state/takt-state.json` exists. If not:
+   > "No Takt session found. Use `/takt-plan` to start a new project."
 
 ---
 
 ## Status Dashboard
 
-Read `.mamh/state/mamh-state.json`, `session.json`, `registry.json`, and all milestone/ticket files. Display:
+Read `.takt/state/takt-state.json`, `session.json`, `registry.json`, and all milestone/ticket files. Display:
 
 ```
 ============================================================
-  MAMH Status Dashboard
+  Takt Status Dashboard
 ============================================================
 
   Project:    <project name>
@@ -35,20 +35,20 @@ Read `.mamh/state/mamh-state.json`, `session.json`, `registry.json`, and all mil
 ------------------------------------------------------------
   Agent               | Model  | Assigned | Done | Status
   --------------------|--------|----------|------|--------
-  mamh-backend        | sonnet |        3 |    2 | working
-  mamh-frontend       | sonnet |        2 |    1 | working
-  mamh-test           | sonnet |        1 |    0 | idle
-  mamh-orchestrator   | opus   |      --- |  --- | coordinating
+  takt-backend        | sonnet |        3 |    2 | working
+  takt-frontend       | sonnet |        2 |    1 | working
+  takt-test           | sonnet |        1 |    0 | idle
+  takt-orchestrator   | opus   |      --- |  --- | coordinating
 
 ------------------------------------------------------------
   Tickets (Milestone <current>)
 ------------------------------------------------------------
   ID    | Title                     | Agent          | Status
   ------|---------------------------|----------------|----------
-  T001  | Setup project structure   | mamh-backend   | approved
-  T002  | Define shared interfaces  | mamh-backend   | approved
-  T003  | Initialize frontend       | mamh-frontend  | in_progress
-  T004  | Setup test infra          | mamh-test      | pending
+  T001  | Setup project structure   | takt-backend   | approved
+  T002  | Define shared interfaces  | takt-backend   | approved
+  T003  | Initialize frontend       | takt-frontend  | in_progress
+  T004  | Setup test infra          | takt-test      | pending
 
 ------------------------------------------------------------
   Progress
@@ -70,9 +70,9 @@ If there are blockers or failed tickets, highlight them prominently.
 
 ## State File Reference
 
-All state files live under `.mamh/state/`.
+All state files live under `.takt/state/`.
 
-### `.mamh/state/mamh-state.json`
+### `.takt/state/takt-state.json`
 
 Primary state file. Always reflects current operational status.
 
@@ -81,7 +81,7 @@ Primary state file. Always reflects current operational status.
   "phase": 3,
   "status": "executing",
   "currentMilestone": "M001",
-  "activeAgents": ["mamh-backend", "mamh-frontend"],
+  "activeAgents": ["takt-backend", "takt-frontend"],
   "ticketsSummary": {
     "total": 12,
     "completed": 3,
@@ -96,7 +96,7 @@ Primary state file. Always reflects current operational status.
 }
 ```
 
-### `.mamh/state/session.json`
+### `.takt/state/session.json`
 
 Session configuration. Set once during Phase 0, read throughout.
 

@@ -1,12 +1,12 @@
 ---
-name: mamh-plan
-description: Run MAMH planning phases — quick interview, plan generation, and approval. Triggers on "mamh plan", or when starting a new MAMH project with "mamh <description>".
+name: takt-plan
+description: Run Takt planning phases — quick interview, plan generation, and approval. Triggers on "takt plan", or when starting a new Takt project with "takt <description>".
 ---
 
-# MAMH Plan — Phases 0-2
+# Takt Plan — Phases 0-2
 
-> This is `/mamh-plan` — the MAMH planning workflow. NOT the generic `/plan` skill.
-> If the user said `mamh <description>`, you are in the right place.
+> This is `/takt-plan` — the Takt planning workflow. NOT the generic `/plan` skill.
+> If the user said `takt <description>`, you are in the right place.
 
 This skill runs planning through a **progressive disclosure** flow:
 
@@ -30,13 +30,13 @@ This skill runs planning through a **progressive disclosure** flow:
 
 ### Step 0.0 — Existing Project Detection
 
-Check if `.mamh/session.json` exists. If it does, an existing MAMH project is present.
+Check if `.takt/session.json` exists. If it does, an existing Takt project is present.
 
 **If NO existing project** → skip to Step 0.1 (fresh start).
 
-**If existing project found**, read `.mamh/session.json` and `.mamh/HANDOFF.md` to understand current state. Then ask:
+**If existing project found**, read `.takt/session.json` and `.takt/HANDOFF.md` to understand current state. Then ask:
 
-> "Existing MAMH project found: **<project name>** (<N> milestones completed). Is this new work an extension of the current feature, or a new feature?"
+> "Existing Takt project found: **<project name>** (<N> milestones completed). Is this new work an extension of the current feature, or a new feature?"
 
 Options:
 - **Extend current feature** — Add more milestones and tickets to the existing project. Keeps all current state.
@@ -50,26 +50,26 @@ Options:
    - Planner receives the existing milestone history so new milestones continue the numbering (e.g., if M001-M003 are done, new milestones start at M004)
    - Ticket numbering also continues from where the last feature left off
 3. Existing agents are reused. New agents can be added if the extension requires them.
-4. Skip Steps 0.5 init (`.mamh/` already exists) — jump to Phase 1 for any new agent files, then Phase 2 for new tickets
+4. Skip Steps 0.5 init (`.takt/` already exists) — jump to Phase 1 for any new agent files, then Phase 2 for new tickets
 
 #### Path B: New Feature
 
-1. **Archive feature-level state** — move ephemeral files to `.mamh/features-archive/<feature-name>-<timestamp>/`:
-   - `.mamh/prd.md`
-   - `.mamh/tickets/milestones/` (any remaining active milestones)
-   - `.mamh/tickets/archive/` (completed milestones — already bundled with artifacts)
-   - `.mamh/comms/` (all files except `decisions.md` — decisions persist across features)
-   - `.mamh/reviews/` (any remaining active reviews)
-   - `.mamh/logs/` (milestone summaries, error logs)
-   - `.mamh/state/mamh-state.json` (reset after archiving)
+1. **Archive feature-level state** — move ephemeral files to `.takt/features-archive/<feature-name>-<timestamp>/`:
+   - `.takt/prd.md`
+   - `.takt/tickets/milestones/` (any remaining active milestones)
+   - `.takt/tickets/archive/` (completed milestones — already bundled with artifacts)
+   - `.takt/comms/` (all files except `decisions.md` — decisions persist across features)
+   - `.takt/reviews/` (any remaining active reviews)
+   - `.takt/logs/` (milestone summaries, error logs)
+   - `.takt/state/takt-state.json` (reset after archiving)
 2. **Keep project-level state** — these persist across features:
-   - `.mamh/session.json` (update `phase` to 0, `currentMilestone` to null, increment `featureCount`)
-   - `.mamh/constraints.md`
-   - `.mamh/tech-spec.md`
-   - `.mamh/POLICY.md`
-   - `.mamh/agents/registry.json` (reset `ticketsCompleted`/`ticketsAssigned` to 0)
-   - `.mamh/comms/decisions.md` (architectural decisions persist)
-   - `.claude/agents/mamh-*.md` (agent definitions)
+   - `.takt/session.json` (update `phase` to 0, `currentMilestone` to null, increment `featureCount`)
+   - `.takt/constraints.md`
+   - `.takt/tech-spec.md`
+   - `.takt/POLICY.md`
+   - `.takt/agents/registry.json` (reset `ticketsCompleted`/`ticketsAssigned` to 0)
+   - `.takt/comms/decisions.md` (architectural decisions persist)
+   - `.claude/agents/takt-*.md` (agent definitions)
 3. **Ask about revisions** (single question):
    > "Want to revise any project-level docs before planning the new feature?"
    Options:
@@ -205,7 +205,7 @@ Display a single, readable plan summary. This is the ONE approval gate.
 
 ```
 ================================================================
-  MAMH Plan Summary
+  Takt Plan Summary
 ================================================================
 
   Project:     <name derived from description>
@@ -217,22 +217,22 @@ Display a single, readable plan summary. This is the ONE approval gate.
 ----------------------------------------------------------------
   Agent              | Model  | Owned Paths
   -------------------|--------|---------------------------
-  mamh-backend       | sonnet | src/api/**, src/db/**
-  mamh-frontend      | sonnet | src/ui/**, public/**
-  mamh-test          | sonnet | tests/**
+  takt-backend       | sonnet | src/api/**, src/db/**
+  takt-frontend      | sonnet | src/ui/**, public/**
+  takt-test          | sonnet | tests/**
   ...
 
 ----------------------------------------------------------------
   Milestones (<N> milestones, <M> tickets total)
 ----------------------------------------------------------------
   M001: Project Scaffolding (X tickets)
-    T001  Setup project structure        -> mamh-backend   (no deps)
-    T002  Define shared interfaces       -> mamh-backend   (no deps)
-    T003  Initialize frontend scaffold   -> mamh-frontend  (deps: T001)
+    T001  Setup project structure        -> takt-backend   (no deps)
+    T002  Define shared interfaces       -> takt-backend   (no deps)
+    T003  Initialize frontend scaffold   -> takt-frontend  (deps: T001)
 
   M002: Core Features (Y tickets)
-    T004  Implement user model           -> mamh-backend   (deps: T002)
-    T005  User registration UI           -> mamh-frontend  (deps: T004)
+    T004  Implement user model           -> takt-backend   (deps: T002)
+    T005  User registration UI           -> takt-frontend  (deps: T004)
     ...
 
 ================================================================
@@ -257,10 +257,10 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/init-project.mjs"
 ```
 
 **Write planning artifacts:**
-- `.mamh/prd.md` — from analyst output
-- `.mamh/tech-spec.md` — from architect output
-- `.mamh/constraints.md` — from Q1 answers + scope boundaries
-- `.mamh/session.json`:
+- `.takt/prd.md` — from analyst output
+- `.takt/tech-spec.md` — from architect output
+- `.takt/constraints.md` — from Q1 answers + scope boundaries
+- `.takt/session.json`:
   ```json
   {
     "name": "<project name>",
@@ -287,19 +287,19 @@ No user input needed — plan was already approved.
 
 ### Step 1.1 — Generate Agent Files
 
-For each agent from the approved plan, generate `.claude/agents/mamh-<agent-id>.md`.
+For each agent from the approved plan, generate `.claude/agents/takt-<agent-id>.md`.
 
 Use templates from `${CLAUDE_PLUGIN_ROOT}/templates/agents/` as base. Merge the architect's scope map.
 
 Also define these **mandatory agents** (always included regardless of project type):
 
-**mamh-orchestrator:**
+**takt-orchestrator:**
 - Delegate mode (no code tools: no Edit, Write, Bash for code changes)
 - Can use: Read, Glob, Grep (read-only), TeamCreate, SendMessage, TaskCreate/Update/List/Get, AskUserQuestion
 - Coordinates all other agents
 - Manages ticket assignment and review flow
 
-**mamh-reviewer:**
+**takt-reviewer:**
 - Read-only access to ALL project files and ALL agent worktrees (`.worktrees/**`)
 - Can use: Read, Glob, Grep, Bash (tests/build/lint only)
 - Cannot use: Write, Edit, WebFetch, WebSearch
@@ -312,7 +312,7 @@ The reviewer agent is a permanent team member — it is NOT optional and should 
 
 Agent file structure:
 ```markdown
-# mamh-<agent-id>
+# takt-<agent-id>
 
 <Role description>
 
@@ -336,26 +336,26 @@ Agent file structure:
 
 ### Step 1.2 — Render POLICY.md
 
-Generate `.mamh/POLICY.md` from the template at `${CLAUDE_PLUGIN_ROOT}/templates/POLICY.md`. Fill placeholders:
+Generate `.takt/POLICY.md` from the template at `${CLAUDE_PLUGIN_ROOT}/templates/POLICY.md`. Fill placeholders:
 
 | Placeholder | Source |
 |-------------|--------|
 | `{{PROJECT_NAME}}` | Project name from session.json |
 | `{{TIMESTAMP}}` | Current ISO timestamp |
 | `{{AGENT_ROSTER}}` | Agent table from Step 1.1 |
-| `{{CONSTRAINTS}}` | Content from `.mamh/constraints.md` (written in Step 0.5 from Q1 answers) |
+| `{{CONSTRAINTS}}` | Content from `.takt/constraints.md` (written in Step 0.5 from Q1 answers) |
 | `{{CODE_STANDARDS}}` | Code Standards section from the architect output (Task 2, item 8) |
 
 **Cross-check:** Before writing POLICY.md, scan the user's constraints (from `{{CONSTRAINTS}}`) against POLICY's "Hard Prohibitions" section. If any constraint contradicts a prohibition (e.g., user says "install packages freely" vs. prohibition #5 "NEVER install new dependencies without approval"), resolve by noting the override in the rendered POLICY.md under a "Project Overrides" subsection after Hard Prohibitions.
 
 ### Step 1.3 — Generate Registry
 
-Write `.mamh/agents/registry.json`:
+Write `.takt/agents/registry.json`:
 ```json
 {
   "agents": {
-    "mamh-<agent-id>": {
-      "id": "mamh-<agent-id>",
+    "takt-<agent-id>": {
+      "id": "takt-<agent-id>",
       "role": "<role description>",
       "modelTier": "<haiku|sonnet|opus>",
       "allowedPaths": ["<glob patterns>"],
@@ -386,7 +386,7 @@ No user input needed — plan was already approved.
 For each milestone, create the directory and files:
 
 ```
-.mamh/tickets/milestones/
+.takt/tickets/milestones/
   M001-<name>/
     _milestone.json
     T001-<title>.md
@@ -412,7 +412,7 @@ For each milestone, create the directory and files:
 ```markdown
 # T001: <Title>
 
-**Agent:** mamh-<agent-id>
+**Agent:** takt-<agent-id>
 **Milestone:** M001
 **Status:** pending
 **Priority:** <critical|high|medium|low>
@@ -440,12 +440,12 @@ If agent-teams mode, create Agent Teams tasks for each ticket in the first miles
 
 ### Step 2.3 — Write Initial HANDOFF.md
 
-Write a comprehensive `.mamh/HANDOFF.md` capturing the full plan:
+Write a comprehensive `.takt/HANDOFF.md` capturing the full plan:
 
 ```markdown
-# MAMH Handoff
+# Takt Handoff
 
-> Auto-updated by MAMH. Last updated: <ISO timestamp>
+> Auto-updated by Takt. Last updated: <ISO timestamp>
 
 ## Project Overview
 
@@ -494,8 +494,8 @@ Update state:
 
 Print:
 ```
-[MAMH] Planning complete. <N> agents, <M> tickets, <K> milestones.
-[MAMH] Ready to execute. Starting M001: <milestone name>.
+[Takt] Planning complete. <N> agents, <M> tickets, <K> milestones.
+[Takt] Ready to execute. Starting M001: <milestone name>.
 ```
 
-Automatically invoke `/mamh-execute` to begin Phase 3.
+Automatically invoke `/takt-execute` to begin Phase 3.

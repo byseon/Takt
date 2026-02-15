@@ -10,7 +10,7 @@
  *   node worktree-merge.mjs [project-directory]
  *
  * Behavior:
- *   - Reads .mamh/agents/registry.json for worktree info
+ *   - Reads .takt/agents/registry.json for worktree info
  *   - For each agent with a worktree:
  *     1. Checks if branch has commits ahead of main
  *     2. Runs tests in the worktree (if test command is configured)
@@ -119,7 +119,7 @@ function detectTestCommand(projectDir) {
  * Read session.json for any merge-related configuration.
  */
 function getSessionConfig(projectDir) {
-  const sessionPath = join(projectDir, ".mamh", "session.json");
+  const sessionPath = join(projectDir, ".takt", "session.json");
   try {
     return JSON.parse(readFileSync(sessionPath, "utf-8"));
   } catch {
@@ -140,9 +140,9 @@ function main() {
   }
 
   // Read registry
-  const registryPath = join(projectDir, ".mamh", "agents", "registry.json");
+  const registryPath = join(projectDir, ".takt", "agents", "registry.json");
   if (!existsSync(registryPath)) {
-    process.stderr.write("Error: Agent registry not found at .mamh/agents/registry.json\n");
+    process.stderr.write("Error: Agent registry not found at .takt/agents/registry.json\n");
     process.exit(1);
   }
 
@@ -173,7 +173,7 @@ function main() {
   const agentBranches = [];
   for (const [agentName, agentConfig] of Object.entries(agents)) {
     if (agentConfig.worktreePath) {
-      const branchName = `mamh/${agentName}`;
+      const branchName = `takt/${agentName}`;
       agentBranches.push({ name: agentName, branch: branchName, config: agentConfig });
     }
   }
@@ -183,7 +183,7 @@ function main() {
     process.exit(0);
   }
 
-  process.stdout.write("\nMAMH Worktree Merge\n");
+  process.stdout.write("\nTakt Worktree Merge\n");
   process.stdout.write("=".repeat(50) + "\n\n");
   process.stdout.write(`Found ${agentBranches.length} agent branches to merge.\n`);
   if (testCommand) {

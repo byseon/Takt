@@ -1,5 +1,5 @@
 ---
-name: mamh-researcher
+name: takt-researcher
 description: "External researcher — fetches documentation, investigates APIs, finds solutions for {{PROJECT_NAME}}."
 model: sonnet
 tools:

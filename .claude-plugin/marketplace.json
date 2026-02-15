@@ -1,27 +1,27 @@
 {
-  "name": "mamh-marketplace",
+  "name": "takt-marketplace",
   "owner": {
     "name": "seongjinpark"
   },
   "metadata": {
-    "description": "Multi-Agent Multi-Harness (MAMH) plugin marketplace",
-    "version": "0.1.1"
+    "description": "Takt plugin marketplace — agent orchestration with ticket-based workflows",
+    "version": "0.2.0"
   },
   "plugins": [
     {
-      "name": "mamh",
+      "name": "takt",
       "source": "./",
-      "description": "Orchestrate teams of specialized AI agents to build complex projects autonomously with scope enforcement, review gates, and milestone-driven execution.",
-      "version": "0.1.1",
+      "description": "Orchestrate teams of specialized AI agents to build complex projects autonomously with scope enforcement, review gates, and ticket-based milestone execution.",
+      "version": "0.2.0",
       "author": {
         "name": "seongjinpark"
       },
-      "homepage": "https://github.com/usespeakeasy/mamh-plugin",
-      "repository": "https://github.com/usespeakeasy/mamh-plugin",
+      "homepage": "https://github.com/seonhq/Takt",
+      "repository": "https://github.com/seonhq/Takt",
       "license": "MIT",
-      "keywords": ["multi-agent", "orchestration", "team", "autonomous", "scope-enforcement"],
+      "keywords": ["multi-agent", "orchestration", "takt", "autonomous", "scope-enforcement", "ticketing"],
       "category": "development-workflows",
-      "tags": ["agents", "orchestration", "project-management", "automation"]
+      "tags": ["agents", "orchestration", "project-management", "automation", "takt"]
     }
   ]
 }

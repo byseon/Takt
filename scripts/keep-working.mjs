@@ -14,7 +14,7 @@
  *
  * Receives hook context via stdin as JSON:
  * {
- *   "agent_name": "mamh-backend",
+ *   "agent_name": "takt-backend",
  *   "session_id": "..."
  * }
  */
@@ -89,8 +89,8 @@ function parseTicketMetadata(content, filename) {
  */
 function getCurrentMilestone() {
   const sessionPaths = [
-    resolve(".mamh", "session.json"),
-    resolve(process.cwd(), ".mamh", "session.json"),
+    resolve(".takt", "session.json"),
+    resolve(process.cwd(), ".takt", "session.json"),
   ];
 
   for (const sp of sessionPaths) {
@@ -110,7 +110,7 @@ function getCurrentMilestone() {
  * Returns tickets grouped by status.
  */
 function findAgentTickets(agentName, milestone) {
-  const base = resolve(".mamh", "tickets", "milestones");
+  const base = resolve(".takt", "tickets", "milestones");
   const result = { pending: [], in_progress: [], done: [] };
 
   if (!existsSync(base)) {
@@ -216,8 +216,8 @@ async function main() {
 
   const agentName = input.agent_name || process.env.CLAUDE_AGENT_NAME || "";
 
-  if (!agentName || !agentName.startsWith("mamh-")) {
-    // Not a MAMH agent — allow idle
+  if (!agentName || !agentName.startsWith("takt-")) {
+    // Not a Takt agent — allow idle
     process.exit(0);
   }
 

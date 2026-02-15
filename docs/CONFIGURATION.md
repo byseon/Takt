@@ -1,6 +1,6 @@
-# MAMH Configuration Reference
+# Takt Configuration Reference
 
-Complete reference for configuring MAMH sessions, agents, and plugin behavior.
+Complete reference for configuring Takt sessions, agents, and plugin behavior.
 
 ---
 
@@ -9,7 +9,7 @@ Complete reference for configuring MAMH sessions, agents, and plugin behavior.
 1. [Configuration Files Overview](#configuration-files-overview)
 2. [session.json - Session Configuration](#sessionjson---session-configuration)
 3. [registry.json - Agent Roster](#registryjson---agent-roster)
-4. [mamh-state.json - Operational State](#mamh-statejson---operational-state)
+4. [takt-state.json - Operational State](#takt-statejson---operational-state)
 5. [plugin.json - Plugin Configuration](#pluginjson---plugin-configuration)
 6. [Environment Variables](#environment-variables)
 7. [Changing Modes Mid-Project](#changing-modes-mid-project)
@@ -19,13 +19,13 @@ Complete reference for configuring MAMH sessions, agents, and plugin behavior.
 
 ## Configuration Files Overview
 
-MAMH uses multiple configuration files with distinct purposes:
+Takt uses multiple configuration files with distinct purposes:
 
 | File | Location | Purpose | Set When | Mutable |
 |------|----------|---------|----------|---------|
-| `session.json` | `.mamh/session.json` | Session preferences and modes | Phase 0 | Read-only after init |
-| `registry.json` | `.mamh/agents/registry.json` | Agent roster with scope boundaries | Phase 1 | Updated when agents added/removed |
-| `mamh-state.json` | `.mamh/state/mamh-state.json` | Current operational state | Phase 0 | Continuously updated |
+| `session.json` | `.takt/session.json` | Session preferences and modes | Phase 0 | Read-only after init |
+| `registry.json` | `.takt/agents/registry.json` | Agent roster with scope boundaries | Phase 1 | Updated when agents added/removed |
+| `takt-state.json` | `.takt/state/takt-state.json` | Current operational state | Phase 0 | Continuously updated |
 | `plugin.json` | `.claude-plugin/plugin.json` | Plugin manifest and defaults | Plugin install | Read-only (developer) |
 
 ---
@@ -34,11 +34,11 @@ MAMH uses multiple configuration files with distinct purposes:
 
 ### Location
 
-`.mamh/session.json`
+`.takt/session.json`
 
 ### Purpose
 
-Stores user preferences and session configuration set during Phase 0 (Planning Interview). These settings control how MAMH operates throughout the project lifecycle.
+Stores user preferences and session configuration set during Phase 0 (Planning Interview). These settings control how Takt operates throughout the project lifecycle.
 
 ### When Set
 
@@ -122,14 +122,14 @@ Created by `init-project.mjs` during Phase 0 with defaults, then populated by th
 
 **Type:** `enum` - `"agent-teams" | "subagents"`
 
-**Description:** Controls how Phase 3 execution is performed. Determines whether MAMH uses Agent Teams (persistent teammates with shared task list) or Subagents (Task-tool-based parallel batch execution with the main session as orchestrator).
+**Description:** Controls how Phase 3 execution is performed. Determines whether Takt uses Agent Teams (persistent teammates with shared task list) or Subagents (Task-tool-based parallel batch execution with the main session as orchestrator).
 
 **Values:**
 
 | Value | Mechanism | Orchestrator | Communication | Requires |
 |-------|-----------|-------------|---------------|----------|
-| `agent-teams` | TeamCreate + SendMessage | `mamh-orchestrator.md` agent in delegate mode | Agent Teams native messaging | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
-| `subagents` | Task tool parallel dispatches | Main session acts as orchestrator | File-based via `.mamh/comms/<ticket-id>-output.md` | Nothing extra |
+| `agent-teams` | TeamCreate + SendMessage | `takt-orchestrator.md` agent in delegate mode | Agent Teams native messaging | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
+| `subagents` | Task tool parallel dispatches | Main session acts as orchestrator | File-based via `.takt/comms/<ticket-id>-output.md` | Nothing extra |
 
 **Default:** `"agent-teams"` if `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var is set, `"subagents"` otherwise. Auto-detected by `init-project.mjs`.
 
@@ -144,8 +144,8 @@ Created by `init-project.mjs` during Phase 0 with defaults, then populated by th
 
 **Impact:**
 - **Phase 3 (Execution):** Determines which execution path is used:
-  - `agent-teams` → Section A of `/mamh-execute` (TeamCreate, SendMessage, shared task list, TeammateIdle hook)
-  - `subagents` → Section B of `/mamh-execute` (Task tool batch dispatch, file-based communication, main session orchestration)
+  - `agent-teams` → Section A of `/takt-execute` (TeamCreate, SendMessage, shared task list, TeammateIdle hook)
+  - `subagents` → Section B of `/takt-execute` (Task tool batch dispatch, file-based communication, main session orchestration)
 - **Phase 4 (Review):** Peer review uses teammate agent (agent-teams) or Task dispatch (subagents)
 - **Resume:** Agent Teams re-launches team; Subagents rebuilds dependency graph
 - **Stop:** Agent Teams signals teammates; Subagents stops dispatching batches
@@ -343,7 +343,7 @@ Created by `init-project.mjs` during Phase 0 with defaults, then populated by th
 
 ### Location
 
-`.mamh/agents/registry.json`
+`.takt/agents/registry.json`
 
 ### Purpose
 
@@ -385,7 +385,7 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
 
 **Type:** `object` - Map of agent ID to agent configuration
 
-**Description:** Each key is an agent identifier (e.g., `"mamh-backend"`), each value is the agent's configuration.
+**Description:** Each key is an agent identifier (e.g., `"takt-backend"`), each value is the agent's configuration.
 
 ---
 
@@ -395,9 +395,9 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
 
 **Description:** Unique agent identifier. Must match the key and the agent filename.
 
-**Format:** `mamh-<role>`
+**Format:** `takt-<role>`
 
-**Example:** `"mamh-backend"`
+**Example:** `"takt-backend"`
 
 ---
 
@@ -466,7 +466,7 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
 {
   "readablePaths": [
     "src/shared/**",
-    ".mamh/**",
+    ".takt/**",
     "package.json"
   ]
 }
@@ -579,8 +579,8 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
 ```json
 {
   "agents": {
-    "mamh-backend": {
-      "id": "mamh-backend",
+    "takt-backend": {
+      "id": "takt-backend",
       "role": "Backend implementation — APIs, server logic, database",
       "modelTier": "sonnet",
       "allowedPaths": [
@@ -590,7 +590,7 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
       ],
       "readablePaths": [
         "src/shared/**",
-        ".mamh/**"
+        ".takt/**"
       ],
       "forbiddenPaths": [
         "src/ui/**",
@@ -601,8 +601,8 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
       "ticketsAssigned": 2,
       "created": "phase1"
     },
-    "mamh-frontend": {
-      "id": "mamh-frontend",
+    "takt-frontend": {
+      "id": "takt-frontend",
       "role": "Frontend implementation — UI components, client logic",
       "modelTier": "sonnet",
       "allowedPaths": [
@@ -612,7 +612,7 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
       ],
       "readablePaths": [
         "src/shared/**",
-        ".mamh/**"
+        ".takt/**"
       ],
       "forbiddenPaths": [
         "src/api/**",
@@ -623,8 +623,8 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
       "ticketsAssigned": 1,
       "created": "phase1"
     },
-    "mamh-ml": {
-      "id": "mamh-ml",
+    "takt-ml": {
+      "id": "takt-ml",
       "role": "ML Engineer — recommendation engine and model training",
       "modelTier": "opus",
       "allowedPaths": [
@@ -655,11 +655,11 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
 
 ---
 
-## mamh-state.json - Operational State
+## takt-state.json - Operational State
 
 ### Location
 
-`.mamh/state/mamh-state.json`
+`.takt/state/takt-state.json`
 
 ### Purpose
 
@@ -758,7 +758,7 @@ Created in Phase 0, updated continuously throughout all phases.
 **Example:**
 ```json
 {
-  "activeAgents": ["mamh-backend", "mamh-frontend"]
+  "activeAgents": ["takt-backend", "takt-frontend"]
 }
 ```
 
@@ -802,7 +802,7 @@ Created in Phase 0, updated continuously throughout all phases.
 
 **Example:** `"2026-02-08T18:00:00.000Z"`
 
-**Set When:** User invokes `mamh stop` or orchestrator pauses for blocker
+**Set When:** User invokes `takt stop` or orchestrator pauses for blocker
 
 ---
 
@@ -890,7 +890,7 @@ Created in Phase 0, updated continuously throughout all phases.
   "phase": 3,
   "status": "executing",
   "currentMilestone": "M002",
-  "activeAgents": ["mamh-backend", "mamh-frontend"],
+  "activeAgents": ["takt-backend", "takt-frontend"],
   "ticketsSummary": {
     "total": 18,
     "completed": 8,
@@ -941,7 +941,7 @@ Created in Phase 0, updated continuously throughout all phases.
       "completedAt": null
     }
   ],
-  "agentsSpawned": ["mamh-backend", "mamh-frontend", "mamh-reviewer"],
+  "agentsSpawned": ["takt-backend", "takt-frontend", "takt-reviewer"],
   "startedAt": "2026-02-08T12:00:00.000Z",
   "lastUpdatedAt": "2026-02-08T16:30:00.000Z"
 }
@@ -1016,7 +1016,7 @@ Set once during plugin development. Users do not modify this file.
 
 **Type:** `object`
 
-**Description:** Default configuration values for session settings. Used to populate `.mamh/session.json` if user does not specify during planning interview.
+**Description:** Default configuration values for session settings. Used to populate `.takt/session.json` if user does not specify during planning interview.
 
 **Example:**
 ```json
@@ -1111,7 +1111,7 @@ echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
 
 **Description:** Absolute path to the plugin root directory. Used in hook script paths.
 
-**Example:** `/Users/username/.claude/plugins/mamh`
+**Example:** `/Users/username/.claude/plugins/takt`
 
 **Usage in hooks.json:**
 ```json
@@ -1132,13 +1132,13 @@ Claude Code replaces `${CLAUDE_PLUGIN_ROOT}` with the actual path at runtime.
 
 **Description:** Name of the agent currently executing. Set by Claude Code when invoking agent.
 
-**Example:** `"mamh-backend"`
+**Example:** `"takt-backend"`
 
 **Usage in hooks:** Scripts use this to identify which agent triggered the hook.
 
 ---
 
-### MAMH_DEBUG
+### TAKT_DEBUG
 
 **Required:** No (optional, for development)
 
@@ -1148,12 +1148,12 @@ Claude Code replaces `${CLAUDE_PLUGIN_ROOT}` with the actual path at runtime.
 
 **Set In:**
 ```bash
-export MAMH_DEBUG=1
+export TAKT_DEBUG=1
 ```
 
 **Usage in scripts:**
 ```javascript
-if (process.env.MAMH_DEBUG) {
+if (process.env.TAKT_DEBUG) {
   console.error(`[DEBUG] ${message}`);
 }
 ```
@@ -1172,14 +1172,14 @@ The following can be changed safely at any time:
 
 ```bash
 # Stop execution if running
-# Say: "mamh stop"
+# Say: "takt stop"
 
 # Edit session.json
-cd .mamh
+cd .takt
 jq '.reviewMode = "peer"' session.json > session.tmp && mv session.tmp session.json
 
 # Resume
-# Say: "mamh resume"
+# Say: "takt resume"
 ```
 
 **Effect:** Next ticket completion will use new review mode.
@@ -1190,8 +1190,8 @@ jq '.reviewMode = "peer"' session.json > session.tmp && mv session.tmp session.j
 
 ```bash
 # Edit at milestone boundary (when milestone just completed)
-jq '.milestoneAdvanceMode = "auto-advance"' .mamh/session.json > .mamh/session.tmp
-mv .mamh/session.tmp .mamh/session.json
+jq '.milestoneAdvanceMode = "auto-advance"' .takt/session.json > .takt/session.tmp
+mv .takt/session.tmp .takt/session.json
 ```
 
 **Effect:** Next milestone completion will use new advance mode.
@@ -1226,20 +1226,20 @@ The following changes are risky and may cause inconsistencies:
 
 ```bash
 # 1. Stop execution
-# In Claude Code, say: "mamh stop"
+# In Claude Code, say: "takt stop"
 
 # 2. Backup current state
-cp .mamh/session.json .mamh/session.json.backup
+cp .takt/session.json .takt/session.json.backup
 
 # 3. Edit session.json
 # Use jq or text editor to change desired fields
 
 # 4. Validate JSON syntax
-jq . .mamh/session.json > /dev/null
+jq . .takt/session.json > /dev/null
 echo $?  # Should output: 0
 
 # 5. Resume execution
-# In Claude Code, say: "mamh resume"
+# In Claude Code, say: "takt resume"
 ```
 
 ---
@@ -1288,7 +1288,7 @@ echo $?  # Should output: 0
 - User manually approves every ticket
 - Small milestones with frequent checkpoints
 
-**Use For:** Production applications, regulated environments, learning MAMH
+**Use For:** Production applications, regulated environments, learning Takt
 
 ---
 
@@ -1342,4 +1342,4 @@ echo $?  # Should output: 0
 
 - [README.md](./README.md) - Developer guide
 - [TEMPLATES.md](./TEMPLATES.md) - Template customization guide
-- [SKILL.md](../skills/mamh/SKILL.md) - Full workflow specification
+- [SKILL.md](../skills/takt/SKILL.md) - Full workflow specification

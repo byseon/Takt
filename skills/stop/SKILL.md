@@ -1,20 +1,20 @@
 ---
-name: mamh-stop
-description: Gracefully stop the MAMH session, save state, and shut down execution. Triggers on "mamh stop".
+name: takt-stop
+description: Gracefully stop the Takt session, save state, and shut down execution. Triggers on "takt stop".
 ---
 
-# MAMH Stop — Stop Protocol
+# Takt Stop — Stop Protocol
 
-This skill gracefully shuts down execution (Agent Teams or subagent dispatch), saves the current state, and marks in-progress tickets as pending so they can be resumed later with `/mamh-resume`.
+This skill gracefully shuts down execution (Agent Teams or subagent dispatch), saves the current state, and marks in-progress tickets as pending so they can be resumed later with `/takt-resume`.
 
 ---
 
 ## Prerequisites
 
-1. **MAMH session is active.** Verify `.mamh/state/mamh-state.json` exists and `status` is not `stopped` or `project-complete`. If the state file does not exist:
-   > "No MAMH session found. Nothing to stop."
+1. **Takt session is active.** Verify `.takt/state/takt-state.json` exists and `status` is not `stopped` or `project-complete`. If the state file does not exist:
+   > "No Takt session found. Nothing to stop."
    If already stopped:
-   > "MAMH session is already stopped. Use `/mamh-resume` to continue."
+   > "Takt session is already stopped. Use `/takt-resume` to continue."
 
 ---
 
@@ -22,7 +22,7 @@ This skill gracefully shuts down execution (Agent Teams or subagent dispatch), s
 
 ### Steps
 
-1. **Save current state:** Update `.mamh/state/mamh-state.json` with:
+1. **Save current state:** Update `.takt/state/takt-state.json` with:
    ```json
    {
      "phase": "<current phase>",
@@ -35,7 +35,7 @@ This skill gracefully shuts down execution (Agent Teams or subagent dispatch), s
 
 2. **Shut down execution (mode-dependent):**
 
-   Read `executionMode` from `.mamh/session.json` (default: `"agent-teams"` if env var set, else `"subagents"`).
+   Read `executionMode` from `.takt/session.json` (default: `"agent-teams"` if env var set, else `"subagents"`).
 
    **Agent Teams mode (`executionMode: "agent-teams"`):**
    - Signal all teammate agents to stop after their current operation completes.
@@ -49,23 +49,23 @@ This skill gracefully shuts down execution (Agent Teams or subagent dispatch), s
 
 3. **Mark in-progress tickets:** Set any `in_progress` tickets back to `pending` so they can be re-claimed on resume.
 
-4. **Preserve git worktrees:** Do NOT remove `.worktrees/` or delete agent branches. Worktrees contain uncommitted work that agents need when resuming. Each agent's worktree at `.worktrees/mamh-<agent-id>/` and branch `mamh/<agent-id>` must remain intact for `/mamh-resume`.
+4. **Preserve git worktrees:** Do NOT remove `.worktrees/` or delete agent branches. Worktrees contain uncommitted work that agents need when resuming. Each agent's worktree at `.worktrees/takt-<agent-id>/` and branch `takt/<agent-id>` must remain intact for `/takt-resume`.
 
-5. **Update HANDOFF.md:** Update `.mamh/HANDOFF.md` with current progress, in-progress work, and clear resume instructions under Next Steps.
+5. **Update HANDOFF.md:** Update `.takt/HANDOFF.md` with current progress, in-progress work, and clear resume instructions under Next Steps.
 
 6. **Write stop summary:**
-   > "MAMH session stopped and state saved. Progress:"
+   > "Takt session stopped and state saved. Progress:"
    > - "Milestone: M00X - <name>"
    > - "Tickets completed: X / Y"
-   > - "Use `/mamh-resume` to continue."
+   > - "Use `/takt-resume` to continue."
 
 ---
 
 ## State File Reference
 
-All state files live under `.mamh/state/`.
+All state files live under `.takt/state/`.
 
-### `.mamh/state/mamh-state.json`
+### `.takt/state/takt-state.json`
 
 Primary state file. Always reflects current operational status.
 
@@ -74,7 +74,7 @@ Primary state file. Always reflects current operational status.
   "phase": 3,
   "status": "executing",
   "currentMilestone": "M001",
-  "activeAgents": ["mamh-backend", "mamh-frontend"],
+  "activeAgents": ["takt-backend", "takt-frontend"],
   "ticketsSummary": {
     "total": 12,
     "completed": 3,
@@ -89,7 +89,7 @@ Primary state file. Always reflects current operational status.
 }
 ```
 
-### `.mamh/state/session.json`
+### `.takt/state/session.json`
 
 Session configuration. Set once during Phase 0, read throughout.
 

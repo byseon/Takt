@@ -4,7 +4,7 @@
  * review-gate.mjs - TaskCompleted hook (completion gate)
  *
  * Lightweight gate that blocks premature ticket completion.
- * This is NOT the full review — /mamh-review handles build/test/peer review.
+ * This is NOT the full review — /takt-review handles build/test/peer review.
  *
  * Checks:
  *   1. Ticket status field says "completed" (not still "in_progress")
@@ -19,7 +19,7 @@
  *
  * Receives hook context via stdin as JSON:
  * {
- *   "agent_name": "mamh-backend",
+ *   "agent_name": "takt-backend",
  *   "task_id": "BACKEND-001",
  *   "milestone": "M1",
  *   "session_id": "..."
@@ -90,7 +90,7 @@ function parseTicketStatus(content) {
  * Fails open (returns true) if git commands fail.
  */
 function agentHasCommits(agentName) {
-  const branchName = `mamh/${agentName.replace("mamh-", "")}`;
+  const branchName = `takt/${agentName.replace("takt-", "")}`;
   try {
     const result = execSync(`git log main..${branchName} --oneline 2>/dev/null`, {
       encoding: "utf-8",
@@ -106,18 +106,18 @@ function agentHasCommits(agentName) {
 /**
  * Find a ticket file by its ID in the milestones directory tree.
  * Tickets may be stored as:
- *   .mamh/tickets/milestones/<milestone>/<ticket-id>.md
- *   .mamh/tickets/milestones/<ticket-id>.md
- *   .mamh/tickets/milestones/<milestone>/<any-file-containing-ticket-id>.md
+ *   .takt/tickets/milestones/<milestone>/<ticket-id>.md
+ *   .takt/tickets/milestones/<ticket-id>.md
+ *   .takt/tickets/milestones/<milestone>/<any-file-containing-ticket-id>.md
  */
 function findTicketFile(ticketId, milestone) {
-  const base = resolve(".mamh", "tickets", "milestones");
+  const base = resolve(".takt", "tickets", "milestones");
 
   if (!existsSync(base)) {
     return null;
   }
 
-  // Strategy 1: Direct file match — .mamh/tickets/milestones/<milestone>/<ticketId>.md
+  // Strategy 1: Direct file match — .takt/tickets/milestones/<milestone>/<ticketId>.md
   if (milestone) {
     const direct = join(base, milestone, `${ticketId}.md`);
     if (existsSync(direct)) return direct;
@@ -186,8 +186,8 @@ function findTicketFile(ticketId, milestone) {
  */
 function getReviewMode() {
   const sessionPaths = [
-    resolve(".mamh", "session.json"),
-    resolve(process.cwd(), ".mamh", "session.json"),
+    resolve(".takt", "session.json"),
+    resolve(process.cwd(), ".takt", "session.json"),
   ];
 
   for (const sp of sessionPaths) {
@@ -224,8 +224,8 @@ async function main() {
   const taskId = input.task_id || input.ticket_id || input.ticketId || "";
   const milestone = input.milestone || input.currentMilestone || null;
 
-  // Only gate MAMH agents — exit immediately for non-MAMH tasks
-  if (!agentName.startsWith("mamh-")) {
+  // Only gate Takt agents — exit immediately for non-Takt tasks
+  if (!agentName.startsWith("takt-")) {
     process.exit(0);
   }
 
