@@ -43,7 +43,6 @@ templates/
 │   ├── backend.md          # Backend engineer
 │   ├── frontend.md         # Frontend engineer
 │   ├── reviewer.md         # Code reviewer
-│   ├── pm.md               # Project manager
 │   ├── designer.md         # UI/UX designer-developer
 │   ├── researcher.md       # External researcher
 │   ├── content.md          # Content writer
@@ -319,40 +318,6 @@ Constraints are inserted verbatim from `.takt/constraints.md`:
 
 ---
 
-### pm.md
-
-**Default Model:** `sonnet`
-
-**Tools:** Read, Glob, Grep, Write (documentation only)
-
-**Disallowed Tools:** Edit, Bash, WebFetch, WebSearch
-
-**Typical Scope:**
-- Allowed: `docs/**`, `.takt/**`, `README.md`, `CHANGELOG.md`
-- Read-only: All project paths (for tracking progress)
-- Forbidden: Source code directories (`src/**`, `tests/**`)
-
-**Responsibilities:**
-- Track ticket progress
-- Write status reports
-- Manage requirements and PRD
-- Prioritize backlog
-- Coordinate agent dependencies
-
-**Communication Hub:**
-- Broadcast status updates
-- Escalate blockers
-- Coordinate cross-agent dependencies
-- Clarify requirements
-
-**Stop Conditions:**
-- Requirements fundamentally unclear (escalate to user)
-- Conflicting agent understandings of same requirement
-- Critical blocker with no clear resolution
-- Scope expanded significantly without user acknowledgment
-
----
-
 ### designer.md
 
 **Default Model:** `sonnet`
@@ -587,7 +552,7 @@ Pick an existing template with similar characteristics:
 |----------------|---------------|
 | Implementation-focused | `backend.md` or `frontend.md` |
 | Read-only reviewer | `reviewer.md` |
-| Documentation-focused | `pm.md` or `content.md` |
+| Documentation-focused | `content.md` |
 | External research | `researcher.md` |
 | Infrastructure-focused | `devops.md` |
 | Design-focused | `designer.md` |

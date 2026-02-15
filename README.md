@@ -98,27 +98,31 @@ flowchart TD
     end
 
     subgraph Orch["Orchestration Layer"]
-        O["Orchestrator (delegate mode)\ncoordinates agents, assigns tickets"]
+        O["Orchestrator<br/>(delegate mode)"]
     end
 
-    subgraph Agents["Agent Layer — parallel, scope-enforced, git-isolated"]
-        BE["Backend\nsrc/api/**"]
-        FE["Frontend\nsrc/ui/**"]
-        DE["Designer\nsrc/styles/**"]
-        RE["Reviewer\n(read-only, permanent)"]
+    subgraph Agents["Agent Layer"]
+        BE["Backend<br/>src/api/**"]
+        FE["Frontend<br/>src/ui/**"]
+        DE["Designer<br/>src/styles/**"]
+        RE["Reviewer<br/>(read-only)"]
     end
 
-    subgraph Safety["Safety Layer — hooks enforce discipline"]
-        S1["scope-guard.mjs\nblocks out-of-scope writes"]
-        S2["review-gate.mjs\nenforces acceptance criteria"]
-        S3["keep-working.mjs\nprevents premature stopping"]
+    subgraph Safety["Safety Layer"]
+        S1["scope-guard.mjs"]
+        S2["review-gate.mjs"]
+        S3["keep-working.mjs"]
     end
 
-    U --> |prompt| O
-    O --> |ticket| BE
-    O --> |ticket| FE
-    O --> |ticket| DE
-    O -.-> |review| RE
+    U -->|prompt| O
+    O -->|ticket| BE
+    O -->|ticket| FE
+    O -->|ticket| DE
+    O -.->|review| RE
+
+    S1 -.->|blocks out-of-scope writes| Agents
+    S2 -.->|enforces acceptance criteria| Agents
+    S3 -.->|prevents premature stopping| Agents
 
     style U fill:#a5d8ff,stroke:#1971c2
     style O fill:#eebefa,stroke:#9c36b5
@@ -170,7 +174,7 @@ flowchart TD
   state/takt-state.json   # Phase, milestone, ticket counts
   agents/registry.json    # Agent roster with scoped paths
   tickets/
-    milestones/M001-*/    # Active tickets (markdown with acceptance criteria)
+    milestones/M001-*/    # Active tickets (T{ID}-{agent}-{title}.md)
     archive/M001-*/       # Completed milestones (tickets + outputs + reviews bundled)
   comms/decisions.md      # Architectural decisions log
   reviews/                # Review results (JSON)
@@ -191,14 +195,13 @@ takt-frontend.md          # Frontend engineer (dynamic, per-project)
 
 ## Agent Templates
 
-Takt ships 8 templates. The architect selects and customizes them per project.
+Takt ships 7 templates. The architect selects and customizes them per project.
 
 | Template | Model | Role |
 |----------|-------|------|
 | **backend** | sonnet | APIs, database, server logic |
 | **frontend** | sonnet | UI, state, routing, styling |
 | **reviewer** | opus | Code review, quality gates (read-only, **permanent**) |
-| **pm** | sonnet | Requirements, status reports |
 | **designer** | sonnet | Design tokens, components, layouts |
 | **researcher** | sonnet | API docs, library evaluation |
 | **content** | haiku | User-facing copy, documentation |

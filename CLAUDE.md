@@ -48,11 +48,10 @@ takt/
 │   └── worktree-merge.mjs       # Merges agent branches at milestone completion
 ├── templates/
 │   ├── POLICY.md                # Shared rulebook template (~130 lines)
-│   └── agents/                  # Agent templates (8 total)
+│   └── agents/                  # Agent templates (7 total)
 │       ├── backend.md
 │       ├── frontend.md
 │       ├── reviewer.md
-│       ├── pm.md
 │       ├── designer.md
 │       ├── researcher.md
 │       ├── content.md

@@ -45,7 +45,6 @@ skills_dev/
 │   │   ├── backend.md              # Backend engineer template
 │   │   ├── frontend.md             # Frontend engineer template
 │   │   ├── reviewer.md             # Code reviewer template
-│   │   ├── pm.md                   # Project manager template
 │   │   ├── designer.md             # UI/UX designer-developer template
 │   │   ├── researcher.md           # External researcher template
 │   │   ├── content.md              # Content writer template
@@ -427,7 +426,7 @@ All state files live under `.takt/` in the user's project directory.
 │   ├── milestones/
 │   │   └── M001-name/
 │   │       ├── _milestone.json
-│   │       └── T001-title.md
+│   │       └── T001-agent-title.md
 │   └── archive/              # Completed milestone tickets
 ├── reviews/
 │   └── T001-review.json      # Review results per ticket
@@ -518,7 +517,7 @@ Agent definitions with scope boundaries. Updated when agents are added/removed.
 
 Each ticket is a markdown file with metadata and checkboxes.
 
-**Example:** `.takt/tickets/milestones/M001-scaffolding/T001-setup-project.md`
+**Example:** `.takt/tickets/milestones/M001-scaffolding/T001-backend-setup-project.md`
 
 ```markdown
 # T001: Setup Project Structure

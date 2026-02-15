@@ -15,11 +15,10 @@
 - [x] Orchestrator agent in delegate mode (`agents/takt-orchestrator.md`)
 - [x] Package metadata (`package.json`)
 
-### Agent Templates (8)
+### Agent Templates (7)
 - [x] `backend.md` — Server-side code (sonnet)
 - [x] `frontend.md` — Client-side code (sonnet)
 - [x] `reviewer.md` — Code review, read-only (opus) + worktree access
-- [x] `pm.md` — Project management (sonnet)
 - [x] `designer.md` — UI/UX design (sonnet)
 - [x] `researcher.md` — External research (sonnet)
 - [x] `content.md` — Content writing (haiku)
@@ -224,7 +223,7 @@
 
 ### 2026-02-08 — v0.1.0 (Initial Release)
 - Created complete Takt plugin with 28 files
-- 8 agent templates covering backend, frontend, reviewer, PM, designer, researcher, content, devops
+- 7 agent templates covering backend, frontend, reviewer, designer, researcher, content, devops
 - Scope enforcement via PreToolUse hook with zero-dependency glob matcher
 - Review gates via TaskCompleted hook
 - Git worktree isolation for parallel agent work

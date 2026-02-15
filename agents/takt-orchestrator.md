@@ -244,7 +244,7 @@ A new session should be able to reconstruct the full project context from HANDOF
 **Provisioning Workflow:**
 
 1. **DETECT GAP** — Identify missing capability
-2. **CHECK TEMPLATES** — Available templates: backend, frontend, reviewer, pm, designer, researcher, content, devops
+2. **CHECK TEMPLATES** — Available templates: backend, frontend, reviewer, designer, researcher, content, devops
 3. **ASSESS** — Can an existing agent's scope be expanded instead?
 4. **CHECK APPROVAL MODE** — Read `.takt/session.json` → `agentApprovalMode`
    - `auto` → create without asking

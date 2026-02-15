@@ -70,11 +70,11 @@ After full initialization, the `.takt/` directory looks like:
     milestones/
       M001-scaffolding/
         _milestone.json               # Milestone metadata
-        T001-setup-project.md         # Ticket file
-        T002-shared-interfaces.md
+        T001-backend-setup-project.md  # Ticket file (T{ID}-{agent}-{title})
+        T002-backend-shared-interfaces.md
       M002-core-features/
         _milestone.json
-        T003-user-model.md
+        T003-backend-user-model.md
     archive/                          # Completed milestone tickets
       M001-scaffolding/
   reviews/

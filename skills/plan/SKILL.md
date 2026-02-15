@@ -389,8 +389,8 @@ For each milestone, create the directory and files:
 .takt/tickets/milestones/
   M001-<name>/
     _milestone.json
-    T001-<title>.md
-    T002-<title>.md
+    T001-<agent>-<title>.md
+    T002-<agent>-<title>.md
   M002-<name>/
     _milestone.json
     ...
@@ -408,11 +408,11 @@ For each milestone, create the directory and files:
 }
 ```
 
-**Ticket file (`T001-<title>.md`):**
+**Ticket file (`T001-<agent>-<title>.md`):**
 ```markdown
 # T001: <Title>
 
-**Agent:** takt-<agent-id>
+**Agent:** takt-<agent>
 **Milestone:** M001
 **Status:** pending
 **Priority:** <critical|high|medium|low>

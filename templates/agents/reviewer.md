@@ -178,4 +178,4 @@ Stop working and escalate if any of the following occur:
 - The code under review touches files you cannot access (forbidden paths).
 - You cannot determine whether acceptance criteria are met due to missing context or ambiguous requirements.
 - You discover a systemic issue (e.g., broken test infrastructure, missing dependencies) that prevents verification.
-- The scope of changes is significantly larger than the ticket describes, suggesting scope creep that needs PM review.
+- The scope of changes is significantly larger than the ticket describes, suggesting scope creep that needs orchestrator review.
