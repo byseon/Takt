@@ -42,11 +42,69 @@ No hidden state in LLM context. PRD, tech spec, tickets, decisions, progress —
 
 ---
 
+## Installation
+
+### Option A: Plugin Marketplace (recommended)
+
+Inside Claude Code, add the Takt marketplace and install the plugin:
+
+```
+/plugin marketplace add byseon/Takt
+/plugin install takt@byseon-Takt
+```
+
+That's it. Takt is now available in all your projects.
+
+### Option B: Clone and load
+
+```bash
+git clone https://github.com/byseon/Takt.git ~/takt
+claude --plugin-dir ~/takt
+```
+
+To make it permanent without using the marketplace, add to your project's `.claude/settings.local.json`:
+
+```json
+{
+  "pluginDirs": ["/absolute/path/to/takt"]
+}
+```
+
+### Setting up Agent Teams mode (recommended)
+
+Agent Teams mode gives each agent its own persistent process with native messaging. Agents appear as visible tmux panes so you can watch them work side-by-side in real time.
+
+**Prerequisites:**
+
+```bash
+# 1. Install tmux
+brew install tmux          # macOS
+sudo apt install tmux      # Linux
+
+# 2. Enable the Agent Teams experimental flag
+#    Add to your shell profile (~/.zshrc or ~/.bashrc):
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+```
+
+**Usage:**
+
+```bash
+# Always launch Claude Code inside a tmux session
+tmux new -s myproject
+claude
+```
+
+> **Why tmux?** Agent Teams spawns each agent as a separate Claude Code process. tmux lets you see all agents working side-by-side in split panes. Without tmux, agents still work but you lose visibility into their real-time progress.
+
+> **Don't want to use tmux?** That's fine. During planning, choose **Subagent mode** instead — agents run via the Task tool in the background. No tmux required. You'll be asked which mode to use.
+
+---
+
 ## Quick Start
 
 ```bash
-# Install (session-only)
-claude --plugin-dir /path/to/Takt
+# Navigate to your project
+cd my-project
 
 # Run
 takt "Build a React dashboard with charts and user authentication"
@@ -261,9 +319,10 @@ Three hooks enforce team discipline:
 
 | | |
 |---|---|
-| **Claude Code** | Latest version |
+| **Claude Code** | Latest version (>= 1.0.33 for marketplace install) |
 | **Node.js** | >= 18.0.0 |
 | **Git** | Required for worktree isolation |
+| **tmux** *(for Agent Teams)* | Agents spawn as visible tmux panes — `brew install tmux` or `apt install tmux` |
 | **Agent Teams** *(optional)* | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` for persistent teammate mode |
 | **Dependencies** | None. Zero. Just the plugin. |
 
@@ -271,11 +330,15 @@ Three hooks enforce team discipline:
 
 ## Troubleshooting
 
-**Plugin not loading?** Check `claude --plugin-dir /path/to/Takt` points to the right directory.
+**Plugin not loading?** Run `/plugin` and check the **Errors** tab. If installed via clone, verify the path in `--plugin-dir` or `pluginDirs` setting.
 
-**Agent Teams not working?** Set `export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, or switch to Subagent mode in `.takt/session.json`.
+**Marketplace install fails?** Make sure you're on Claude Code >= 1.0.33. Try `/plugin marketplace update byseon-Takt` to refresh.
 
-**Scope violations?** Check `.takt/agents/registry.json` for glob patterns.
+**Agent Teams not working?** Check three things: (1) `echo $CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` should print `1`, (2) you're inside a tmux session (`tmux ls` should show your session), (3) if neither helps, switch to Subagent mode during planning.
+
+**Agents not visible in tmux?** Make sure you launched `claude` inside `tmux new -s myproject`, not the other way around.
+
+**Scope violations?** Check `.takt/agents/registry.json` for glob patterns. The scope-guard hook logs violations to stderr.
 
 **Resume after interruption?** `takt resume` reads HANDOFF.md and picks up where you left off.
 
@@ -286,7 +349,7 @@ Three hooks enforce team discipline:
 1. Read `CLAUDE.md` (developer guide) and `STATUS.md` (project status)
 2. All scripts: ESM (`.mjs`), zero external dependencies, Node.js built-ins only
 3. Use `${CLAUDE_PLUGIN_ROOT}` for portable paths, `{{PLACEHOLDER}}` in templates
-4. Test in a separate project: `mkdir /tmp/test && cd /tmp/test && git init && claude --plugin-dir /path/to/Takt`
+4. Test in a separate project: `mkdir /tmp/test && cd /tmp/test && git init && claude --plugin-dir /path/to/takt`
 
 ---
 

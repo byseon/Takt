@@ -53,18 +53,29 @@ function parseTicketMetadata(content, filename) {
   }
 
   // Try inline metadata patterns (e.g., **Status:** pending)
+  // Note: tickets use **Status:** (colon inside bold), not **Status**:
   if (!meta.status) {
-    const statusMatch = content.match(/\*\*status\*\*:\s*(.+)/i)
+    const statusMatch = content.match(/\*\*Status:\*\*\s*(.+)/i)
+      || content.match(/\*\*status\*\*:\s*(.+)/i)
       || content.match(/status:\s*`?([^`\n]+)`?/i);
-    if (statusMatch) meta.status = statusMatch[1].trim().toLowerCase();
+    if (statusMatch) {
+      // Clean any stray markdown from captured value
+      meta.status = statusMatch[1].replace(/\*+/g, "").trim().toLowerCase();
+    }
   }
 
   if (!meta.assignee) {
-    const assigneeMatch = content.match(/\*\*assignee\*\*:\s*(.+)/i)
-      || content.match(/assignee:\s*`?([^`\n]+)`?/i)
+    // Tickets use **Agent:** not **Assignee:**
+    const assigneeMatch = content.match(/\*\*Agent:\*\*\s*(.+)/i)
+      || content.match(/\*\*Assignee:\*\*\s*(.+)/i)
+      || content.match(/\*\*assignee\*\*:\s*(.+)/i)
+      || content.match(/\*\*Assigned\s*to:\*\*\s*(.+)/i)
       || content.match(/\*\*assigned\s*to\*\*:\s*(.+)/i)
-      || content.match(/assigned\s*to:\s*`?([^`\n]+)`?/i);
-    if (assigneeMatch) meta.assignee = assigneeMatch[1].trim().toLowerCase();
+      || content.match(/assignee:\s*`?([^`\n]+)`?/i)
+      || content.match(/agent:\s*`?([^`\n]+)`?/i);
+    if (assigneeMatch) {
+      meta.assignee = assigneeMatch[1].replace(/\*+/g, "").trim().toLowerCase();
+    }
   }
 
   if (!meta.status) {
@@ -79,6 +90,14 @@ function parseTicketMetadata(content, filename) {
     } else if (uncheckedCount > 0) {
       meta.status = "pending";
     }
+  }
+
+  // Override: if all acceptance criteria checkboxes are checked, treat as done
+  // regardless of what the status field says (agents sometimes forget to update it)
+  const uncheckedAC = (content.match(/- \[ \]/g) || []).length;
+  const checkedAC = (content.match(/- \[x\]/gi) || []).length;
+  if (checkedAC > 0 && uncheckedAC === 0) {
+    meta.status = "done";
   }
 
   return meta;
@@ -186,7 +205,11 @@ function findAgentTickets(agentName, milestone) {
         result.pending.push(meta.id);
       } else if (status === "in_progress" || status === "in-progress" || status === "active" || status === "claimed") {
         result.in_progress.push(meta.id);
-      } else if (status === "done" || status === "complete" || status === "completed" || status === "closed") {
+      } else if (
+        status === "done" || status === "complete" || status === "completed" ||
+        status === "closed" || status === "approved" || status === "review" ||
+        status === "merged" || status.includes("complete")
+      ) {
         result.done.push(meta.id);
       } else {
         // Unknown status — treat as pending
@@ -203,16 +226,25 @@ function findAgentTickets(agentName, milestone) {
 // ---------------------------------------------------------------------------
 
 async function main() {
+  // Safety timeout — if stdin hangs or script takes too long, fail open
+  const timeout = setTimeout(() => {
+    process.stderr.write("keep-working: Timeout reading stdin. Allowing idle.\n");
+    process.exit(0);
+  }, 5000);
+
   let input;
 
   try {
     const rawInput = readFileSync("/dev/stdin", "utf-8");
     input = JSON.parse(rawInput);
   } catch (err) {
+    clearTimeout(timeout);
     process.stderr.write(`keep-working: Failed to parse stdin input: ${err.message}\n`);
     // Fail open — allow idle if we can't parse
     process.exit(0);
   }
+
+  clearTimeout(timeout);
 
   const agentName = input.agent_name || process.env.CLAUDE_AGENT_NAME || "";
 
@@ -222,6 +254,13 @@ async function main() {
   }
 
   const milestone = getCurrentMilestone();
+
+  // If no active milestone is set, allow idle — the hook's job is to keep
+  // agents working during active execution, not during planning or between milestones.
+  if (!milestone) {
+    process.exit(0);
+  }
+
   const tickets = findAgentTickets(agentName, milestone);
 
   const remaining = [...tickets.in_progress, ...tickets.pending];

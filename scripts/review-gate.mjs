@@ -78,10 +78,14 @@ function parseAcceptanceCriteria(content) {
 /**
  * Extract the Status field value from ticket markdown content.
  * Looks for a line like: **Status:** completed
+ * Handles both **Status:** (colon inside bold) and **Status**: (colon outside)
  */
 function parseTicketStatus(content) {
-  const match = content.match(/\*\*Status:\*\*\s*(\S+)/i);
-  return match ? match[1].toLowerCase() : null;
+  const match = content.match(/\*\*Status:\*\*\s*(\S+)/i)
+    || content.match(/\*\*Status\*\*:\s*(\S+)/i);
+  if (!match) return null;
+  // Clean any stray markdown from captured value
+  return match[1].replace(/\*+/g, "").trim().toLowerCase();
 }
 
 /**
