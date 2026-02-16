@@ -205,7 +205,8 @@ When a ticket status changes, perform ALL of these updates:
 2. If approved, add `**ApprovedAt:** <ISO timestamp>`
 3. Update `takt-state.json` `ticketsSummary` counts
 4. Update `registry.json` agent stats (`ticketsCompleted`, `ticketsAssigned`)
-5. Update `.takt/HANDOFF.md` (see below)
+5. **Sync `session.json`** — update `phase`, `currentMilestone`, and `updatedAt` to match `takt-state.json`. This keeps hooks and resume consistent.
+6. Update `.takt/HANDOFF.md` (see below)
 
 ### Step 3.6c - HANDOFF.md Updates
 

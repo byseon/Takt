@@ -93,7 +93,17 @@ Rewrite `.takt/HANDOFF.md` using the template below. Preserve the **Milestone Hi
 **Issues:** <bullet list of issues encountered, or "(none)">
 ```
 
-### Step 3 — Confirm
+### Step 3 — Sync session.json
+
+Sync `.takt/session.json` with the authoritative state from `.takt/state/takt-state.json`. Update these fields in `session.json`:
+
+- `phase` ← from `takt-state.json`
+- `currentMilestone` ← from `takt-state.json`
+- `updatedAt` ← current ISO timestamp
+
+This ensures hooks and the resume skill read consistent state.
+
+### Step 4 — Confirm
 
 After writing, display a brief summary:
 

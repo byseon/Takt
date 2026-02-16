@@ -50,10 +50,21 @@ This skill resumes an interrupted Takt session. It reads the saved state, determ
 6. **Restore execution (mode-dependent):** If resuming Phase 3:
 
    **Agent Teams mode (`executionMode: "agent-teams"`):**
-   - Re-launch Agent Teams with all agents from `registry.json`
-   - Each agent's worktree path (`.worktrees/takt-<agent-id>/`) as their working directory
-   - Ticket states from ticket files (skip completed/approved tickets)
-   - In-progress tickets reset to `pending` (the agent may have lost context)
+
+   Re-create the agent team following the same steps as `/takt-execute` Section A, Step 3.1. Specifically:
+
+   1. **Create a new team** using `TeamCreate` with the project name
+   2. **Spawn each agent** from `registry.json` as a teammate using the Task tool with `team_name` and `name` parameters. Each spawn prompt must include:
+      - The agent's role and responsibilities (from `.claude/agents/takt-<agent-id>.md`)
+      - The agent's owned paths, readable paths, and forbidden paths
+      - Their worktree path (`.worktrees/takt-<agent-id>/`) as working directory
+      - Their REMAINING tickets for the current milestone (skip completed/approved)
+      - Instructions to read `.takt/POLICY.md` at session start
+   3. **Always spawn takt-reviewer** as a mandatory team member
+   4. **Reset in-progress tickets to pending** (the agent lost context on interruption)
+   5. **Create tasks** in the shared task list for remaining tickets with dependencies
+
+   This re-creates the tmux panes so you can see agents working side-by-side again.
 
    **Subagent mode (`executionMode: "subagents"`):**
    - Rebuild the dependency graph from remaining tickets (skip completed/approved)

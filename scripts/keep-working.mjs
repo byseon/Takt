@@ -104,9 +104,27 @@ function parseTicketMetadata(content, filename) {
 }
 
 /**
- * Get the current milestone from session.json.
+ * Get the current milestone from state files.
+ * Checks both takt-state.json (authoritative) and session.json (fallback).
  */
 function getCurrentMilestone() {
+  // takt-state.json is the authoritative source — updated during execution
+  const statePaths = [
+    resolve(".takt", "state", "takt-state.json"),
+    resolve(process.cwd(), ".takt", "state", "takt-state.json"),
+  ];
+
+  for (const sp of statePaths) {
+    try {
+      const raw = readFileSync(sp, "utf-8");
+      const state = JSON.parse(raw);
+      if (state.currentMilestone) return state.currentMilestone;
+    } catch {
+      // Try next
+    }
+  }
+
+  // Fallback to session.json
   const sessionPaths = [
     resolve(".takt", "session.json"),
     resolve(process.cwd(), ".takt", "session.json"),
@@ -116,11 +134,12 @@ function getCurrentMilestone() {
     try {
       const raw = readFileSync(sp, "utf-8");
       const session = JSON.parse(raw);
-      return session.currentMilestone || null;
+      if (session.currentMilestone) return session.currentMilestone;
     } catch {
       // Try next
     }
   }
+
   return null;
 }
 
@@ -140,13 +159,25 @@ function findAgentTickets(agentName, milestone) {
   const dirsToScan = [];
 
   if (milestone) {
-    const milestoneDir = join(base, milestone);
-    if (existsSync(milestoneDir)) {
-      dirsToScan.push(milestoneDir);
+    // Try exact match first, then prefix match (e.g., "M003" matches "M003-risk-and-moat")
+    const exactDir = join(base, milestone);
+    if (existsSync(exactDir)) {
+      dirsToScan.push(exactDir);
+    } else {
+      try {
+        const entries = readdirSync(base, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory() && entry.name.startsWith(milestone)) {
+            dirsToScan.push(join(base, entry.name));
+          }
+        }
+      } catch {
+        // Fall through to scan all
+      }
     }
   }
 
-  // If no specific milestone, scan all milestone directories
+  // If no specific milestone found, scan all milestone directories
   if (dirsToScan.length === 0) {
     try {
       const entries = readdirSync(base, { withFileTypes: true });

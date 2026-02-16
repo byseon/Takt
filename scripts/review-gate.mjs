@@ -125,6 +125,19 @@ function findTicketFile(ticketId, milestone) {
   if (milestone) {
     const direct = join(base, milestone, `${ticketId}.md`);
     if (existsSync(direct)) return direct;
+
+    // Try prefix match (e.g., "M003" matches "M003-risk-and-moat")
+    try {
+      const entries = readdirSync(base, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory() && entry.name.startsWith(milestone)) {
+          const prefixDirect = join(base, entry.name, `${ticketId}.md`);
+          if (existsSync(prefixDirect)) return prefixDirect;
+        }
+      }
+    } catch {
+      // Continue to other strategies
+    }
   }
 
   // Strategy 2: Direct file at milestones root
