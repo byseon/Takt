@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Takt plugin marketplace — agent orchestration with ticket-based workflows",
-    "version": "0.2.0"
+    "version": "0.2.1"
   },
   "plugins": [
     {
       "name": "takt",
       "source": "./",
       "description": "Orchestrate teams of specialized AI agents to build complex projects autonomously with scope enforcement, review gates, and ticket-based milestone execution.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "author": {
         "name": "seongjinpark"
       },
