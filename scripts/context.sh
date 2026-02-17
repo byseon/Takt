@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # context.sh - Shell wrapper for context.mjs
 #
@@ -9,4 +10,4 @@
 # in shell-based workflows and hook integrations.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-node "${SCRIPT_DIR}/context.mjs" "$@"
+exec node "${SCRIPT_DIR}/context.mjs" "$@"

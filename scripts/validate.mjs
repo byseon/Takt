@@ -64,7 +64,7 @@ const DEFAULT_TIMEOUT_MS = 300000; // 5 minutes per command
  */
 function commandExists(cmd) {
   try {
-    execSync(`which ${cmd}`, {
+    execSync(`command -v ${cmd}`, {
       encoding: "utf-8",
       timeout: 5000,
       stdio: ["pipe", "pipe", "pipe"],

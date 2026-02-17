@@ -15,7 +15,7 @@
  * Zero external dependencies. Uses child_process.execSync with 5s timeouts.
  */
 
-import { execSync } from "node:child_process";
+import { execSync, execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { resolve, join, basename, relative } from "node:path";
 
@@ -183,7 +183,15 @@ function buildTree(dir, prefix, depth, maxDepth, lineCount) {
     }
     if (SKIP_DIRS.has(name)) continue;
 
-    const isLast = i === entries.length - 1;
+    const isLast = (() => {
+      for (let j = i + 1; j < entries.length; j++) {
+        const n = entries[j].name;
+        if (n.startsWith(".") && n !== ".env.example" && n !== ".gitignore") continue;
+        if (SKIP_DIRS.has(n)) continue;
+        return false;
+      }
+      return true;
+    })();
     const connector = isLast ? "└── " : "├── ";
     const childPrefix = isLast ? "    " : "│   ";
 
@@ -291,7 +299,18 @@ function detectPackageManager(dir) {
  */
 function findScopeFiles(dir, scope) {
   // Try git ls-files first (respects .gitignore)
-  const gitResult = exec(`git ls-files -- "${scope}"`, dir);
+  // Use execFileSync with argument array to avoid shell injection
+  let gitResult = null;
+  try {
+    gitResult = execFileSync("git", ["ls-files", "--", scope], {
+      cwd: dir,
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+  } catch {
+    gitResult = null;
+  }
   if (gitResult) {
     return gitResult.split("\n").filter((l) => l.trim() !== "").slice(0, 100);
   }
@@ -340,10 +359,28 @@ function searchTitleInScope(dir, scope, title) {
   const matches = [];
 
   for (const keyword of keywords.slice(0, 5)) {
-    const result = exec(
-      `git grep -l -i "${keyword}" -- "${scope}" 2>/dev/null || grep -rl -i "${keyword}" "${scope}" 2>/dev/null`,
-      dir,
-    );
+    // Use execFileSync with argument arrays to avoid shell injection
+    let result = null;
+    try {
+      result = execFileSync("git", ["grep", "-l", "-i", keyword, "--", scope], {
+        cwd: dir,
+        encoding: "utf-8",
+        timeout: 5000,
+        stdio: ["pipe", "pipe", "pipe"],
+      }).trim();
+    } catch {
+      // git grep failed or not in a git repo — try plain grep
+      try {
+        result = execFileSync("grep", ["-rl", "-i", keyword, scope], {
+          cwd: dir,
+          encoding: "utf-8",
+          timeout: 5000,
+          stdio: ["pipe", "pipe", "pipe"],
+        }).trim();
+      } catch {
+        result = null;
+      }
+    }
     if (result) {
       const files = result.split("\n").filter((l) => l.trim() !== "");
       for (const file of files) {

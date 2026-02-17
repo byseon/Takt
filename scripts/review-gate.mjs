@@ -95,6 +95,10 @@ function parseTicketStatus(content) {
  * Fails open (returns true) if git commands fail.
  */
 function agentHasCommits(agentName) {
+  // Validate agent name format to prevent shell injection
+  if (!/^takt-[a-zA-Z0-9_-]+$/.test(agentName)) {
+    return true; // fail open for invalid names
+  }
   const branchName = `takt/${agentName.replace("takt-", "")}`;
   try {
     const result = execSync(`git log main..${branchName} --oneline 2>/dev/null`, {

@@ -176,12 +176,15 @@ export function parseYaml(text) {
           // Key with no value — might have children on subsequent lines
           nestedObj[key] = {};
           ctx.obj.push(nestedObj);
-          // Push the inner object for potential children
-          // Array item indent + 2 for the "- " prefix + key indent
+          // Push nestedObj at array-item indent so sibling keys merge into it
+          stack.push({ indent, obj: nestedObj, key: null });
+          // Push the inner object for potential children at deeper indent
           stack.push({ indent: indent + 2, obj: nestedObj[key], key });
         } else {
           nestedObj[key] = parseScalar(rawVal);
           ctx.obj.push(nestedObj);
+          // Push nestedObj at array-item indent so sibling keys merge into it
+          stack.push({ indent, obj: nestedObj, key: null });
         }
       } else {
         // Simple array item
