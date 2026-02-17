@@ -23,7 +23,7 @@ Before starting, verify the following:
    > "Agent Teams mode requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. Set the env var and retry, or switch to subagent mode by updating `executionMode` in `.takt/session.json`."
 3. **Planning is complete.** Verify `.takt/state/takt-state.json` exists and shows `phase >= 2` with `status: "tickets-generated"` (or `status: "executing"` for resume). If not, inform the user:
    > "No tickets found. Run `/takt-plan` first to generate the project plan."
-4. **Plugin scripts exist.** The plugin root is available via `${CLAUDE_PLUGIN_ROOT}`. Verify that `${CLAUDE_PLUGIN_ROOT}/scripts/scope-guard.mjs` and `${CLAUDE_PLUGIN_ROOT}/scripts/keep-working.mjs` exist.
+4. **Plugin scripts exist.** The plugin root is available via `${CLAUDE_PLUGIN_ROOT}`. Verify that `${CLAUDE_PLUGIN_ROOT}/scripts/scope-guard.mjs` exists.
 
 ---
 
@@ -142,7 +142,7 @@ Use the Agent Teams shared task list (not file-based tracking) to manage work:
 1. **Create tasks** in the shared task list for each ticket in the current milestone
 2. **Set dependencies** between tasks matching ticket dependencies
 3. Teammates **self-claim** available tasks as they finish their current work
-4. The TeammateIdle hook (`${CLAUDE_PLUGIN_ROOT}/scripts/keep-working.mjs`) prevents teammates from going idle when they have unclaimed tickets
+4. When a teammate completes all assigned tickets, the orchestrator sends a `shutdown_request` to close their panel (see Step 3.7)
 
 ### Step 3.3 - Scope Enforcement
 
@@ -250,9 +250,17 @@ The goal is that a new session reading only HANDOFF.md can understand the full p
 
 These messages are output as regular text to the user (not written to files). They supplement, not replace, the HANDOFF.md updates.
 
-### Step 3.7 - Keep-Working Enforcement
+### Step 3.7 - Agent Shutdown
 
-The keep-working script (`${CLAUDE_PLUGIN_ROOT}/scripts/keep-working.mjs`) ensures agents do not stop prematurely. If an agent reports completion but has remaining assigned tickets, it is redirected to the next ticket.
+When an agent has completed all its assigned tickets for the current milestone:
+
+1. **Send a `shutdown_request`** via SendMessage to the agent
+2. **Wait for the shutdown confirmation** before proceeding
+3. **Remove the agent from `activeAgents`** in `takt-state.json`
+
+At milestone completion, shut down **all** agents before merging worktrees. Agents needed for the next milestone will be re-spawned during the next milestone's team creation step.
+
+At project stop/pause (`takt stop`), shut down **all** agents before updating state.
 
 ---
 
@@ -438,9 +446,9 @@ The main session updates all state files directly (no delegation needed):
 - Update `.takt/HANDOFF.md` after each batch (see Step 3.6c for checkpoint rules)
 - At milestone completion, perform a full HANDOFF.md rewrite with Milestone History entry
 
-### Step 3.7-S - Keep-Working
+### Step 3.7-S - Agent Lifecycle
 
-Not applicable in subagent mode. The TeammateIdle hook only fires in Agent Teams mode. In subagent mode, the main session controls the dispatch loop and there is no idle state.
+Not applicable in subagent mode. Subagents terminate naturally when their Task completes. There is no idle state or shutdown needed.
 
 ---
 

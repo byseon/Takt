@@ -7,7 +7,7 @@ description: Trigger Takt review gates on completed tickets. Validates work thro
 
 This skill runs the **full review process** on completed tickets — build checks, test runs, peer review, and/or user approval depending on the configured review mode.
 
-> **Two-layer review model:** The `review-gate.mjs` hook (TaskCompleted event) is a lightweight **completion gate** — it only validates that acceptance criteria checkboxes are checked before allowing a ticket to be marked complete. This skill (`/takt-review`) runs the **full validation**: build, test, diagnostics, scope checks, and optional peer/user review. In subagent mode, the main session invokes this logic inline during Step 3.2-S.3 of execution.
+> **Two-layer review model:** The `review-gate.mjs` script is a lightweight **completion gate** — invoked programmatically by the orchestrator, it validates that acceptance criteria checkboxes are checked before allowing a ticket to be marked complete. This skill (`/takt-review`) runs the **full validation**: build, test, diagnostics, scope checks, and optional peer/user review. In subagent mode, the main session invokes this logic inline during Step 3.2-S.3 of execution.
 
 ---
 
@@ -114,6 +114,35 @@ Write review results to `.takt/reviews/<ticket-id>-review.json`:
   "reviewedAt": "<ISO timestamp>"
 }
 ```
+
+---
+
+## Evidence-Based Review (Optional)
+
+This section only activates when `.takt/config.yaml` exists with `review.require_validation: true`.
+
+### Validation Artifact Check
+
+When evidence-based review is enabled, the review process includes an additional check:
+
+1. **Check for validation artifacts:** Verify that `.takt/artifacts/ticket/<ticket-id>/logs/` contains validation log files.
+2. **If artifacts are missing:**
+   - In `auto` mode: Automatically run `takt-validate --mode ticket --id <ticket-id>` before proceeding with review.
+   - In `peer` mode: Note the missing artifacts in the review request to the reviewer agent.
+   - In `user` mode: Flag the missing artifacts in the review summary presented to the user.
+3. **If artifacts exist:** Include a validation summary in the review output, noting pass/fail counts.
+
+### Configuration
+
+To enable evidence-based review, create or edit `.takt/config.yaml`:
+
+```yaml
+review:
+  require_validation: true      # Require validation artifacts for review-gate
+  require_test_artifacts: false  # Require test output artifacts (future)
+```
+
+When disabled (default), the review process works exactly as before — no behavioral change.
 
 ---
 

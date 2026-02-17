@@ -33,21 +33,33 @@ takt/
 │   │   └── SKILL.md             # /takt-resume — Resume interrupted session
 │   ├── handoff/
 │   │   └── SKILL.md             # /takt-handoff — Update HANDOFF.md
+│   ├── quick/
+│   │   └── SKILL.md             # /takt-quick — Quick single-task mode
+│   ├── validate/
+│   │   └── SKILL.md             # /takt-validate — Validation checks
+│   ├── promote/
+│   │   └── SKILL.md             # /takt-promote — Promote quick to ticket
 │   └── stop/
 │       └── SKILL.md             # /takt-stop — Graceful shutdown
 ├── agents/
 │   └── takt-orchestrator.md     # Team lead agent (delegate mode, no code tools)
 ├── hooks/
-│   └── hooks.json               # Hook configuration (PreToolUse, TaskCompleted, TeammateIdle)
+│   └── hooks.json               # Hook configuration (PreToolUse)
 ├── scripts/
 │   ├── scope-guard.mjs          # PreToolUse hook: blocks out-of-scope writes
-│   ├── review-gate.mjs          # TaskCompleted hook: enforces review checks
-│   ├── keep-working.mjs         # TeammateIdle hook: prevents premature stopping
+│   ├── review-gate.mjs          # Standalone script: enforces review checks (invoked programmatically)
+│   ├── keep-working.mjs         # Standalone script: checks for remaining tickets (invoked programmatically)
 │   ├── init-project.mjs         # Creates .takt/ directory in user projects
 │   ├── worktree-setup.mjs       # Creates per-agent git worktrees
-│   └── worktree-merge.mjs       # Merges agent branches at milestone completion
+│   ├── worktree-merge.mjs       # Merges agent branches at milestone completion
+│   ├── yaml-parse.mjs           # Minimal YAML parser (zero deps)
+│   ├── context.mjs              # Context gathering (git, tree, language)
+│   ├── context.sh               # Shell wrapper for context.mjs
+│   └── validate.mjs             # Validation runner (presets, captures)
 ├── templates/
 │   ├── POLICY.md                # Shared rulebook template (~130 lines)
+│   ├── quick.md                 # Quick mode entry template
+│   ├── ticket.md                # Reusable ticket template
 │   └── agents/                  # Agent templates (7 total)
 │       ├── backend.md
 │       ├── frontend.md
@@ -64,6 +76,11 @@ takt/
 ├── CLAUDE.md                    # This file
 ├── STATUS.md                    # Project status, changelog, design decisions
 ├── README.md                    # User-facing installation + usage guide
+├── SPEC.md                      # Quick Mode specification
+├── ARCHITECTURE.md              # Module architecture
+├── DECISIONS.md                 # Architectural decision records
+├── RUNBOOK.md                   # Operational guide
+├── DIAGRAMS.md                  # Mermaid diagrams
 ├── package.json                 # npm metadata (no runtime deps)
 ├── LICENSE                      # MIT License
 └── .gitignore
@@ -85,6 +102,8 @@ takt/
 | Git worktree isolation | Each writing agent gets its own branch; no merge conflicts during parallel work. |
 | Dual execution mode (agent-teams / subagents) | Agent Teams requires an experimental env var not available to all users. Subagent mode provides a fully functional fallback using Task tool batch dispatch with the main session as orchestrator. Mode is chosen during planning and stored in `session.json`. |
 | Mandatory reviewer agent | Every project includes a permanent opus-tier reviewer that cannot be removed during roster review. Ensures code quality regardless of project type. |
+| Quick mode as separate path | Small tasks don't need agents/tickets. Separate `.takt/quick/` directory avoids touching structured mode state. |
+| config.yaml with minimal YAML parser | User-friendly config format. Zero-dep parser supports 2-level nesting — enough for validation presets. |
 
 ---
 
@@ -103,11 +122,11 @@ takt/
 - **Agent templates**: YAML frontmatter + markdown body
 
 ### Hooks (`hooks.json` + scripts)
-- **Hook types**: PreToolUse (scope-guard), TaskCompleted (review-gate), TeammateIdle (keep-working)
+- **Hook types**: PreToolUse (scope-guard). Only `PreToolUse` is a valid Claude Code hook event.
 - **Exit codes**: 0 (allow), 2 (block), 1 (error)
 - **Input**: JSON on stdin with tool/agent context
 - **Output**: JSON on stdout (for blocking messages)
-- **Mode awareness**: `scope-guard` fires in both execution modes. `TeammateIdle` (keep-working) and `TaskCompleted` (review-gate) only fire in agent-teams mode.
+- **Standalone scripts**: `review-gate.mjs` and `keep-working.mjs` are invoked programmatically by the orchestrator, not registered as hooks (TaskCompleted and TeammateIdle are not valid hook events).
 
 ### State Files (`.takt/*.json`)
 - **Format**: JSON with clear schema
@@ -214,6 +233,13 @@ echo '{"agent_name":"takt-backend"}' | \
 - **[skills/resume/SKILL.md](skills/resume/SKILL.md)**: Resume protocol skill
 - **[skills/handoff/SKILL.md](skills/handoff/SKILL.md)**: Handoff document update skill
 - **[skills/stop/SKILL.md](skills/stop/SKILL.md)**: Stop protocol skill
+- **[skills/quick/SKILL.md](skills/quick/SKILL.md)**: Quick mode skill
+- **[skills/validate/SKILL.md](skills/validate/SKILL.md)**: Validation skill
+- **[skills/promote/SKILL.md](skills/promote/SKILL.md)**: Promote skill
+- **[SPEC.md](SPEC.md)**: Quick Mode specification
+- **[ARCHITECTURE.md](ARCHITECTURE.md)**: Module architecture
+- **[DECISIONS.md](DECISIONS.md)**: Architectural decision records
+- **[RUNBOOK.md](RUNBOOK.md)**: Operational guide
 - **[docs/README.md](docs/README.md)**: Internal developer docs
 - **[docs/TEMPLATES.md](docs/TEMPLATES.md)**: Template customization guide
 - **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**: Configuration reference
@@ -221,5 +247,5 @@ echo '{"agent_name":"takt-backend"}' | \
 
 ---
 
-**Last Updated**: 2026-02-15
-**Plugin Version**: 0.2.0
+**Last Updated**: 2026-02-16
+**Plugin Version**: 0.3.0

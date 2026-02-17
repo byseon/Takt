@@ -29,6 +29,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { execSync } from "node:child_process";
+import { parseYaml } from './yaml-parse.mjs';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -221,6 +222,17 @@ function getReviewMode() {
   return "auto";
 }
 
+/**
+ * Load config.yaml if it exists, otherwise return null.
+ */
+function loadConfigIfExists(projectDir) {
+  const configPath = resolve(projectDir || '.', '.takt', 'config.yaml');
+  if (!existsSync(configPath)) return null;
+  try {
+    return parseYaml(readFileSync(configPath, 'utf-8'));
+  } catch { return null; }
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -291,6 +303,22 @@ async function main() {
   // Check 3: Acceptance criteria
   const { checked, unchecked } = parseAcceptanceCriteria(ticketContent);
   const totalCriteria = checked.length + unchecked.length;
+
+  // Check 4 (optional): Validation artifacts
+  // Only runs if .takt/config.yaml exists AND review.require_validation === true
+  const projectDir = process.cwd();
+  const config = loadConfigIfExists(projectDir);
+  if (config?.review?.require_validation) {
+    const artifactDir = resolve(projectDir, '.takt', 'artifacts', 'ticket', taskId, 'logs');
+    if (!existsSync(artifactDir) || readdirSync(artifactDir).length === 0) {
+      const message =
+        `REVIEW GATE: Ticket ${taskId} requires validation artifacts. ` +
+        `Run \`takt validate --mode ticket --id ${taskId}\` before marking as complete. ` +
+        `(Set review.require_validation: false in .takt/config.yaml to disable this check.)`;
+      process.stdout.write(message);
+      process.exit(2);
+    }
+  }
 
   // Determine review mode
   const reviewMode = getReviewMode();

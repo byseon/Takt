@@ -36,6 +36,10 @@ const DIRECTORIES = [
   ".takt/tickets/archive",
   ".takt/comms",
   ".takt/state",
+  ".takt/quick",
+  ".takt/artifacts",
+  ".takt/artifacts/quick",
+  ".takt/artifacts/ticket",
 ];
 
 // ---------------------------------------------------------------------------

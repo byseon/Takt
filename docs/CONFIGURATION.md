@@ -144,12 +144,12 @@ Created by `init-project.mjs` during Phase 0 with defaults, then populated by th
 
 **Impact:**
 - **Phase 3 (Execution):** Determines which execution path is used:
-  - `agent-teams` → Section A of `/takt-execute` (TeamCreate, SendMessage, shared task list, TeammateIdle hook)
+  - `agent-teams` → Section A of `/takt-execute` (TeamCreate, SendMessage, shared task list, shutdown lifecycle)
   - `subagents` → Section B of `/takt-execute` (Task tool batch dispatch, file-based communication, main session orchestration)
 - **Phase 4 (Review):** Peer review uses teammate agent (agent-teams) or Task dispatch (subagents)
 - **Resume:** Agent Teams re-launches team; Subagents rebuilds dependency graph
 - **Stop:** Agent Teams signals teammates; Subagents stops dispatching batches
-- **Hooks:** `TeammateIdle` and `TaskCompleted` hooks only fire in agent-teams mode. `scope-guard` fires in both modes.
+- **Hooks:** Only `PreToolUse` (scope-guard) is registered as a hook. Agent shutdown is handled by the orchestrator via `shutdown_request` messages.
 
 ---
 
@@ -1335,6 +1335,141 @@ echo $?  # Should output: 0
 - Medium-sized milestones
 
 **Use For:** Constrained environments, budget-sensitive projects, predictable teams
+
+---
+
+## config.yaml - Project Configuration
+
+### Location
+
+`.takt/config.yaml`
+
+### Purpose
+
+Optional project-level configuration for quick mode, validation presets, and review settings. NOT created by default — everything works with sensible defaults. Created when user runs `takt quick` for the first time or manually.
+
+### When Set
+
+Created on demand. Can be edited at any time.
+
+### Schema
+
+```yaml
+# Takt Configuration — all fields optional
+
+quick:
+  default_type: feat          # bug | feat | research
+  auto_validate: true         # Run validation after quick entry creation
+  strict_validation: false    # Fail on errors (default: warn only)
+
+validate:
+  preset: auto                # auto | python | node
+  timeout: 300000             # Per-command timeout in ms (default: 5 min)
+  python:
+    prefer_uv: true           # Prefer uv run for ruff/pytest
+    mypy_enabled: true        # Include mypy in python preset
+    pytest_args: ""            # Extra args for pytest
+  node:
+    package_manager: auto     # auto | npm | pnpm | yarn | bun
+    lint_script: "lint"       # package.json script name for linting
+    test_script: "test"       # package.json script name for testing
+  commands: []                # Custom commands: [{name, command, optional}]
+
+review:
+  require_validation: false   # Require validation artifacts for review-gate
+  require_test_artifacts: false  # Require test output artifacts
+
+artifacts:
+  retention: all              # all | last-milestone | none
+  max_log_size: 1048576       # Max bytes per log file (1MB)
+```
+
+### Field Reference
+
+#### quick.default_type
+
+**Type:** `enum` - `"feat" | "bug" | "research"`
+
+**Description:** Default type for quick entries when `--type` is not specified.
+
+**Default:** `"feat"`
+
+---
+
+#### quick.auto_validate
+
+**Type:** `boolean`
+
+**Description:** Whether to automatically run validation after creating a quick entry.
+
+**Default:** `true`
+
+---
+
+#### quick.strict_validation
+
+**Type:** `boolean`
+
+**Description:** In strict mode, validation failures cause the quick command to error instead of just warning.
+
+**Default:** `false`
+
+---
+
+#### validate.preset
+
+**Type:** `enum` - `"auto" | "python" | "node"`
+
+**Description:** Default validation preset. `auto` detects based on project files.
+
+**Default:** `"auto"`
+
+---
+
+#### validate.timeout
+
+**Type:** `number` (milliseconds)
+
+**Description:** Per-command timeout for validation commands.
+
+**Default:** `300000` (5 minutes)
+
+---
+
+#### validate.commands
+
+**Type:** `array of objects`
+
+**Description:** Custom validation commands appended to the preset.
+
+**Schema per entry:**
+```yaml
+- name: "custom-lint"
+  command: "custom-lint-tool ."
+  optional: true    # If true, skip when tool not found
+```
+
+---
+
+#### review.require_validation
+
+**Type:** `boolean`
+
+**Description:** When true, the review-gate script requires validation artifacts to exist before allowing ticket completion.
+
+**Default:** `false`
+
+**Impact:** Only affects structured mode review gates. Quick mode is never blocked by this.
+
+---
+
+#### artifacts.retention
+
+**Type:** `enum` - `"all" | "last-milestone" | "none"`
+
+**Description:** How long to keep artifacts. `all` keeps everything, `last-milestone` cleans up on milestone completion, `none` deletes after successful review.
+
+**Default:** `"all"`
 
 ---
 

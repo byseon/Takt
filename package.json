@@ -1,6 +1,6 @@
 {
   "name": "takt",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Takt — Claude Code plugin for orchestrating teams of specialized AI agents with ticket-based workflows",
   "author": "seongjinpark",
   "license": "MIT",

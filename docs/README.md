@@ -31,12 +31,12 @@ skills_dev/
 │   ├── CONFIGURATION.md            # Configuration reference
 │   └── POLICY.md                   # Generated shared policy for projects
 ├── hooks/
-│   └── hooks.json                  # Hook registration (PreToolUse, TaskCompleted, TeammateIdle)
+│   └── hooks.json                  # Hook registration (PreToolUse)
 ├── scripts/
 │   ├── init-project.mjs            # Phase 0 initialization script
 │   ├── scope-guard.mjs             # PreToolUse hook enforces path boundaries
-│   ├── review-gate.mjs             # TaskCompleted hook validates acceptance criteria
-│   └── keep-working.mjs            # TeammateIdle hook prevents premature idling
+│   ├── review-gate.mjs             # Standalone script: validates acceptance criteria
+│   └── keep-working.mjs            # Standalone script: checks for remaining tickets
 ├── skills/
 │   └── takt/
 │       └── SKILL.md                # Main skill definition (6-phase workflow)
@@ -172,18 +172,9 @@ Hooks are registered in `hooks/hooks.json`:
       "script": "${CLAUDE_PLUGIN_ROOT}/scripts/scope-guard.mjs",
       "description": "Blocks agents from writing outside their allowed scope"
     },
-    {
-      "event": "TaskCompleted",
-      "script": "${CLAUDE_PLUGIN_ROOT}/scripts/review-gate.mjs",
-      "description": "Enforces review checks before ticket completion"
-    },
-    {
-      "event": "TeammateIdle",
-      "script": "${CLAUDE_PLUGIN_ROOT}/scripts/keep-working.mjs",
-      "description": "Directs idle agents to claim next available ticket"
-    }
   ]
 }
+
 ```
 
 ### Hook 1: scope-guard.mjs (PreToolUse)
@@ -232,9 +223,9 @@ Example patterns:
 - `src/*.ts` → matches `src/index.ts` but NOT `src/api/users.ts`
 - `tests/**/*.test.ts` → matches any test file in nested test directories
 
-### Hook 2: review-gate.mjs (TaskCompleted)
+### Script 2: review-gate.mjs (standalone)
 
-**Trigger:** After agent reports ticket complete
+**Not registered as a hook.** Invoked programmatically by the orchestrator when an agent reports ticket completion.
 
 **Purpose:** Validate acceptance criteria before approval
 
@@ -277,11 +268,11 @@ REVIEW GATE: Ticket T001 cannot be completed. 2 of 5 acceptance criteria remain 
 Complete all acceptance criteria before marking this ticket as done.
 ```
 
-### Hook 3: keep-working.mjs (TeammateIdle)
+### Script 3: keep-working.mjs (standalone)
 
-**Trigger:** When agent goes idle (no active task)
+**Not registered as a hook.** Invoked programmatically by the orchestrator to check if an agent has remaining work.
 
-**Purpose:** Prevent agents from stopping when they have remaining assigned tickets
+**Purpose:** Check whether an agent has remaining assigned tickets in the current milestone
 
 **Input (via stdin):**
 ```json
@@ -297,8 +288,8 @@ Complete all acceptance criteria before marking this ticket as done.
 2. Scan `.takt/tickets/milestones/<milestone>/` for tickets assigned to agent
 3. Parse ticket metadata (status, assignee) from markdown files
 4. Categorize tickets: `pending`, `in_progress`, `done`
-5. If `pending` or `in_progress` tickets exist → block idle (exit 2), direct to next ticket
-6. If no remaining tickets → allow idle (exit 0)
+5. If `pending` or `in_progress` tickets exist → exit 2 with ticket list
+6. If no remaining tickets → exit 0 (agent can be shut down)
 
 **Exit Codes:**
 - `0` = allow idle (no remaining work)

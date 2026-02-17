@@ -134,6 +134,43 @@ Then agents execute in parallel:
 
 ---
 
+## Quick Mode
+
+Not every task needs a full agent team. For bug fixes, small features, and research spikes, use quick mode:
+
+```
+takt quick "Fix auth token refresh" --type bug --scope src/auth/
+```
+
+Quick mode creates a lightweight tracked entry — no agents, no planning, no milestones:
+
+```
+.takt/quick/20260216-143022_fix-auth-token-refresh/
+  quick.md          # Your task: context, steps, acceptance checks
+```
+
+### Validation
+
+Run project checks (lint, typecheck, tests) with auto-detected presets:
+
+```
+takt validate
+```
+
+Results are saved as artifacts and appended to your quick entry.
+
+### Promote to Ticket
+
+When a quick task grows beyond a single session, promote it to a structured ticket:
+
+```
+takt promote 20260216-143022_fix-auth-token-refresh --to ticket
+```
+
+This carries over your context, acceptance checks, notes, and validation artifacts into a full ticket — ready for agent assignment.
+
+---
+
 ## How It Works
 
 ```
@@ -214,6 +251,9 @@ flowchart TD
 | `takt resume` | `/takt-resume` | Resume an interrupted session |
 | `takt stop` | `/takt-stop` | Gracefully shut down and save state |
 | `takt execute` | `/takt-execute` | Launch execution for current milestone |
+| `takt quick "<title>"` | `/takt-quick` | Quick single-task entry (no agents) |
+| `takt validate` | `/takt-validate` | Run validation checks, save artifacts |
+| `takt promote <id>` | `/takt-promote` | Promote quick entry to structured ticket |
 
 ---
 
@@ -359,4 +399,4 @@ MIT License. See [LICENSE](LICENSE).
 
 ---
 
-**Takt v0.2.0** — Agent orchestration meets ticket-based workflows. Zero dependencies. 3 questions to autonomous execution.
+**Takt v0.3.0** — Agent orchestration meets ticket-based workflows. Zero dependencies. 3 questions to autonomous execution.

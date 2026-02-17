@@ -202,10 +202,11 @@ A new session should be able to reconstruct the full project context from HANDOF
 4. Move tickets to `.takt/tickets/archive/<milestone>/`
 5. Update `_milestone.json`: `status` → `completed`, `completedAt` → timestamp
 6. Merge git worktree branches (run worktree-merge script)
-7. Update `.takt/HANDOFF.md` with milestone completion summary
-8. Evaluate roster for next milestone (see §6)
-9. Update `.takt/state/takt-state.json` with new milestone
-10. Check milestoneAdvanceMode in `.takt/session.json`:
+7. **Shut down agents** — Send `shutdown_request` via SendMessage to each teammate that has no remaining tickets. Wait for shutdown confirmations. Only keep agents needed for the next milestone.
+8. Update `.takt/HANDOFF.md` with milestone completion summary
+9. Evaluate roster for next milestone (see §6)
+10. Update `.takt/state/takt-state.json` with new milestone
+11. Check milestoneAdvanceMode in `.takt/session.json`:
    - `auto-advance` → proceed automatically
    - `re-plan` → delegate to planner agent to re-evaluate remaining milestones
    - `user-decides` → present summary and ask user for direction
@@ -468,10 +469,11 @@ When asked for status, display:
 - External dependency unavailable
 
 **When stopping:**
-1. Update `.takt/state/takt-state.json` with `status: "stopped"`
-2. Mark in-progress tickets back to `pending`
-3. Generate progress summary
-4. Suggest next steps for resumption
+1. **Shut down all agents** — Send `shutdown_request` via SendMessage to every active teammate. Wait for confirmations before proceeding.
+2. Update `.takt/state/takt-state.json` with `status: "stopped"`
+3. Mark in-progress tickets back to `pending`
+4. Generate progress summary
+5. Suggest next steps for resumption
 
 ---
 

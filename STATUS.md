@@ -1,8 +1,8 @@
 # Takt — Project Status
 
-## Current Version: 0.2.0
+## Current Version: 0.3.0
 
-**Date:** 2026-02-15
+**Date:** 2026-02-16
 
 ---
 
@@ -25,10 +25,28 @@
 - [x] `devops.md` — Infrastructure (sonnet)
 
 ### Hook Scripts
-- [x] `scope-guard.mjs` — PreToolUse: blocks out-of-scope writes + worktree enforcement
-- [x] `review-gate.mjs` — TaskCompleted: enforces acceptance criteria
-- [x] `keep-working.mjs` — TeammateIdle: directs agents to next ticket
+- [x] `scope-guard.mjs` — PreToolUse hook: blocks out-of-scope writes + worktree enforcement
+- [x] `review-gate.mjs` — Standalone script: enforces acceptance criteria (invoked by orchestrator)
+- [x] `keep-working.mjs` — Standalone script: checks for remaining tickets (invoked by orchestrator)
 - [x] `init-project.mjs` — Creates `.takt/` directory in user projects
+
+### Quick Mode
+- [x] `skills/quick/SKILL.md` — `/takt-quick` single-task mode
+- [x] `skills/validate/SKILL.md` — `/takt-validate` validation checks
+- [x] `skills/promote/SKILL.md` — `/takt-promote` quick-to-ticket promotion
+- [x] `scripts/yaml-parse.mjs` — Minimal YAML parser (zero deps)
+- [x] `scripts/context.mjs` — Context gathering (git, tree, language)
+- [x] `scripts/context.sh` — Shell wrapper for context.mjs
+- [x] `scripts/validate.mjs` — Validation runner with preset detection
+- [x] `templates/quick.md` — Quick mode entry template
+- [x] `templates/ticket.md` — Reusable ticket template
+
+### Design Documents
+- [x] `SPEC.md` — Quick Mode specification
+- [x] `ARCHITECTURE.md` — Module architecture
+- [x] `DECISIONS.md` — Architectural decision records
+- [x] `RUNBOOK.md` — Operational guide
+- [x] `DIAGRAMS.md` — Mermaid diagrams
 
 ### Git Worktree Isolation
 - [x] `worktree-setup.mjs` — Creates per-agent worktrees from main
@@ -58,6 +76,9 @@
 | `${CLAUDE_PLUGIN_ROOT}` in hook paths | Plugin works from any install location |
 | Reviewer has `.worktrees/**` read access | Enables code review of agent branches before merge |
 | Dual execution mode (agent-teams / subagents) | Agent Teams requires experimental env var; subagent mode is a fully functional fallback using Task tool batch dispatch |
+| Quick mode as separate path | Small tasks bypass agents/tickets entirely. Separate `.takt/quick/` avoids touching structured mode state. |
+| config.yaml with YAML parser | User-friendly config. Custom zero-dep parser is sufficient for 2-level nesting. |
+| Validation opt-in in quick mode | Fast by default; strict mode available when needed |
 
 ---
 
@@ -74,6 +95,58 @@
 ---
 
 ## Changelog
+
+### 2026-02-16 — v0.3.0
+- **Quick Mode: lightweight single-task workflow**
+  - `takt quick "<title>"` creates a tracked quick entry with auto-collected context
+  - No agents, no planning, no milestones — just a quick.md file
+  - Auto-gathered context: git status, recent commits, diff stat, directory tree, language detection
+  - Optional validation (lint, typecheck, tests) via presets
+  - Quick entries live in `.takt/quick/YYYYMMDD-HHMMSS_slug/quick.md`
+- **Validation presets**
+  - `takt validate` runs project checks with auto-detected presets (Python, Node, or both)
+  - Python: compileall, ruff, pytest, mypy (prefers uv when available)
+  - Node: lint, typecheck, test, format check (auto-detects package manager)
+  - Results saved as artifacts in `.takt/artifacts/<mode>/<id>/logs/`
+  - Custom commands via `validate.commands[]` in config.yaml
+- **Promote workflow**
+  - `takt promote <quick-id> --to ticket` converts a quick entry to a structured ticket
+  - Carries over context, acceptance checks, notes, and validation artifacts
+  - Generates next available ticket ID, places in current or ad-hoc milestone
+  - Origin field traces ticket back to quick entry
+- **Evidence-based review (opt-in)**
+  - `review-gate.mjs` extended with optional validation artifact check
+  - Gated by `review.require_validation: true` in `.takt/config.yaml`
+  - No effect on existing projects unless explicitly enabled
+- **Project configuration**
+  - Optional `.takt/config.yaml` for quick mode, validation, and review settings
+  - Custom YAML parser (`yaml-parse.mjs`) — zero external dependencies
+  - All settings have sensible defaults; config file is entirely optional
+- **New design documents**: SPEC.md, ARCHITECTURE.md, DECISIONS.md, RUNBOOK.md, DIAGRAMS.md
+- New files (14):
+  1. `scripts/yaml-parse.mjs` — Minimal YAML parser
+  2. `scripts/context.mjs` — Context gathering
+  3. `scripts/context.sh` — Shell wrapper
+  4. `scripts/validate.mjs` — Validation runner
+  5. `templates/quick.md` — Quick entry template
+  6. `templates/ticket.md` — Ticket template
+  7. `skills/quick/SKILL.md` — Quick mode skill
+  8. `skills/validate/SKILL.md` — Validation skill
+  9. `skills/promote/SKILL.md` — Promote skill
+  10. `SPEC.md` — Specification
+  11. `ARCHITECTURE.md` — Architecture
+  12. `DECISIONS.md` — Decision records
+  13. `RUNBOOK.md` — Operational guide
+  14. `DIAGRAMS.md` — Mermaid diagrams
+- Modified files (8):
+  1. `scripts/init-project.mjs` — Added quick/, artifacts/ directories
+  2. `scripts/review-gate.mjs` — Optional validation artifact check
+  3. `skills/review/SKILL.md` — Evidence-based review section
+  4. `skills/takt/SKILL.md` — 3 new routing entries + directory structure
+  5. `CLAUDE.md` — Updated structure, decisions, docs references
+  6. `STATUS.md` — This changelog
+  7. `README.md` — Quick mode section, new commands
+  8. `docs/CONFIGURATION.md` — config.yaml reference
 
 ### 2026-02-15 — v0.2.0
 - **Rebranded: Takt → Takt**
@@ -225,7 +298,7 @@
 - Created complete Takt plugin with 28 files
 - 7 agent templates covering backend, frontend, reviewer, designer, researcher, content, devops
 - Scope enforcement via PreToolUse hook with zero-dependency glob matcher
-- Review gates via TaskCompleted hook
+- Review gates via orchestrator-invoked review-gate script
 - Git worktree isolation for parallel agent work
 - Shared POLICY.md focused on guardrails (15 NEVER rules, 10 ALWAYS rules)
 - Comprehensive documentation (README, TEMPLATES, CONFIGURATION, POLICY docs)

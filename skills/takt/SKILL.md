@@ -44,6 +44,9 @@ Parse the user's input to determine which subcommand to execute:
 | `takt resume` | `Skill(skill="takt-resume")` | Resume an interrupted session. |
 | `takt handoff` | `Skill(skill="takt-handoff")` | Update HANDOFF.md with current project state and progress. |
 | `takt stop` | `Skill(skill="takt-stop")` | Gracefully shut down execution and save state. |
+| `takt quick "<title>" [flags]`    | `Skill(skill="takt-quick")`    | Create a quick work entry (no agents/planning). |
+| `takt validate [flags]`           | `Skill(skill="takt-validate")` | Run validation checks and save artifacts. |
+| `takt promote <quick-id> [flags]` | `Skill(skill="takt-promote")`  | Promote a quick entry to a structured ticket. |
 
 If the user provides a bare `takt` (or `takt`) with no arguments or description, display this help message listing the available commands.
 
@@ -93,4 +96,19 @@ After full initialization, the `.takt/` directory looks like:
   takt-frontend.md                    # Frontend engineer agent
   takt-test.md                        # Test engineer agent
   ...                                 # Additional project-specific agents
+
+.takt/
+  quick/                            # Quick mode entries
+    YYYYMMDD-HHMMSS_slug/
+      quick.md                      # Quick entry document
+  artifacts/                        # Validation/context artifacts
+    quick/<id>/
+      logs/                         # Validation command outputs
+      context/                      # Context gathering outputs
+    ticket/<id>/
+      logs/
+      tests/
+      screenshots/
+      notes/
+  config.yaml                       # Optional project configuration
 ```
