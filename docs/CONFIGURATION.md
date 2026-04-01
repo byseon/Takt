@@ -460,6 +460,7 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
       "id": "string",
       "role": "string",
       "modelTier": "haiku | sonnet | opus",
+      "defaultBackend": "claude | codex (optional)",
       "allowedPaths": ["glob patterns"],
       "readablePaths": ["glob patterns"],
       "forbiddenPaths": ["glob patterns"],

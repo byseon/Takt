@@ -34,15 +34,20 @@ import { resolve } from "node:path";
  * Searches in .takt/reviews/ directory.
  */
 function findReviewFile(ticketId) {
-  const reviewDir = resolve(".takt", "reviews");
+  const searchRoots = [
+    resolve(".takt", "reviews"),
+    resolve(process.cwd(), ".takt", "reviews"),
+  ];
 
-  if (!existsSync(reviewDir)) {
-    return null;
-  }
+  for (const reviewDir of searchRoots) {
+    if (!existsSync(reviewDir)) {
+      continue;
+    }
 
-  const directPath = resolve(reviewDir, `${ticketId}-review.json`);
-  if (existsSync(directPath)) {
-    return directPath;
+    const directPath = resolve(reviewDir, `${ticketId}-review.json`);
+    if (existsSync(directPath)) {
+      return directPath;
+    }
   }
 
   return null;
@@ -95,6 +100,14 @@ async function main() {
 
   const ticketId = input.ticketId || input.ticket_id || "";
 
+  // Validate ticketId format to prevent path injection
+  if (ticketId && !/^[A-Za-z0-9_-]+$/.test(ticketId)) {
+    process.stderr.write(
+      `review-severity-gate: Invalid ticketId format: ${ticketId}\n`
+    );
+    process.exit(1);
+  }
+
   if (!ticketId) {
     process.stderr.write(
       "review-severity-gate: No ticketId provided. Cannot check severity.\n"
@@ -106,11 +119,11 @@ async function main() {
   const reviewPath = findReviewFile(ticketId);
 
   if (!reviewPath) {
-    process.stderr.write(
-      `review-severity-gate: No review file found for ${ticketId}. ` +
-        "Ensure cross-model review has been run.\n"
+    process.stdout.write(
+      `SEVERITY GATE: No review file found for ${ticketId}. ` +
+        "Cross-model review must be run before approval."
     );
-    process.exit(1);
+    process.exit(2);
   }
 
   // Parse the review JSON
@@ -129,10 +142,11 @@ async function main() {
   const summary = getLatestRoundSummary(reviewData);
 
   if (!summary) {
-    process.stderr.write(
-      `review-severity-gate: No cross-model review rounds found for ${ticketId}.\n`
+    process.stdout.write(
+      `SEVERITY GATE: No cross-model review rounds found for ${ticketId}. ` +
+        "Review must complete before approval."
     );
-    process.exit(1);
+    process.exit(2);
   }
 
   // Check for blocking severities

@@ -365,7 +365,7 @@ For each ticket in the batch, dispatch a Task tool call **in parallel** (multipl
 - `model`: Use the agent's `modelTier` from `registry.json` (e.g., `"sonnet"`, `"haiku"`, `"opus"`)
 - `prompt`: Comprehensive ticket prompt as described above
 
-**New ticket fields (v0.4.0):**
+**New ticket fields:**
 - `Backend`: `claude` (default) | `codex` — determines execution provider
 - `ModelTier`: `haiku | sonnet | opus` — Claude model tier (applies only when Backend is claude)
 
