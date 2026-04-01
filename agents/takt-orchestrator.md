@@ -70,6 +70,36 @@ When spawning teammates, use their template model tier. For ad-hoc subtasks with
 
 ---
 
+## Backend Routing for Ticket Execution
+
+Tickets now have a `Backend` field (`claude` | `codex`) that determines how they are dispatched:
+
+### Claude Backend (default)
+Standard dispatch via Agent Teams (`SendMessage` to assigned teammate) or Task tool (subagents mode). Uses the ticket's `ModelTier` field (`haiku | sonnet | opus`).
+
+### Codex Backend
+Tickets with `Backend: codex` are dispatched via the `ask_codex` MCP tool instead of Agent Teams or Task tool.
+
+**Codex Dispatch Protocol:**
+1. **Check availability**: Read `codexAvailable` from `.takt/session.json`. If `false`, fall back to Claude opus and log a warning.
+2. **Prepare prompt**: Construct prompt from ticket description, acceptance criteria, owned file paths, and forbidden paths. Include project conventions from POLICY.md.
+3. **Dispatch**: Call `ask_codex` with:
+   - `agent_role`: Match ticket's agent role (e.g., `"executor"` for implementation, `"code-reviewer"` for review)
+   - `prompt`: The constructed ticket prompt
+   - `context_files`: Array of file paths the agent needs to read
+   - `background: true` (non-blocking)
+   - `working_directory`: Agent's worktree path (`.worktrees/takt-<agent>/`)
+4. **Monitor**: Use `check_job_status` to poll the job. Use `wait_for_job` with the configured `timeoutMs` if blocking is acceptable.
+5. **Collect output**: On completion, read Codex output and write to `.takt/comms/<ticket-id>-output.md` (same format as Claude agent output).
+6. **Scope validation**: Run `git diff` on the agent's worktree to verify Codex only modified files within the agent's `allowedPaths` from `registry.json`. If scope violated, reject the ticket and log the violation.
+7. **Fallback on failure**: If Codex times out or errors, log the failure and re-dispatch via Claude opus (`Task(model="opus", prompt=...)` in subagents mode, or `SendMessage` to a Claude teammate in Agent Teams mode).
+
+**In Agent Teams mode**: The orchestrator calls `ask_codex` directly (MCP tools are available to the orchestrator). Codex results are communicated to the team via `SendMessage`.
+
+**In Subagents mode**: The main session calls `ask_codex` during dispatch. Results are written to `.takt/comms/<ticket-id>-output.md`.
+
+---
+
 ## Primary Responsibilities
 
 ### 1. Ticket Distribution & Assignment

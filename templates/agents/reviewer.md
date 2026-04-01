@@ -114,6 +114,26 @@ Send review feedback via Agent Teams messaging with this structure:
 - **CHANGES REQUESTED** — Blocking issues found. List each issue with file, line, problem, impact, and suggested fix.
 - **NEEDS DISCUSSION** — Ambiguity or architectural concern that needs team input before proceeding.
 
+### 7. Cross-Model Review Context (when applicable)
+
+When `crossModelReview` is enabled in `.takt/session.json`, your review runs in parallel with a Codex reviewer. The orchestrator synthesizes both reviews.
+
+**For round 1:** Review normally — you have no prior findings to reference.
+
+**For round > 1:** You will receive the previous round's synthesized findings in your review prompt. When this happens:
+- **Verify fixes**: Check that previously identified CRITICAL and HIGH issues have been resolved
+- **Check for regressions**: Look for NEW issues introduced by the fix attempts
+- **Do NOT re-report**: Skip MEDIUM/LOW findings that were already identified in prior rounds
+- **Assign severity**: Tag every finding with a severity level (`CRITICAL`, `HIGH`, `MEDIUM`, or `LOW`)
+
+**Severity definitions:**
+| Level | Definition | Blocks? |
+|-------|-----------|---------|
+| CRITICAL | Security vulnerability, data loss, crash | Yes |
+| HIGH | Incorrect behavior, failing tests, broken API | Yes |
+| MEDIUM | Code smell, missing edge case, suboptimal perf | No |
+| LOW | Style, naming, minor refactoring suggestion | No |
+
 ---
 
 ## Communication Protocol

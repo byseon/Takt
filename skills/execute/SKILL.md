@@ -135,6 +135,16 @@ Each teammate should:
 
 After creating the team, **switch to delegate mode** (press Shift+Tab) to restrict yourself to coordination-only tools.
 
+### Step 3.1b - Backend Routing (Agent Teams Mode)
+
+When the orchestrator assigns a ticket to an agent, check the ticket's `Backend` field:
+
+**If `Backend: codex`:**
+The orchestrator handles Codex dispatch directly (MCP tools are available to the orchestrator). Follow the Codex Backend Dispatch Protocol in the orchestrator agent instructions. Codex results are communicated to the team via `SendMessage`.
+
+**If `Backend: claude` (default):**
+Proceed with existing Agent Teams dispatch (SendMessage to assigned teammate).
+
 ### Step 3.2 - Ticket Distribution via Shared Task List
 
 Use the Agent Teams shared task list (not file-based tracking) to manage work:
@@ -318,6 +328,27 @@ Batch 3: [T005]           — deps satisfied after Batch 2
 
 For each batch, in order:
 
+#### Backend Routing (Subagents Mode)
+
+Before dispatching each ticket, check the ticket's `Backend` field:
+
+**If `Backend: codex`:**
+1. Check `codexAvailable` in `.takt/session.json`. If `false`, log warning and fall back to Claude opus dispatch below.
+2. Dispatch via `ask_codex` MCP tool:
+   - `agent_role`: `"executor"`
+   - `prompt`: Ticket description + acceptance criteria + POLICY rules + owned file paths
+   - `context_files`: Array of files in the agent's `allowedPaths` that are relevant to the ticket
+   - `background`: `true`
+   - `working_directory`: Agent's worktree path (`.worktrees/takt-<agent>/`)
+3. Store the returned `job_id` for status tracking.
+4. Poll via `check_job_status` or use `wait_for_job` with timeout from `codexConfig.timeoutMs` in session.json.
+5. On completion: Read Codex output and write to `.takt/comms/<ticket-id>-output.md`.
+6. Post-execution scope validation: Run `git diff` on the worktree to verify only files within the agent's `allowedPaths` were modified. If scope violated, reject ticket.
+7. On failure/timeout: Log error, re-dispatch via `Task(model="opus", prompt=...)` as fallback.
+
+**If `Backend: claude` (default):**
+Proceed with existing dispatch logic below (Task tool with modelTier).
+
 #### 3.2-S.1 — Dispatch Parallel Tasks
 
 For each ticket in the batch, dispatch a Task tool call **in parallel** (multiple Task calls in a single message). Each Task prompt must include:
@@ -333,6 +364,10 @@ For each ticket in the batch, dispatch a Task tool call **in parallel** (multipl
 - `subagent_type`: `"general-purpose"`
 - `model`: Use the agent's `modelTier` from `registry.json` (e.g., `"sonnet"`, `"haiku"`, `"opus"`)
 - `prompt`: Comprehensive ticket prompt as described above
+
+**New ticket fields (v0.4.0):**
+- `Backend`: `claude` (default) | `codex` — determines execution provider
+- `ModelTier`: `haiku | sonnet | opus` — Claude model tier (applies only when Backend is claude)
 
 **Example dispatch:**
 ```

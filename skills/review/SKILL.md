@@ -71,6 +71,112 @@ After auto review passes, the peer review mechanism depends on the execution mod
 - Edge cases and error handling
 - Integration with adjacent components
 
+### Cross-Model Review (Dual Reviewer Dispatch)
+
+When `crossModelReview: true` in `.takt/session.json` AND `codexAvailable: true`, the review phase dispatches TWO parallel reviewers instead of one:
+
+**Subagents Mode:**
+1. **Opus Reviewer**: `Task(model="opus", prompt=<review prompt with changed files, acceptance criteria, POLICY rules>)`
+2. **Codex Reviewer**: `ask_codex(agent_role="code-reviewer", prompt=<review prompt>, context_files=<changed file paths>, background=true, working_directory=<agent worktree path>)`
+3. Wait for both to complete. Use `wait_for_job` for the Codex reviewer.
+
+**Agent Teams Mode:**
+1. **Opus Reviewer**: `SendMessage` to permanent `takt-reviewer` teammate with review request
+2. **Codex Reviewer**: Orchestrator calls `ask_codex` directly with `agent_role="code-reviewer"`
+3. Collect both results before proceeding to synthesis.
+
+**Fallback:** If `codexAvailable: false` or `ask_codex` fails, fall back to single Opus reviewer (existing behavior) and log a warning.
+
+### Severity Classification
+
+Each reviewer assigns one of four severity levels to every finding:
+
+| Level | Definition | Blocks Approval? |
+|-------|-----------|-----------------|
+| CRITICAL | Security vulnerability, data loss risk, crash/panic | Yes |
+| HIGH | Incorrect behavior, failing tests, broken API contract | Yes |
+| MEDIUM | Code smell, missing edge case, suboptimal performance | No |
+| LOW | Style suggestion, naming preference, minor refactoring | No |
+
+Reviewers assign severity independently. The synthesis step preserves original severity ratings.
+
+### Review Synthesis
+
+**Ownership:**
+- **Subagents mode**: Main session performs synthesis inline
+- **Agent Teams mode**: `takt-reviewer` agent performs synthesis (has Bash access for file writing)
+
+**Synthesis Algorithm:**
+1. Collect all findings from Opus reviewer and Codex reviewer
+2. Deduplicate: findings targeting the same file + line range + issue type are merged (keep the higher severity)
+3. Tag each finding with its source: `[Opus]`, `[Codex]`, or `[Both]` (if both reviewers found it)
+4. Sort by severity descending (CRITICAL first)
+5. Generate summary counts: `{ critical: N, high: N, medium: N, low: N }`
+
+**Review Artifact** — write to `.takt/reviews/<ticket-id>-review.json`:
+```json
+{
+  "crossModelReview": {
+    "enabled": true,
+    "rounds": [
+      {
+        "round": 1,
+        "opusFindings": [
+          { "file": "src/auth.ts", "line": 42, "severity": "HIGH", "issue": "Missing null check" }
+        ],
+        "codexFindings": [
+          { "file": "src/auth.ts", "line": 40, "severity": "CRITICAL", "issue": "SQL injection risk" }
+        ],
+        "synthesized": [
+          { "file": "src/auth.ts", "line": 40, "severity": "CRITICAL", "issue": "SQL injection risk", "source": "Codex" },
+          { "file": "src/auth.ts", "line": 42, "severity": "HIGH", "issue": "Missing null check", "source": "Opus" }
+        ],
+        "summary": { "critical": 1, "high": 1, "medium": 0, "low": 0 }
+      }
+    ],
+    "finalVerdict": "approved",
+    "totalRounds": 1
+  }
+}
+```
+
+**Side-by-Side Comparison** — write to `.takt/reviews/<ticket-id>-comparison.md`:
+
+| # | Opus Finding | Codex Finding | Severity | Source |
+|---|-------------|---------------|----------|--------|
+| 1 | — | SQL injection in auth.ts:40 | CRITICAL | Codex only |
+| 2 | Missing null check auth.ts:42 | — | HIGH | Opus only |
+
+This comparison table provides transparency into what each model caught independently.
+
+### Re-Review Loop
+
+After synthesis, run the severity gate to determine if the ticket passes:
+
+**Loop Protocol:**
+```
+maxRounds = session.maxReviewRounds || 3
+round = 1
+
+LOOP:
+  1. Dispatch dual reviewers (see Cross-Model Review Dispatch above)
+  2. Synthesize findings (see Review Synthesis above)
+  3. Run severity gate: `echo '{"ticketId":"<id>"}' | node scripts/review-severity-gate.mjs`
+  4. IF gate passes (exit 0) → mark ticket `approved`, write final verdict to review JSON, EXIT
+  5. IF round >= maxRounds:
+     - IF any CRITICAL remaining → mark ticket `blocked`, escalate to user with finding details
+     - IF only HIGH remaining → mark ticket `approved-with-warnings`, log unresolved HIGH findings
+     - EXIT
+  6. Generate fix instructions from all CRITICAL and HIGH findings in the synthesized list
+  7. Dispatch the original agent to apply fixes (use same backend as the ticket)
+  8. round++, GOTO LOOP
+```
+
+**Between rounds:** When dispatching reviewers for round > 1, include the previous round's synthesized findings in the review prompt. Instruct reviewers to:
+- Verify that previously identified CRITICAL/HIGH issues have been fixed
+- Check for NEW issues introduced by the fixes
+- Do NOT re-report MEDIUM/LOW findings from prior rounds
+
 ### User Review (`reviewMode: "user"`)
 
 After auto review (and optionally peer review) passes:
