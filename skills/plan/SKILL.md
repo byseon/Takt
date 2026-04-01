@@ -169,6 +169,7 @@ Output:
    - Readable directories (read-only paths)
    - Forbidden paths
    - Model tier (haiku/sonnet/opus)
+   - Default backend (claude/codex) — if most tickets for this agent suit codex (mechanical, repetitive work), set defaultBackend to "codex"; otherwise omit (defaults to "claude")
 7. Dependency Graph — which components depend on which
 8. Code Standards — naming conventions, file organization, import style, test patterns, and any stack-specific standards (e.g., "use functional components" for React, "use pydantic models" for FastAPI)
 ```
@@ -196,7 +197,7 @@ Rules:
 For each milestone, output:
 - Milestone ID (M001, M002, ...)
 - Name, description
-- Tickets with: ID (T001, T002, ...), title, description, agent, dependencies, acceptance criteria, complexity (low/medium/high), priority (critical/high/medium/low)
+- Tickets with: ID (T001, T002, ...), title, description, agent, dependencies, acceptance criteria, complexity (low/medium/high), priority (critical/high/medium/low), backend ("claude" | "codex"), modelTier ("haiku" | "sonnet" | "opus")
 ```
 
 ### Step 0.4 — Show Plan Summary
@@ -418,6 +419,8 @@ For each milestone, create the directory and files:
 **Priority:** <critical|high|medium|low>
 **Complexity:** <low|medium|high>
 **Dependencies:** <comma-separated ticket IDs, or "none">
+**Backend:** claude (default) | codex
+**ModelTier:** haiku | sonnet | opus
 **ApprovedAt:**
 
 ## Description
@@ -431,6 +434,11 @@ For each milestone, create the directory and files:
 ## Review Notes
 <!-- Populated after review -->
 ```
+
+**Backend Assignment Heuristic:**
+- Default: `claude` for all tickets unless user configures otherwise via `defaultBackend` in session.json
+- Suggest `codex` for: mechanical refactoring, boilerplate generation, repetitive code patterns, simple CRUD implementations
+- Keep `claude` for: complex architecture decisions, multi-file coordination, security-sensitive code, code that needs Agent Teams messaging
 
 ### Step 2.2 — Agent Teams Task Setup (agent-teams mode only)
 

@@ -96,16 +96,19 @@ These rules are absolute. Violating any of them causes immediate ticket rejectio
 
 Use the cheapest model that can handle the task:
 
-| Task Type | Model | Examples |
-|-----------|-------|---------|
-| File scaffolding, boilerplate | haiku | Creating empty files, copying templates, config files |
-| Running commands | haiku | Tests, lint, format, build, git operations |
-| Simple code changes | haiku | Renaming, moving, small fixes with clear instructions |
-| Feature implementation | sonnet | New features, bug fixes, refactoring, integration |
-| Standard code review | sonnet | Style checks, convention adherence, simple logic review |
-| Architecture decisions | opus | System design, complex trade-offs, security review |
-| Requirements analysis | opus | Expanding vague requirements, identifying gaps |
-| Complex debugging | opus | Multi-file issues, race conditions, security vulnerabilities |
+| Task Type | Backend | Model | Examples |
+|-----------|---------|-------|---------|
+| File scaffolding, boilerplate | claude | haiku | Creating empty files, copying templates, config files |
+| Running commands | claude | haiku | Tests, lint, format, build, git operations |
+| Simple code changes | claude | haiku | Renaming, moving, small fixes with clear instructions |
+| Mechanical refactoring | codex | — | Repetitive code patterns, boilerplate generation, CRUD |
+| Feature implementation | claude | sonnet | New features, bug fixes, refactoring, integration |
+| Standard code review | claude | sonnet | Style checks, convention adherence, simple logic review |
+| Architecture decisions | claude | opus | System design, complex trade-offs, security review |
+| Requirements analysis | claude | opus | Expanding vague requirements, identifying gaps |
+| Complex debugging | claude | opus | Multi-file issues, race conditions, security vulnerabilities |
+
+**Backend** determines the execution provider: `claude` (default) or `codex`. When `Backend` is `codex`, the `Model` column does not apply — Codex uses its own model configuration from `.takt/session.json` → `codexConfig`.
 
 Agents should default to their assigned model tier but may request escalation from the orchestrator for complex subtasks.
 

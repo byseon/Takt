@@ -6,6 +6,8 @@
 **Priority:** {{PRIORITY}}
 **Complexity:** {{COMPLEXITY}}
 **Dependencies:** {{DEPENDENCIES}}
+**Backend:** {{BACKEND}}
+**ModelTier:** {{MODEL_TIER}}
 **Origin:** {{ORIGIN}}
 **ApprovedAt:**
 

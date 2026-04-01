@@ -104,6 +104,10 @@ takt/
 | Mandatory reviewer agent | Every project includes a permanent opus-tier reviewer that cannot be removed during roster review. Ensures code quality regardless of project type. |
 | Quick mode as separate path | Small tasks don't need agents/tickets. Separate `.takt/quick/` directory avoids touching structured mode state. |
 | config.yaml with minimal YAML parser | User-friendly config format. Zero-dep parser supports 2-level nesting — enough for validation presets. |
+| Backend vs ModelTier separation | `Backend` (claude/codex) determines execution provider; `ModelTier` (haiku/sonnet/opus) is the Claude model tier. Codex is a different execution backend, not a model tier — mixing them would break the existing modelTier enum and Task tool dispatch. |
+| Codex as soft dependency via OMC's ask_codex MCP | Takt stays zero-dep; Codex integration goes through OMC's MCP tool. Falls back to Claude opus when unavailable. |
+| Cross-model review with severity gate | Two independent reviewers (Codex + Opus) catch different blind spots. Severity-based exit (CRITICAL/HIGH block, MEDIUM/LOW pass) prevents infinite loops. |
+| Separate review-severity-gate.mjs script | Keeps review-gate.mjs focused on completion gating; severity logic is a distinct concern invoked programmatically during re-review loops. |
 
 ---
 

@@ -57,6 +57,15 @@ Created by `init-project.mjs` during Phase 0 with defaults, then populated by th
   "milestoneAdvanceMode": "auto-advance | re-plan | user-decides",
   "reviewMode": "auto | peer | user",
   "milestoneGranularity": "fine | medium | coarse",
+  "defaultBackend": "claude | codex",
+  "crossModelReview": "boolean",
+  "maxReviewRounds": "number",
+  "codexAvailable": "boolean",
+  "codexConfig": {
+    "model": "string",
+    "reasoningEffort": "string",
+    "timeoutMs": "number"
+  },
   "createdAt": "ISO 8601 timestamp",
   "updatedAt": "ISO 8601 timestamp"
 }
@@ -299,6 +308,86 @@ Created by `init-project.mjs` during Phase 0 with defaults, then populated by th
 
 ---
 
+#### defaultBackend
+
+**Type:** `enum` - `"claude" | "codex"`
+
+**Description:** Default execution backend for tickets that don't specify a `Backend` field. Determines whether tickets are dispatched via Claude (Task tool / Agent Teams) or Codex (via `ask_codex` MCP tool).
+
+**Default:** `"claude"`
+
+**Example:**
+```json
+{
+  "defaultBackend": "codex"
+}
+```
+
+**Set During:** Planning interview (Phase 0) or manually in session.json
+
+---
+
+#### crossModelReview
+
+**Type:** `boolean`
+
+**Description:** When `true`, enables dual-reviewer mode during Phase 4 (Review Gates). Both a Claude Opus reviewer and a Codex reviewer run in parallel. Their findings are synthesized, deduplicated, and gated by severity level.
+
+**Default:** `false`
+
+**Impact:**
+- **Phase 4 (Review):** Dispatches two parallel reviewers instead of one. Synthesis produces unified findings with side-by-side comparison.
+- **Requires:** `codexAvailable: true`. Falls back to single Opus reviewer when Codex is unavailable.
+
+---
+
+#### maxReviewRounds
+
+**Type:** `number`
+
+**Description:** Maximum number of re-review cycles in the cross-model review loop. After this many rounds, unresolved CRITICAL issues escalate to the user and HIGH issues are logged as warnings.
+
+**Default:** `3`
+
+---
+
+#### codexAvailable
+
+**Type:** `boolean`
+
+**Description:** Whether the Codex CLI and `ask_codex` MCP tool are available. Auto-detected during session initialization. When `false`, all Codex features degrade gracefully to Claude-only operation.
+
+**Default:** `false` (auto-detected)
+
+---
+
+#### codexConfig
+
+**Type:** `object`
+
+**Description:** Configuration for Codex backend dispatch.
+
+**Fields:**
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model` | `string` | `"gpt-5.4"` | Codex model to use |
+| `reasoningEffort` | `string` | `"xhigh"` | Reasoning effort level (`minimal`, `low`, `medium`, `high`, `xhigh`) |
+| `timeoutMs` | `number` | `300000` | Timeout in milliseconds for Codex job completion (5 minutes) |
+
+**Example:**
+```json
+{
+  "codexConfig": {
+    "model": "gpt-5.4",
+    "reasoningEffort": "xhigh",
+    "timeoutMs": 300000
+  }
+}
+```
+
+---
+
 #### createdAt / updatedAt
 
 **Type:** `string` (ISO 8601 timestamp)
@@ -332,6 +421,15 @@ Created by `init-project.mjs` during Phase 0 with defaults, then populated by th
   "milestoneAdvanceMode": "auto-advance",
   "reviewMode": "peer",
   "milestoneGranularity": "medium",
+  "defaultBackend": "claude",
+  "crossModelReview": true,
+  "maxReviewRounds": 3,
+  "codexAvailable": true,
+  "codexConfig": {
+    "model": "gpt-5.4",
+    "reasoningEffort": "xhigh",
+    "timeoutMs": 300000
+  },
   "createdAt": "2026-02-08T12:00:00.000Z",
   "updatedAt": "2026-02-08T15:30:00.000Z"
 }
@@ -362,6 +460,7 @@ Created in Phase 1 (Agent Definition), updated when agents are added or removed.
       "id": "string",
       "role": "string",
       "modelTier": "haiku | sonnet | opus",
+      "defaultBackend": "claude | codex (optional)",
       "allowedPaths": ["glob patterns"],
       "readablePaths": ["glob patterns"],
       "forbiddenPaths": ["glob patterns"],

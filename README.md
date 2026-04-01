@@ -326,6 +326,9 @@ Set during planning via Question 3. Stored in `.takt/session.json`.
 | `agentApprovalMode` | `auto` / `suggest` / `locked` | `suggest` |
 | `reviewMode` | `auto` / `peer` / `user` | `auto` |
 | `milestoneAdvanceMode` | `auto-advance` / `re-plan` / `user-decides` | `user-decides` |
+| `defaultBackend` | `claude` / `codex` | `claude` |
+| `crossModelReview` | `true` / `false` | `false` |
+| `maxReviewRounds` | number | `3` |
 
 ---
 
@@ -351,6 +354,7 @@ Three hooks enforce team discipline:
 |------|-------------|
 | **scope-guard.mjs** | Blocks writes outside agent's owned paths (both modes) |
 | **review-gate.mjs** | Enforces acceptance criteria before ticket completion (Agent Teams) |
+| **review-severity-gate.mjs** | Blocks approval when CRITICAL/HIGH issues remain (cross-model review) |
 | **keep-working.mjs** | Redirects idle agents to their next ticket (Agent Teams) |
 
 ---
